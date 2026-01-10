@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Forex Trading Journal – Plans & Executions</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #020617;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 16px 24px;
+      background: #020617;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: 20px;
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    header .subtitle {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .account-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    select, input, button, textarea {
+      border-radius: 6px;
+      border: 1px solid #1f2933;
+      padding: 6px 10px;
+      font-size: 13px;
+      background: #020617;
+      color: #e5e7eb;
+    }
+
+    select:focus, input:focus, textarea:focus {
+      outline: 1px solid #38bdf8;
+      border-color: #38bdf8;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: #38bdf8;
+      color: #020617;
+      font-weight: 500;
+    }
+
+    button.secondary {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+    }
+
+    button.danger {
+      background: #b91c1c;
+      color: #f9fafb;
+    }
+
+    button.small {
+      font-size: 11px;
+      padding: 4px 8px;
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 2.2fr) minmax(0, 2.3fr);
+      gap: 16px;
+      padding: 16px 20px 20px;
+    }
+
+    @media (max-width: 1040px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: #020617;
+      border-radius: 10px;
+      border: 1px solid #1f2933;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel h2 {
+      font-size: 13px;
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9ca3af;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .panel-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      padding: 2px 8px;
+      font-size: 11px;
+      color: #9ca3af;
+      background: #020617;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #38bdf8;
+    }
+
+    .small {
+      font-size: 11px;
+    }
+
+    .muted {
+      color: #6b7280;
+    }
+
+    /* Calendar */
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .calendar-header-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .calendar-header button {
+      padding-inline: 8px;
+      padding-block: 4px;
+      font-size: 11px;
+    }
+
+    .month-label {
+      font-weight: 500;
+      font-size: 13px;
+      color: #e5e7eb;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #1f2937;
+    }
+
+    .calendar-day-header {
+      padding: 6px;
+      text-align: center;
+      font-size: 11px;
+      text-transform: uppercase;
+      background: #020617;
+      border-bottom: 1px solid #1f2937;
+      color: #6b7280;
+    }
+
+    .calendar-cell {
+      min-height: 72px;
+      border-right: 1px solid #0b1120;
+      border-bottom: 1px solid #0b1120;
+      padding: 4px 5px;
+      font-size: 11px;
+      position: relative;
+      cursor: pointer;
+      background: #020617;
+      transition: background 0.12s ease, box-shadow 0.12s ease, transform 0.06s ease;
+    }
+
+    .calendar-cell:nth-child(7n) {
+      border-right: none;
+    }
+
+    .calendar-cell:hover {
+      background: #02081a;
+      box-shadow: inset 0 0 0 1px #1d4ed8;
+      transform: translateY(-0.5px);
+    }
+
+    .calendar-cell.inactive {
+      background: #020617;
+      color: #4b5563;
+      cursor: default;
+    }
+
+    .calendar-date-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+
+    .calendar-date {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .calendar-pl {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .calendar-pl.profit {
+      color: #22c55e;
+    }
+
+    .calendar-pl.loss {
+      color: #f97373;
+    }
+
+    .calendar-pl.flat {
+      color: #6b7280;
+    }
+
+    .calendar-trades {
+      font-size: 10px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+
+    .calendar-plans {
+      font-size: 10px;
+      color: #38bdf8;
+      margin-top: 1px;
+    }
+
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .stat-pill {
+      display: inline-flex;
+      flex-direction: column;
+      font-size: 11px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      min-width: 96px;
+    }
+
+    .stat-label {
+      color: #6b7280;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 10px;
+    }
+
+    .stat-value {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    /* Forms */
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    @media (max-width: 800px) {
+      .form-grid-2, .form-grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-row label {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    textarea {
+      min-height: 60px;
+      resize: vertical;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    /* Journal / plan lists */
+    .split-vertical {
+      display: grid;
+      grid-template-rows: auto auto;
+      gap: 12px;
+    }
+
+    .journal-list,
+    .plans-list {
+      max-height: 190px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid #111827;
+      padding: 6px;
+      background: #020617;
+    }
+
+    .journal-entry,
+    .plan-entry {
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #111827;
+      margin-bottom: 6px;
+      background: #020617;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .journal-entry-header,
+    .plan-entry-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+      color: #9ca3af;
+      align-items: flex-start;
+    }
+
+    .journal-entry-pl.profit {
+      color: #22c55e;
+      font-weight: 600;
+    }
+
+    .journal-entry-pl.loss {
+      color: #f97373;
+      font-weight: 600;
+    }
+
+    .journal-entry-pl.flat {
+      color: #6b7280;
+      font-weight: 600;
+    }
+
+    .journal-notes,
+    .plan-notes {
+      font-size: 12px;
+      color: #e5e7eb;
+      white-space: pre-wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      font-size: 10px;
+      color: #9ca3af;
+    }
+
+    .pill-blue {
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+
+    .pill-green {
+      border-color: #22c55e;
+      color: #22c55e;
+    }
+
+    .pill-yellow {
+      border-color: #facc15;
+      color: #facc15;
+    }
+
+    .pill-red {
+      border-color: #f97373;
+      color: #f97373;
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .link-btn {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: #38bdf8;
+      font-size: 11px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* Day details popup */
+    .day-details {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      max-width: 360px;
+      background: #020617;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      padding: 10px 12px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+      font-size: 12px;
+      z-index: 50;
+    }
+
+    .day-details-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .day-details-header span {
+      font-size: 12px;
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    .day-details-close {
+      border-radius: 999px;
+      border: none;
+      background: #111827;
+      color: #9ca3af;
+      font-size: 11px;
+      padding: 2px 6px;
+      cursor: pointer;
+    }
+
+    .day-details-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+      margin-top: 6px;
+      margin-bottom: 2px;
+    }
+
+    .day-details-trades,
+    .day-details-plans {
+      max-height: 130px;
+      overflow-y: auto;
+      border-radius: 6px;
+      border: 1px solid #111827;
+      padding: 4px 6px;
+      margin-top: 2px;
+    }
+
+    .day-trade-item,
+    .day-plan-item {
+      border-bottom: 1px solid #111827;
+      padding: 4px 0;
+    }
+
+    .day-trade-item:last-child,
+    .day-plan-item:last-child {
+      border-bottom: none;
+    }
+
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    input[type="checkbox"] {
+      width: 13px;
+      height: 13px;
+      cursor: pointer;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #020617;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #111827;
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body>
+<!-- Firebase v8 compat (works with your code) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDLEpF3rNWIHVbsOlkGe-oa5gS2Cr9MhdI",
+  authDomain: "personal-forex-journal.firebaseapp.com",
+  projectId: "personal-forex-journal",
+  storageBucket: "personal-forex-journal.appspot.com",
+  messagingSenderId: "842498312562",
+  appId: "1:842498312562:web:a810d3a27f43aff635b5eb",
+  measurementId: "G-XQKCNYHGQS"
+};
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const JOURNALS_COLLECTION = "journals";
+  const JOURNAL_DOC_ID = "juans-journal";
+  const journalDocRef = db.collection(JOURNALS_COLLECTION).doc(JOURNAL_DOC_ID);
+</script>
+
+  <header>
+    <div class="header-left">
+      <h1>Forex Trading Journal</h1>
+      <div class="subtitle">Multi-account · Pre-trade plans · Executed trades · Calendar & journal log</div>
+    </div>
+
+    <div class="account-controls">
+      <span class="small muted">Account:</span>
+      <select id="accountSelect"></select>
+      <input id="newAccountInput" type="text" placeholder="Add account name" />
+      <button id="addAccountBtn" class="small">Add</button>
+      <button id="deleteAccountBtn" class="secondary small">Delete</button>
+      <span class="small muted" id="syncStatus" style="margin-left:6px;">Syncing…</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left: Calendar & account stats -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Calendar</h2>
+        <div class="panel-header-right">
+          <div class="badge">
+            <span class="badge-dot"></span>
+            <span id="currentAccountLabel">Account</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="calendar-header">
+        <div class="calendar-header-left">
+          <button id="prevMonthBtn" class="secondary small">&lt;</button>
+          <div class="month-label" id="monthLabel"></div>
+          <button id="nextMonthBtn" class="secondary small">&gt;</button>
+        </div>
+        <div class="stats-row">
+          <div class="stat-pill">
+            <div class="stat-label">Starting balance</div>
+            <div class="stat-value" id="statStartingBalance">$0.00</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-label">Current balance</div>
+            <div class="stat-value" id="statCurrentBalance">$0.00</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-label">Month P/L</div>
+            <div class="stat-value" id="statMonthPL">$0.00</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-label">Win / loss days</div>
+            <div class="stat-value"><span id="statWinDays">0</span> / <span id="statLossDays">0</span></div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-label">Trades this month</div>
+            <div class="stat-value" id="statTotalTrades">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin-bottom:6px; gap:8px; flex-wrap:wrap;">
+        <div class="flex-row small muted">
+          <span class="pill pill-green"><span class="pill-dot"></span> Win day</span>
+          <span class="pill pill-red"><span class="pill-dot"></span> Loss day</span>
+          <span class="pill"><span class="pill-dot" style="background:#6b7280;"></span> Flat day</span>
+          <span class="pill pill-blue"><span class="pill-dot"></span> Planned trades</span>
+        </div>
+      </div>
+
+      <div id="calendarGrid" class="calendar-grid"></div>
+
+      <div style="margin-top:8px;" class="small muted">
+        Click a day to see executed trades and planned setups for that date.
+      </div>
+    </section>
+
+    <!-- Right: Plan creation, execution, journal -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Account & trade workflow</h2>
+        <span class="small muted" id="selectedDateLabel"></span>
+      </div>
+
+      <!-- Account settings -->
+      <div class="panel" style="padding:10px; margin-bottom:6px;">
+        <div class="panel-header" style="margin-bottom:4px;">
+          <h2>Account settings</h2>
+          <span class="small muted">Per account</span>
+        </div>
+        <div class="form-grid-3">
+          <div class="form-row">
+            <label for="startingBalance">Starting balance</label>
+            <input type="number" step="0.01" id="startingBalance" placeholder="e.g. 5000" />
+          </div>
+          <div class="form-row">
+            <label>Current balance</label>
+            <input type="text" id="currentBalanceDisplay" disabled />
+          </div>
+          <div class="form-row">
+            <label>&nbsp;</label>
+            <button id="saveAccountSettingsBtn" class="small">Save account</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="split-vertical">
+        <!-- Pre-trade plan -->
+        <div>
+          <div class="panel-header">
+            <h2>Plan trade (pre-trade)</h2>
+            <span class="small muted">Define entry, SL, TP and reasoning</span>
+          </div>
+
+          <div class="form-grid-3" style="margin-bottom:6px;">
+            <div class="form-row">
+              <label for="planDate">Date</label>
+              <input type="date" id="planDate" />
+            </div>
+            <div class="form-row">
+              <label for="planPair">Pair</label>
+              <input type="text" id="planPair" placeholder="e.g. EURUSD" />
+            </div>
+            <div class="form-row">
+              <label for="planDirection">Direction</label>
+              <select id="planDirection">
+                <option value="">Select</option>
+                <option value="Long">Long</option>
+                <option value="Short">Short</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-3" style="margin-bottom:6px;">
+            <div class="form-row">
+              <label for="planEntry">Entry</label>
+              <input type="number" step="0.00001" id="planEntry" placeholder="Entry price" />
+            </div>
+            <div class="form-row">
+              <label for="planSL">Stop loss</label>
+              <input type="number" step="0.00001" id="planSL" placeholder="SL price" />
+            </div>
+            <div class="form-row">
+              <label for="planTP">Take profit</label>
+              <input type="number" step="0.00001" id="planTP" placeholder="TP price" />
+            </div>
+          </div>
+
+          <div class="form-grid-3" style="margin-bottom:6px;">
+            <div class="form-row">
+              <label for="planRR">Planned R:R (auto / manual)</label>
+              <input type="text" id="planRR" placeholder="Auto from SL/TP or enter manually" />
+            </div>
+            <div class="form-row">
+              <label for="planSession">Session</label>
+              <input type="text" id="planSession" placeholder="London, NY, Asia..." />
+            </div>
+            <div class="form-row">
+              <label for="planTag">Tag</label>
+              <input type="text" id="planTag" placeholder="Setup, pattern, etc." />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label for="planReason">Reason for trade</label>
+            <textarea id="planReason" placeholder="Higher time frame context, confluences, structure, etc."></textarea>
+          </div>
+          <div class="form-row">
+            <label for="planInvalidation">What invalidates this setup?</label>
+            <textarea id="planInvalidation" placeholder="Conditions that tell you not to take it or to cancel."></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button id="clearPlanBtn" class="secondary small">Clear</button>
+            <button id="addPlanBtn">Save plan</button>
+          </div>
+
+          <div class="panel-header" style="margin-top: 10px;">
+            <h2>Open plans</h2>
+            <span class="small muted">Planned but not executed/cancelled</span>
+          </div>
+          <div class="plans-list" id="plansList"></div>
+        </div>
+
+        <!-- Execute trade (post-trade) + journal -->
+        <div>
+          <div class="panel-header">
+            <h2>Execute / close trade</h2>
+            <span class="small muted">Convert a plan into an executed trade</span>
+          </div>
+
+          <div class="form-row" style="margin-bottom:6px;">
+            <label for="executePlanSelect">Select planned trade</label>
+            <select id="executePlanSelect">
+              <option value="">Select a plan to execute</option>
+            </select>
+          </div>
+
+          <div class="form-grid-2" style="margin-bottom:6px;">
+            <div class="form-row">
+              <label for="execDate">Execution date</label>
+              <input type="date" id="execDate" />
+            </div>
+            <div class="form-row">
+              <label for="execResult">Actual P/L amount</label>
+              <input type="number" step="0.01" id="execResult" placeholder="e.g. 35.50" />
+            </div>
+          </div>
+
+          <div class="form-grid-2" style="margin-bottom:6px;">
+            <div class="form-row">
+              <label for="execExitPrice">Actual exit price (optional)</label>
+              <input type="number" step="0.00001" id="execExitPrice" placeholder="Exit price" />
+            </div>
+            <div class="form-row">
+              <label for="execRisk">Risk (R or %)</label>
+              <input type="text" id="execRisk" placeholder="e.g. 1R, 0.5%, etc." />
+            </div>
+          </div>
+
+          <div class="form-grid-2" style="margin-bottom:6px;">
+            <div class="form-row">
+              <label>Did you close early?</label>
+              <div class="checkbox-row">
+                <input type="checkbox" id="execClosedEarly" />
+                <span class="small muted">Yes, I closed before TP/SL</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <label>Did you follow your plan?</label>
+              <div class="checkbox-row">
+                <input type="checkbox" id="execFollowedPlan" />
+                <span class="small muted">Yes, I executed according to the plan</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label for="execClosedEarlyReason">If closed early, why?</label>
+            <textarea id="execClosedEarlyReason" placeholder="Fear, news, structure change, spread, etc."></textarea>
+          </div>
+          <div class="form-row">
+            <label for="execMistakes">Mistakes</label>
+            <textarea id="execMistakes" placeholder="Rules you broke, things you’d change next time."></textarea>
+          </div>
+          <div class="form-row">
+            <label for="execLessons">Lessons</label>
+            <textarea id="execLessons" placeholder="What you learned, what to repeat, what to avoid."></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button id="clearExecBtn" class="secondary small">Clear</button>
+            <button id="saveExecBtn">Save executed trade</button>
+          </div>
+
+          <div class="panel-header" style="margin-top:10px;">
+            <h2>Journal log</h2>
+            <span class="small muted">Executed trades (latest first)</span>
+          </div>
+          <div class="journal-list" id="journalList"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Day details popup -->
+  <div id="dayDetails" class="day-details" style="display: none;">
+    <div class="day-details-header">
+      <span id="dayDetailsTitle"></span>
+      <button class="day-details-close" id="dayDetailsClose">Close</button>
+    </div>
+    <div class="small muted" id="dayDetailsSummary"></div>
+
+    <div class="day-details-section-title">Executed trades</div>
+    <div class="day-details-trades" id="dayDetailsTrades"></div>
+
+    <div class="day-details-section-title">Planned trades</div>
+    <div class="day-details-plans" id="dayDetailsPlans"></div>
+  </div>
+
+  <script>
+    // Firestore-backed data model:
+    // Document: journals / juans-journal
+    // {
+    //   accounts: {
+    //     [accountName]: {
+    //       startingBalance: number,
+    //       trades: [],
+    //       plans: []
+    //     }
+    //   },
+    //   currentAccount: string
+    // }
+
+    const state = {
+      data: {
+        accounts: {},
+        currentAccount: null
+      },
+      currentMonth: new Date().getMonth(),
+      currentYear: new Date().getFullYear(),
+      selectedDate: null,
+      saveTimeout: null,
+      syncing: false
+    };
+
+    const syncStatusEl = document.getElementById("syncStatus");
+
+    function setSyncStatus(text) {
+      if (syncStatusEl) syncStatusEl.textContent = text;
+    }
+
+    async function loadData() {
+      setSyncStatus("Loading…");
+      try {
+        const snap = await journalDocRef.get();
+        if (snap.exists) {
+          const data = snap.data();
+          if (!data.accounts || Object.keys(data.accounts).length === 0) {
+            state.data = {
+              accounts: {
+                "Main Account": {
+                  startingBalance: 0,
+                  trades: [],
+                  plans: []
+                }
+              },
+              currentAccount: "Main Account"
+            };
+            await saveData(true);
+          } else {
+            state.data = data;
+            if (!state.data.currentAccount) {
+              state.data.currentAccount = Object.keys(state.data.accounts)[0];
+            }
+          }
+        } else {
+          state.data = {
+            accounts: {
+              "Main Account": {
+                startingBalance: 0,
+                trades: [],
+                plans: []
+              }
+            },
+            currentAccount: "Main Account"
+          };
+          await saveData(true);
+        }
+        setSyncStatus("Synced");
+      } catch (err) {
+        console.error("Error loading Firestore data:", err);
+        setSyncStatus("Load error (see console)");
+        if (!state.data.accounts || Object.keys(state.data.accounts).length === 0) {
+          state.data = {
+            accounts: {
+              "Main Account": {
+                startingBalance: 0,
+                trades: [],
+                plans: []
+              }
+            },
+            currentAccount: "Main Account"
+          };
+        }
+      }
+    }
+
+    async function saveData(force = false) {
+      if (!force) {
+        if (state.saveTimeout) clearTimeout(state.saveTimeout);
+        state.saveTimeout = setTimeout(() => saveData(true), 600);
+        return;
+      }
+      try {
+        state.syncing = true;
+        setSyncStatus("Saving…");
+        await journalDocRef.set(state.data);
+        state.syncing = false;
+        setSyncStatus("Synced");
+      } catch (err) {
+        console.error("Error saving Firestore data:", err);
+        state.syncing = false;
+        setSyncStatus("Save error");
+      }
+    }
+
+    function formatDateInput(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function formatCurrency(value) {
+      const num = Number(value) || 0;
+      return (num < 0 ? "-" : "") + "$" + Math.abs(num).toFixed(2);
+    }
+
+    function getCurrentAccount() {
+      return state.data.accounts[state.data.currentAccount];
+    }
+
+    function ensureAccountExists(name) {
+      if (!state.data.accounts[name]) {
+        state.data.accounts[name] = {
+          startingBalance: 0,
+          trades: [],
+          plans: []
+        };
+      }
+    }
+
+    function getTradesForAccountMonth(account, year, month) {
+      return account.trades.filter(t => {
+        if (!t.date) return false;
+        const [y, m] = t.date.split("-").map(Number);
+        return y === year && m === (month + 1);
+      });
+    }
+
+    function getTradesForAccountDay(account, dateStr) {
+      return account.trades.filter(t => t.date === dateStr);
+    }
+
+    function getPlansForAccountDay(account, dateStr) {
+      return account.plans.filter(p => p.date === dateStr && p.status === "planned");
+    }
+
+    function calculateCurrentBalance(account) {
+      const base = Number(account.startingBalance) || 0;
+      const pl = account.trades.reduce((sum, t) => sum + (Number(t.actualResult) || 0), 0);
+      return base + pl;
+    }
+
+    function autoCalculateRR(entry, sl, tp, direction) {
+      const e = Number(entry);
+      const s = Number(sl);
+      const t = Number(tp);
+      if (!e || !s || !t || !direction) return "";
+      let risk, reward;
+      if (direction === "Long") {
+        risk = e - s;
+        reward = t - e;
+      } else {
+        risk = s - e;
+        reward = e - t;
+      }
+      if (risk <= 0 || reward <= 0) return "";
+      const rr = reward / risk;
+      if (!isFinite(rr) || rr <= 0) return "";
+      return rr.toFixed(2) + "R";
+    }
+
+    // --- DOM references ---
+    const accountSelect = document.getElementById("accountSelect");
+    const newAccountInput = document.getElementById("newAccountInput");
+    const addAccountBtn = document.getElementById("addAccountBtn");
+    const deleteAccountBtn = document.getElementById("deleteAccountBtn");
+
+    const calendarGrid = document.getElementById("calendarGrid");
+    const monthLabel = document.getElementById("monthLabel");
+
+    const statStartingBalance = document.getElementById("statStartingBalance");
+    const statCurrentBalance = document.getElementById("statCurrentBalance");
+    const statMonthPL = document.getElementById("statMonthPL");
+    const statWinDays = document.getElementById("statWinDays");
+    const statLossDays = document.getElementById("statLossDays");
+    const statTotalTrades = document.getElementById("statTotalTrades");
+
+    const startingBalanceInput = document.getElementById("startingBalance");
+    const currentBalanceDisplay = document.getElementById("currentBalanceDisplay");
+    const saveAccountSettingsBtn = document.getElementById("saveAccountSettingsBtn");
+
+    const planDate = document.getElementById("planDate");
+    const planPair = document.getElementById("planPair");
+    const planDirection = document.getElementById("planDirection");
+    const planEntry = document.getElementById("planEntry");
+    const planSL = document.getElementById("planSL");
+    const planTP = document.getElementById("planTP");
+    const planRR = document.getElementById("planRR");
+    const planSession = document.getElementById("planSession");
+    const planTag = document.getElementById("planTag");
+    const planReason = document.getElementById("planReason");
+    const planInvalidation = document.getElementById("planInvalidation");
+    const addPlanBtn = document.getElementById("addPlanBtn");
+    const clearPlanBtn = document.getElementById("clearPlanBtn");
+
+    const executePlanSelect = document.getElementById("executePlanSelect");
+    const execDate = document.getElementById("execDate");
+    const execResult = document.getElementById("execResult");
+    const execExitPrice = document.getElementById("execExitPrice");
+    const execRisk = document.getElementById("execRisk");
+    const execClosedEarly = document.getElementById("execClosedEarly");
+    const execFollowedPlan = document.getElementById("execFollowedPlan");
+    const execClosedEarlyReason = document.getElementById("execClosedEarlyReason");
+    const execMistakes = document.getElementById("execMistakes");
+    const execLessons = document.getElementById("execLessons");
+    const saveExecBtn = document.getElementById("saveExecBtn");
+    const clearExecBtn = document.getElementById("clearExecBtn");
+
+    const plansList = document.getElementById("plansList");
+    const journalList = document.getElementById("journalList");
+    const currentAccountLabel = document.getElementById("currentAccountLabel");
+    const selectedDateLabel = document.getElementById("selectedDateLabel");
+
+    const prevMonthBtn = document.getElementById("prevMonthBtn");
+    const nextMonthBtn = document.getElementById("nextMonthBtn");
+
+    const dayDetails = document.getElementById("dayDetails");
+    const dayDetailsTitle = document.getElementById("dayDetailsTitle");
+    const dayDetailsSummary = document.getElementById("dayDetailsSummary");
+    const dayDetailsTrades = document.getElementById("dayDetailsTrades");
+    const dayDetailsPlans = document.getElementById("dayDetailsPlans");
+    const dayDetailsClose = document.getElementById("dayDetailsClose");
+
+    // --- Render functions ---
+    function renderAccounts() {
+      accountSelect.innerHTML = "";
+      const accounts = Object.keys(state.data.accounts);
+      accounts.forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        if (name === state.data.currentAccount) option.selected = true;
+        accountSelect.appendChild(option);
+      });
+      currentAccountLabel.textContent = state.data.currentAccount;
+
+      const account = getCurrentAccount();
+      startingBalanceInput.value = account.startingBalance ?? 0;
+      const currentBal = calculateCurrentBalance(account);
+      currentBalanceDisplay.value = formatCurrency(currentBal);
+      statStartingBalance.textContent = formatCurrency(account.startingBalance ?? 0);
+      statCurrentBalance.textContent = formatCurrency(currentBal);
+    }
+
+    function renderCalendar() {
+      const year = state.currentYear;
+      const month = state.currentMonth;
+
+      const date = new Date(year, month, 1);
+      const firstDayIndex = date.getDay(); // 0=Sun
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      const monthNames = [
+        "January","February","March","April","May","June",
+        "July","August","September","October","November","December"
+      ];
+      monthLabel.textContent = `${monthNames[month]} ${year}`;
+
+      calendarGrid.innerHTML = "";
+
+      const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      dayNames.forEach(d => {
+        const el = document.createElement("div");
+        el.className = "calendar-day-header";
+        el.textContent = d;
+        calendarGrid.appendChild(el);
+      });
+
+      const account = getCurrentAccount();
+      const trades = getTradesForAccountMonth(account, year, month);
+
+      const dayStats = {};
+      trades.forEach(t => {
+        const day = Number(t.date.split("-")[2]);
+        if (!dayStats[day]) {
+          dayStats[day] = { pl: 0, trades: 0, plans: 0 };
+        }
+        dayStats[day].pl += Number(t.actualResult) || 0;
+        dayStats[day].trades += 1;
+      });
+
+      account.plans
+        .filter(p => {
+          if (!p.date || p.status !== "planned") return false;
+          const [y, m] = p.date.split("-").map(Number);
+          return y === year && m === (month + 1);
+        })
+        .forEach(p => {
+          const day = Number(p.date.split("-")[2]);
+          if (!dayStats[day]) {
+            dayStats[day] = { pl: 0, trades: 0, plans: 0 };
+          }
+          dayStats[day].plans += 1;
+        });
+
+      const totalCells = firstDayIndex + daysInMonth;
+      const rows = Math.ceil(totalCells / 7);
+      let currentDay = 1;
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < 7; c++) {
+          const cell = document.createElement("div");
+          cell.className = "calendar-cell";
+
+          const cellIndex = r * 7 + c;
+          if (cellIndex < firstDayIndex || currentDay > daysInMonth) {
+            cell.classList.add("inactive");
+            calendarGrid.appendChild(cell);
+            continue;
+          }
+
+          const cellDateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(currentDay).padStart(2,"0")}`;
+          const stats = dayStats[currentDay];
+
+          const dateRow = document.createElement("div");
+          dateRow.className = "calendar-date-row";
+
+          const dateEl = document.createElement("div");
+          dateEl.className = "calendar-date";
+          dateEl.textContent = currentDay;
+
+          const plEl = document.createElement("div");
+          plEl.className = "calendar-pl";
+
+          dateRow.appendChild(dateEl);
+          dateRow.appendChild(plEl);
+
+          const tradesEl = document.createElement("div");
+          tradesEl.className = "calendar-trades";
+
+          const plansEl = document.createElement("div");
+          plansEl.className = "calendar-plans";
+
+          if (stats && (stats.trades > 0 || stats.plans > 0)) {
+            const pl = stats.pl;
+            if (stats.trades > 0) {
+              plEl.textContent = formatCurrency(pl);
+              if (pl > 0) plEl.classList.add("profit");
+              else if (pl < 0) plEl.classList.add("loss");
+              else plEl.classList.add("flat");
+              tradesEl.textContent = `${stats.trades} trade${stats.trades !== 1 ? "s" : ""}`;
+            } else {
+              plEl.textContent = "$0.00";
+              plEl.classList.add("flat");
+              tradesEl.textContent = "No executions";
+            }
+
+            if (stats.plans > 0) {
+              plansEl.textContent = `${stats.plans} planned`;
+            } else {
+              plansEl.textContent = "";
+            }
+          } else {
+            plEl.textContent = "$0.00";
+            plEl.classList.add("flat");
+            tradesEl.textContent = "No executions";
+            plansEl.textContent = "";
+          }
+
+          cell.appendChild(dateRow);
+          cell.appendChild(tradesEl);
+          cell.appendChild(plansEl);
+
+          cell.addEventListener("click", () => {
+            state.selectedDate = cellDateStr;
+            updateSelectedDateLabel();
+            openDayDetails(cellDateStr);
+          });
+
+          calendarGrid.appendChild(cell);
+          currentDay++;
+        }
+      }
+
+      updateMonthStats(dayStats);
+    }
+
+    function updateMonthStats(dayStats) {
+      let monthPL = 0;
+      let winDays = 0;
+      let lossDays = 0;
+      let totalTrades = 0;
+
+      Object.values(dayStats).forEach(d => {
+        monthPL += d.pl;
+        totalTrades += d.trades;
+        if (d.pl > 0) winDays++;
+        else if (d.pl < 0) lossDays++;
+      });
+
+      statMonthPL.textContent = formatCurrency(monthPL);
+      statWinDays.textContent = winDays;
+      statLossDays.textContent = lossDays;
+      statTotalTrades.textContent = totalTrades;
+    }
+
+    function renderPlans() {
+      const account = getCurrentAccount();
+      const plans = account.plans
+        .filter(p => p.status === "planned")
+        .sort((a, b) => {
+          if (a.date === b.date) {
+            return (b.createdAt || 0) - (a.createdAt || 0);
+          }
+          return a.date < b.date ? -1 : 1;
+        });
+
+      plansList.innerHTML = "";
+
+      if (!plans.length) {
+        const empty = document.createElement("div");
+        empty.className = "small muted";
+        empty.textContent = "No open plans. Create a setup above.";
+        plansList.appendChild(empty);
+      } else {
+        plans.forEach(p => {
+          const entry = document.createElement("div");
+          entry.className = "plan-entry";
+
+          const header = document.createElement("div");
+          header.className = "plan-entry-header";
+
+          const left = document.createElement("div");
+          const titleParts = [];
+          titleParts.push(p.date || "Date");
+          if (p.pair) titleParts.push(p.pair);
+          if (p.direction) titleParts.push(p.direction);
+          left.textContent = titleParts.join(" · ");
+
+          const right = document.createElement("div");
+          right.className = "flex-row";
+          if (p.rr) {
+            const rrPill = document.createElement("span");
+            rrPill.className = "pill pill-green";
+            rrPill.textContent = `Planned ${p.rr}`;
+            right.appendChild(rrPill);
+          }
+          if (p.session) {
+            const sPill = document.createElement("span");
+            sPill.className = "pill pill-blue";
+            sPill.textContent = p.session;
+            right.appendChild(sPill);
+          }
+
+          header.appendChild(left);
+          header.appendChild(right);
+
+          const meta = document.createElement("div");
+          meta.className = "small muted";
+          const metaParts = [];
+          if (p.entry && p.sl && p.tp) {
+            metaParts.push(`Entry ${p.entry} · SL ${p.sl} · TP ${p.tp}`);
+          }
+          if (p.tag) metaParts.push(`#${p.tag}`);
+          meta.textContent = metaParts.join(" · ");
+
+          const notes = document.createElement("div");
+          notes.className = "plan-notes small";
+          notes.textContent = p.reason || "";
+
+          const actions = document.createElement("div");
+          actions.className = "flex-row";
+          const execBtn = document.createElement("button");
+          execBtn.className = "link-btn";
+          execBtn.textContent = "Use in execution form";
+          execBtn.addEventListener("click", () => {
+            executePlanSelect.value = p.id;
+            populateExecutionFormFromPlan(p);
+          });
+
+          const cancelBtn = document.createElement("button");
+          cancelBtn.className = "link-btn";
+          cancelBtn.style.color = "#f97373";
+          cancelBtn.textContent = "Cancel plan";
+          cancelBtn.addEventListener("click", async () => {
+            const ok = confirm("Mark this plan as cancelled?");
+            if (!ok) return;
+            p.status = "cancelled";
+            await saveData();
+            renderPlans();
+            renderCalendar();
+          });
+
+          actions.appendChild(execBtn);
+          actions.appendChild(cancelBtn);
+
+          entry.appendChild(header);
+          if (metaParts.length) entry.appendChild(meta);
+          if (p.reason) entry.appendChild(notes);
+          entry.appendChild(actions);
+
+          plansList.appendChild(entry);
+        });
+      }
+
+      executePlanSelect.innerHTML = '<option value="">Select a plan to execute</option>';
+      plans.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = `${p.date} · ${p.pair || ""} · ${p.direction || ""}`;
+        executePlanSelect.appendChild(opt);
+      });
+    }
+
+    function renderJournal() {
+      const account = getCurrentAccount();
+      const trades = [...account.trades].sort((a, b) => {
+        if (a.date === b.date) {
+          return (b.createdAt || 0) - (a.createdAt || 0);
+        }
+        return a.date < b.date ? 1 : -1;
+      });
+
+      journalList.innerHTML = "";
+
+      if (!trades.length) {
+        const empty = document.createElement("div");
+        empty.className = "small muted";
+        empty.textContent = "No executed trades yet. Execute a plan to log a trade.";
+        journalList.appendChild(empty);
+        return;
+      }
+
+      trades.slice(0, 60).forEach(t => {
+        const entry = document.createElement("div");
+        entry.className = "journal-entry";
+
+        const header = document.createElement("div");
+        header.className = "journal-entry-header";
+
+        const left = document.createElement("div");
+        const parts = [];
+        parts.push(t.date || "Date");
+        if (t.pair) parts.push(t.pair);
+        if (t.direction) parts.push(t.direction);
+        left.textContent = parts.join(" · ");
+
+        const right = document.createElement("div");
+        const plClass = Number(t.actualResult) > 0 ? "profit" : Number(t.actualResult) < 0 ? "loss" : "flat";
+        right.className = `journal-entry-pl ${plClass}`;
+        right.textContent = formatCurrency(t.actualResult);
+
+        header.appendChild(left);
+        header.appendChild(right);
+
+        const meta = document.createElement("div");
+        meta.className = "small muted";
+        const metaParts = [];
+        if (t.plannedEntry && t.plannedSL && t.plannedTP) {
+          metaParts.push(`Planned ${t.plannedEntry}/${t.plannedSL}/${t.plannedTP}${t.plannedRR ? ` (${t.plannedRR})` : ""}`);
+        }
+        if (t.actualExitPrice) {
+          metaParts.push(`Exit ${t.actualExitPrice}`);
+        }
+        if (t.session) metaParts.push(t.session);
+        if (t.tag) metaParts.push(`#${t.tag}`);
+        if (t.closedEarly) metaParts.push("Closed early");
+        if (t.followedPlan) metaParts.push("Followed plan");
+        meta.textContent = metaParts.join(" · ");
+
+        const notes = document.createElement("div");
+        notes.className = "journal-notes small";
+        const lines = [];
+        if (t.closedEarly && t.closedEarlyReason) {
+          lines.push(`Closed early: ${t.closedEarlyReason}`);
+        }
+        if (t.mistakes) {
+          lines.push(`Mistakes: ${t.mistakes}`);
+        }
+        if (t.lessons) {
+          lines.push(`Lessons: ${t.lessons}`);
+        }
+        notes.textContent = lines.join("\n");
+
+        entry.appendChild(header);
+        if (metaParts.length) entry.appendChild(meta);
+        if (lines.length) entry.appendChild(notes);
+
+        journalList.appendChild(entry);
+      });
+
+      const accountUpdated = getCurrentAccount();
+      const currentBal = calculateCurrentBalance(accountUpdated);
+      currentBalanceDisplay.value = formatCurrency(currentBal);
+      statCurrentBalance.textContent = formatCurrency(currentBal);
+    }
+
+    function updateSelectedDateLabel() {
+      selectedDateLabel.textContent = `Selected date: ${state.selectedDate}`;
+      planDate.value = state.selectedDate;
+      execDate.value = state.selectedDate;
+    }
+
+    function openDayDetails(dateStr) {
+      const account = getCurrentAccount();
+      const trades = getTradesForAccountDay(account, dateStr);
+      const plans = getPlansForAccountDay(account, dateStr);
+
+      const dateObj = new Date(dateStr + "T00:00:00");
+      const options = { weekday: "short", month: "short", day: "numeric", year: "numeric" };
+      const label = dateObj.toLocaleDateString(undefined, options);
+
+      dayDetailsTitle.textContent = label;
+
+      let pl = 0;
+      trades.forEach(t => pl += Number(t.actualResult) || 0);
+
+      const plText = formatCurrency(pl);
+      const plClass = pl > 0 ? "profit" : pl < 0 ? "loss" : "flat";
+      dayDetailsSummary.innerHTML = `
+        <span class="${plClass}">${plText}</span>
+        · ${trades.length} execution${trades.length !== 1 ? "s" : ""}
+        · ${plans.length} plan${plans.length !== 1 ? "s" : ""}
+      `;
+
+      dayDetailsTrades.innerHTML = "";
+      if (!trades.length) {
+        const empty = document.createElement("div");
+        empty.className = "small muted";
+        empty.textContent = "No executed trades.";
+        dayDetailsTrades.appendChild(empty);
+      } else {
+        trades.forEach(t => {
+          const item = document.createElement("div");
+          item.className = "day-trade-item";
+
+          const top = document.createElement("div");
+          top.className = "flex-between small";
+          const plItemClass = Number(t.actualResult) > 0 ? "profit" : Number(t.actualResult) < 0 ? "loss" : "flat";
+          top.innerHTML = `
+            <span>${t.pair || "Pair"} · ${t.direction || ""}</span>
+            <span class="${plItemClass}">${formatCurrency(t.actualResult)}</span>
+          `;
+
+          const meta = document.createElement("div");
+          meta.className = "small muted";
+          const metaParts = [];
+          if (t.plannedEntry && t.plannedSL && t.plannedTP) {
+            metaParts.push(`Planned ${t.plannedEntry}/${t.plannedSL}/${t.plannedTP}${t.plannedRR ? ` (${t.plannedRR})` : ""}`);
+          }
+          if (t.actualExitPrice) {
+            metaParts.push(`Exit ${t.actualExitPrice}`);
+          }
+          if (t.session) metaParts.push(t.session);
+          if (t.tag) metaParts.push(`#${t.tag}`);
+          if (t.closedEarly) metaParts.push("Closed early");
+          if (t.followedPlan) metaParts.push("Followed plan");
+          meta.textContent = metaParts.join(" · ");
+
+          const notes = document.createElement("div");
+          notes.className = "small";
+          const lines = [];
+          if (t.closedEarly && t.closedEarlyReason) {
+            lines.push(`Closed early: ${t.closedEarlyReason}`);
+          }
+          if (t.mistakes) {
+            lines.push(`Mistakes: ${t.mistakes}`);
+          }
+          if (t.lessons) {
+            lines.push(`Lessons: ${t.lessons}`);
+          }
+          notes.textContent = lines.join(" | ");
+
+          item.appendChild(top);
+          if (metaParts.length) item.appendChild(meta);
+          if (lines.length) item.appendChild(notes);
+
+          dayDetailsTrades.appendChild(item);
+        });
+      }
+
+      dayDetailsPlans.innerHTML = "";
+      if (!plans.length) {
+        const empty = document.createElement("div");
+        empty.className = "small muted";
+        empty.textContent = "No open plans.";
+        dayDetailsPlans.appendChild(empty);
+      } else {
+        plans.forEach(p => {
+          const item = document.createElement("div");
+          item.className = "day-plan-item";
+
+          const top = document.createElement("div");
+          top.className = "flex-between small";
+          top.innerHTML = `
+            <span>${p.pair || "Pair"} · ${p.direction || ""}</span>
+            <span class="pill pill-blue">Planned${p.rr ? ` ${p.rr}` : ""}</span>
+          `;
+
+          const meta = document.createElement("div");
+          meta.className = "small muted";
+          const metaParts = [];
+          if (p.entry && p.sl && p.tp) {
+            metaParts.push(`Entry ${p.entry} · SL ${p.sl} · TP ${p.tp}`);
+          }
+          if (p.session) metaParts.push(p.session);
+          if (p.tag) metaParts.push(`#${p.tag}`);
+          meta.textContent = metaParts.join(" · ");
+
+          const notes = document.createElement("div");
+          notes.className = "small";
+          notes.textContent = p.reason || "";
+
+          item.appendChild(top);
+          if (metaParts.length) item.appendChild(meta);
+          if (p.reason) item.appendChild(notes);
+
+          dayDetailsPlans.appendChild(item);
+        });
+      }
+
+      dayDetails.style.display = "block";
+    }
+
+    function populateExecutionFormFromPlan(plan) {
+      if (!plan) return;
+      execDate.value = plan.date || state.selectedDate;
+      execResult.value = "";
+      execExitPrice.value = "";
+      execRisk.value = "";
+      execClosedEarly.checked = false;
+      execFollowedPlan.checked = true;
+      execClosedEarlyReason.value = "";
+      execMistakes.value = "";
+      execLessons.value = "";
+    }
+
+    // --- Event handlers (Firestore-backed) ---
+    accountSelect.addEventListener("change", async () => {
+      const name = accountSelect.value;
+      state.data.currentAccount = name;
+      await saveData();
+      renderAccounts();
+      renderCalendar();
+      renderPlans();
+      renderJournal();
+    });
+
+    addAccountBtn.addEventListener("click", async () => {
+      const name = newAccountInput.value.trim();
+      if (!name) return;
+      ensureAccountExists(name);
+      state.data.currentAccount = name;
+      newAccountInput.value = "";
+      await saveData();
+      renderAccounts();
+      renderCalendar();
+      renderPlans();
+      renderJournal();
+    });
+
+    deleteAccountBtn.addEventListener("click", async () => {
+      const current = state.data.currentAccount;
+      const accounts = Object.keys(state.data.accounts);
+      if (accounts.length <= 1) {
+        alert("You must have at least one account.");
+        return;
+      }
+      const ok = confirm(`Delete account "${current}" and all its data (plans + trades)?`);
+      if (!ok) return;
+      delete state.data.accounts[current];
+      state.data.currentAccount = Object.keys(state.data.accounts)[0];
+      await saveData();
+      renderAccounts();
+      renderCalendar();
+      renderPlans();
+      renderJournal();
+    });
+
+    saveAccountSettingsBtn.addEventListener("click", async () => {
+      const account = getCurrentAccount();
+      account.startingBalance = Number(startingBalanceInput.value) || 0;
+      await saveData();
+      const currentBal = calculateCurrentBalance(account);
+      currentBalanceDisplay.value = formatCurrency(currentBal);
+      statStartingBalance.textContent = formatCurrency(account.startingBalance);
+      statCurrentBalance.textContent = formatCurrency(currentBal);
+    });
+
+    prevMonthBtn.addEventListener("click", () => {
+      state.currentMonth--;
+      if (state.currentMonth < 0) {
+        state.currentMonth = 11;
+        state.currentYear--;
+      }
+      renderCalendar();
+    });
+
+    nextMonthBtn.addEventListener("click", () => {
+      state.currentMonth++;
+      if (state.currentMonth > 11) {
+        state.currentMonth = 0;
+        state.currentYear++;
+      }
+      renderCalendar();
+    });
+
+    function maybeUpdateRR() {
+      const autoRR = autoCalculateRR(
+        planEntry.value,
+        planSL.value,
+        planTP.value,
+        planDirection.value
+      );
+      if (autoRR && !planRR.dataset.manual) {
+        planRR.value = autoRR;
+      }
+    }
+
+    planEntry.addEventListener("input", maybeUpdateRR);
+    planSL.addEventListener("input", maybeUpdateRR);
+    planTP.addEventListener("input", maybeUpdateRR);
+    planDirection.addEventListener("change", maybeUpdateRR);
+    planRR.addEventListener("input", () => {
+      if (planRR.value.trim()) {
+        planRR.dataset.manual = "1";
+      } else {
+        delete planRR.dataset.manual;
+        maybeUpdateRR();
+      }
+    });
+
+    addPlanBtn.addEventListener("click", async () => {
+      const dateVal = planDate.value || state.selectedDate;
+      const pairVal = planPair.value.trim();
+      const dirVal = planDirection.value;
+
+      if (!dateVal) {
+        alert("Please select a date for the plan.");
+        return;
+      }
+      if (!pairVal) {
+        alert("Please enter a pair.");
+        return;
+      }
+      if (!dirVal) {
+        alert("Please select direction.");
+        return;
+      }
+
+      const account = getCurrentAccount();
+      const plan = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        date: dateVal,
+        pair: pairVal,
+        direction: dirVal,
+        entry: planEntry.value ? Number(planEntry.value) : null,
+        sl: planSL.value ? Number(planSL.value) : null,
+        tp: planTP.value ? Number(planTP.value) : null,
+        rr: planRR.value.trim() || autoCalculateRR(planEntry.value, planSL.value, planTP.value, planDirection.value),
+        reason: planReason.value.trim(),
+        invalidation: planInvalidation.value.trim(),
+        session: planSession.value.trim(),
+        tag: planTag.value.trim(),
+        status: "planned",
+        createdAt: Date.now()
+      };
+
+      account.plans.push(plan);
+      await saveData();
+
+      state.selectedDate = dateVal;
+      updateSelectedDateLabel();
+      renderPlans();
+      renderCalendar();
+      clearPlan(false);
+    });
+
+    function clearPlan(resetDate = true) {
+      if (resetDate) planDate.value = state.selectedDate;
+      planPair.value = "";
+      planDirection.value = "";
+      planEntry.value = "";
+      planSL.value = "";
+      planTP.value = "";
+      planRR.value = "";
+      delete planRR.dataset.manual;
+      planSession.value = "";
+      planTag.value = "";
+      planReason.value = "";
+      planInvalidation.value = "";
+    }
+
+    clearPlanBtn.addEventListener("click", () => clearPlan(true));
+
+    executePlanSelect.addEventListener("change", () => {
+      const planId = executePlanSelect.value;
+      const account = getCurrentAccount();
+      const plan = account.plans.find(p => p.id === planId);
+      populateExecutionFormFromPlan(plan);
+    });
+
+    saveExecBtn.addEventListener("click", async () => {
+      const planId = executePlanSelect.value;
+      const account = getCurrentAccount();
+
+      if (!planId) {
+        alert("Select a plan to execute.");
+        return;
+      }
+
+      const plan = account.plans.find(p => p.id === planId && p.status === "planned");
+      if (!plan) {
+        alert("Selected plan not found or already executed/cancelled.");
+        return;
+      }
+
+      const dateVal = execDate.value || plan.date || state.selectedDate;
+      const resultVal = execResult.value;
+
+      if (!dateVal) {
+        alert("Please set an execution date.");
+        return;
+      }
+      if (!resultVal) {
+        alert("Please enter actual P/L amount.");
+        return;
+      }
+
+      const trade = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        planId: plan.id,
+        date: dateVal,
+        pair: plan.pair,
+        direction: plan.direction,
+        plannedEntry: plan.entry,
+        plannedSL: plan.sl,
+        plannedTP: plan.tp,
+        plannedRR: plan.rr,
+        actualResult: Number(resultVal),
+        actualExitPrice: execExitPrice.value ? Number(execExitPrice.value) : null,
+        risk: execRisk.value.trim(),
+        closedEarly: !!execClosedEarly.checked,
+        closedEarlyReason: execClosedEarlyReason.value.trim(),
+        followedPlan: !!execFollowedPlan.checked,
+        mistakes: execMistakes.value.trim(),
+        lessons: execLessons.value.trim(),
+        session: plan.session,
+        tag: plan.tag,
+        createdAt: Date.now()
+      };
+
+      account.trades.push(trade);
+      plan.status = "executed";
+
+      await saveData();
+
+      state.selectedDate = dateVal;
+      updateSelectedDateLabel();
+      renderPlans();
+      renderCalendar();
+      renderJournal();
+      clearExecutionForm();
+    });
+
+    function clearExecutionForm() {
+      executePlanSelect.value = "";
+      execDate.value = state.selectedDate;
+      execResult.value = "";
+      execExitPrice.value = "";
+      execRisk.value = "";
+      execClosedEarly.checked = false;
+      execFollowedPlan.checked = true;
+      execClosedEarlyReason.value = "";
+      execMistakes.value = "";
+      execLessons.value = "";
+    }
+
+    clearExecBtn.addEventListener("click", () => clearExecutionForm());
+
+    dayDetailsClose.addEventListener("click", () => {
+      dayDetails.style.display = "none";
+    });
+
+    async function init() {
+      state.selectedDate = formatDateInput(new Date());
+      updateSelectedDateLabel();
+      setSyncStatus("Loading…");
+      await loadData();
+
+      const now = new Date();
+      state.currentMonth = now.getMonth();
+      state.currentYear = now.getFullYear();
+      state.selectedDate = formatDateInput(now);
+
+      renderAccounts();
+      updateSelectedDateLabel();
+      renderCalendar();
+      renderPlans();
+      renderJournal();
+    }
+
+    init();
+  </script>
+</body>
+</html>
