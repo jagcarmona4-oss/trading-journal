@@ -131,6 +131,7 @@
   .loading-overlay { position: fixed; inset: 0; background: var(--color-background-tertiary); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; gap: 12px; }
   .spinner { width: 28px; height: 28px; border: 2px solid var(--color-border-secondary); border-top-color: var(--color-text-primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .balance-modal-input { width: 120px; text-align: right; font-size: 15px; font-weight: 500; }
   @media (max-width: 700px) {
     .form-grid.cols3 { grid-template-columns: 1fr 1fr; }
     .form-grid.cols4 { grid-template-columns: 1fr 1fr; }
@@ -141,12 +142,10 @@
 </style>
 </head>
 <body>
-
 <div id="loading-overlay" class="loading-overlay">
   <div class="spinner"></div>
   <span style="font-size:13px;color:var(--color-text-secondary)">Loading trades…</span>
 </div>
-
 <div class="app">
   <div class="nav">
     <h1>📈 Trading Journal</h1>
@@ -154,16 +153,18 @@
     <button class="nav-btn" onclick="showPage('log')">Trade Log</button>
     <button class="nav-btn" onclick="showPage('analytics')">Analytics</button>
     <button class="nav-btn" onclick="showPage('add')">+ New Trade</button>
-    
-    <!-- New: Multiple Accounts Selector -->
+   
+    <!-- Multiple Accounts Selector -->
     <select id="account-selector" class="account-selector" onchange="setCurrentAccount(this.value)"></select>
-    
+   
+    <!-- New: Balance management button -->
+    <button class="nav-btn" onclick="showBalanceModal()" style="margin-left:8px;padding:6px 14px;white-space:nowrap;">💰 Balances</button>
+   
     <div class="sync-status">
       <div class="sync-dot syncing" id="sync-dot"></div>
       <span id="sync-label">Connecting…</span>
     </div>
   </div>
-
   <div id="page-dashboard" class="page active">
     <div class="stats-grid" id="stats-grid"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
@@ -177,7 +178,6 @@
       </div>
     </div>
   </div>
-
   <div id="page-log" class="page">
     <div class="filter-bar">
       <select id="filter-pair" onchange="renderLog()"><option value="">All pairs</option></select>
@@ -192,7 +192,6 @@
       <div id="log-list"></div>
     </div>
   </div>
-
   <div id="page-analytics" class="page">
     <div class="stats-grid" id="analytics-stats"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
@@ -210,7 +209,6 @@
       <canvas id="pnl-chart" height="100"></canvas>
     </div>
   </div>
-
   <div id="page-add" class="page">
     <div class="card">
       <p class="section-title">Trade details</p>
@@ -244,12 +242,10 @@
         <div class="form-group"><label>Position size (lots)</label><input id="f-size" type="number" step="any" placeholder="0.10"></div>
         <div class="form-group"><label>Risk amount ($)</label><input id="f-risk" type="number" step="any" placeholder="50"></div>
       </div>
-
       <p class="section-title">Setup & reason for entry</p>
       <div class="form-group"><label>Why did you enter?</label><textarea id="f-reason" placeholder="Describe your setup, confluences, pattern, indicator signal…"></textarea></div>
       <div class="form-group" style="margin-top:10px;"><label>Timeframe(s)</label><input id="f-tf" placeholder="15m, 1H, 4H"></div>
       <div class="form-group" style="margin-top:10px;"><label>Tags</label><input id="f-tags" placeholder="breakout, trend, fib, news, revenge…"></div>
-
       <p class="section-title">Trade outcome</p>
       <div class="form-grid cols3">
         <div class="form-group"><label>Exit price</label><input id="f-exit" type="number" step="any" placeholder="Leave blank if open"></div>
@@ -258,7 +254,6 @@
       </div>
       <div class="form-group" style="margin-top:12px;"><label>Closed early?</label><select id="f-early"><option value="no">No</option><option value="yes">Yes – moved to BE</option><option value="partial">Partial close</option><option value="stopped">Stopped out early</option></select></div>
       <div class="form-group" style="margin-top:10px;"><label>Early close reason</label><textarea id="f-early-reason" placeholder="Why did you exit early? Fear, news event, target revised…" style="min-height:55px;"></textarea></div>
-
       <p class="section-title">Post-trade review</p>
       <div class="form-group"><label>What went well?</label><textarea id="f-well" placeholder="Patience, followed the plan, good entry timing…"></textarea></div>
       <div class="form-group" style="margin-top:10px;"><label>What could be improved?</label><textarea id="f-improve" placeholder="Sized too big, moved SL, entered too early…"></textarea></div>
@@ -271,12 +266,10 @@
         <div style="display:flex;align-items:center;gap:10px;"><input id="f-conf" type="range" min="1" max="10" value="7" style="flex:1"><span id="conf-out" style="font-size:13px;color:var(--color-text-secondary);min-width:30px;">7</span></div>
       </div>
       <div class="form-group" style="margin-top:10px;"><label>Grade this trade</label><select id="f-grade"><option value="">—</option><option value="A">A — Textbook execution</option><option value="B">B — Good, minor issues</option><option value="C">C — Okay, needs work</option><option value="D">D — Poor, violated rules</option><option value="F">F — Should not have taken</option></select></div>
-
       <p class="section-title">Screenshots</p>
       <div class="upload-zone" onclick="document.getElementById('img-input').click()">Click to add chart screenshots (PNG, JPG)</div>
       <input type="file" id="img-input" multiple accept="image/*" style="display:none" onchange="handleImages(event)">
       <div class="img-preview" id="img-preview"></div>
-
       <div style="margin-top:1.5rem;display:flex;gap:10px;align-items:center;">
         <button class="btn-primary" id="save-btn" onclick="saveTrade()">Save trade</button>
         <button class="nav-btn" onclick="clearForm()">Clear</button>
@@ -286,12 +279,31 @@
   </div>
 </div>
 
+<!-- Detail modal (unchanged) -->
 <div id="detail-modal" style="display:none;" class="detail-modal" onclick="closeModal(event)">
   <div class="detail-box" id="detail-content" onclick="event.stopPropagation()"></div>
 </div>
+
+<!-- Lightbox (unchanged) -->
 <div id="lightbox" style="display:none;" class="lightbox" onclick="this.style.display='none'">
   <img id="lb-img" src="" alt="Chart screenshot">
 </div>
+
+<!-- New: Account Balance Management Modal -->
+<div id="balance-modal" style="display:none;" class="detail-modal" onclick="if(event.target.id==='balance-modal')closeBalanceModal()">
+  <div class="detail-box" onclick="event.stopPropagation()" style="max-width:520px;width:100%;">
+    <h2 style="margin-bottom:1rem;">💰 Account Balances
+      <button class="close-btn" onclick="closeBalanceModal()">✕</button>
+    </h2>
+    <p style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:16px;">Current balance = Initial capital + sum of all closed trade PNLs</p>
+    <div id="balances-list" class="card" style="padding:0;"></div>
+    <div style="margin-top:1rem;display:flex;gap:8px;">
+      <button class="btn-primary" onclick="addNewAccountBalance()" style="flex:1;">+ Add new account</button>
+      <button class="nav-btn" onclick="closeBalanceModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -311,6 +323,7 @@ let pnlChart = null;
 let editingId = null;
 let currentAccount = 'All';
 let knownAccounts = [];
+let initialBalances = {};   // New: { "Main": 10000, "Demo": 5000, ... }
 
 function setSyncStatus(state, label) {
   document.getElementById('sync-dot').className = 'sync-dot ' + state;
@@ -324,6 +337,32 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
+/* ====================== ACCOUNT BALANCE HELPERS ====================== */
+function loadInitialBalances() {
+  const saved = localStorage.getItem('initialBalances');
+  initialBalances = saved ? JSON.parse(saved) : {};
+}
+
+function saveInitialBalances() {
+  localStorage.setItem('initialBalances', JSON.stringify(initialBalances));
+}
+
+function getSingleBalance(acc) {
+  const filtered = trades.filter(t => t.account === acc);
+  const closedPnl = filtered
+    .filter(t => t.status !== 'open')
+    .reduce((sum, t) => sum + (parseFloat(t.pnl) || 0), 0);
+  return (initialBalances[acc] || 0) + closedPnl;
+}
+
+function getBalance(account) {
+  if (account === 'All') {
+    return knownAccounts.reduce((total, acc) => total + getSingleBalance(acc), 0);
+  }
+  return getSingleBalance(account);
+}
+
+/* ====================== SUPABASE + CORE ====================== */
 async function fetchTrades() {
   setSyncStatus('syncing', 'Loading…');
   try {
@@ -372,7 +411,9 @@ async function deleteTradeRemote(id) {
 
 function extractAndSaveAccounts() {
   const fromTrades = [...new Set(trades.map(t => t.account).filter(Boolean))];
-  knownAccounts = [...new Set([...knownAccounts, ...fromTrades])].sort();
+  const fromBalances = Object.keys(initialBalances);
+  const all = [...new Set([...fromTrades, ...fromBalances])];
+  knownAccounts = all.sort();
   localStorage.setItem('knownAccounts', JSON.stringify(knownAccounts));
   populateAccountSelector();
   populateAccountDatalist();
@@ -380,9 +421,10 @@ function extractAndSaveAccounts() {
 
 function populateAccountSelector() {
   const sel = document.getElementById('account-selector');
-  let html = '<option value="All">All Accounts</option>';
+  let html = `<option value="All">All Accounts ($${getBalance('All').toFixed(2)})</option>`;
   knownAccounts.forEach(a => {
-    html += `<option value="${a}" ${a === currentAccount ? 'selected' : ''}>${a}</option>`;
+    const bal = getSingleBalance(a);
+    html += `<option value="${a}" ${a === currentAccount ? 'selected' : ''}>${a} ($${bal.toFixed(2)})</option>`;
   });
   sel.innerHTML = html;
 }
@@ -417,6 +459,7 @@ function showPage(p) {
   if (p === 'add') { populateAccountDatalist(); }
 }
 
+/* ====================== FORM HELPERS ====================== */
 document.getElementById('f-emotion').addEventListener('input', e => document.getElementById('emotion-out').textContent = e.target.value);
 document.getElementById('f-conf').addEventListener('input', e => document.getElementById('conf-out').textContent = e.target.value);
 
@@ -444,10 +487,8 @@ function openLightbox(src) { document.getElementById('lb-img').src = src; docume
 function editTrade(id) {
   const trade = trades.find(t => t.id === id);
   if (!trade) return;
-
   editingId = id;
   document.getElementById('save-btn').textContent = 'Update trade';
-
   document.getElementById('f-pair').value = trade.pair || '';
   document.getElementById('f-account').value = trade.account || 'Main';
   document.getElementById('f-entry').value = trade.entry || '';
@@ -473,10 +514,8 @@ function editTrade(id) {
   document.getElementById('f-conf').value = trade.confidence || 7;
   document.getElementById('conf-out').textContent = trade.confidence || 7;
   document.getElementById('f-grade').value = trade.grade || '';
-
   tempImages = trade.images ? [...trade.images] : [];
   renderImagePreview();
-
   showPage('add');
 }
 
@@ -485,7 +524,6 @@ async function saveTrade() {
   const accountInput = document.getElementById('f-account').value.trim();
   const entry = parseFloat(document.getElementById('f-entry').value);
   if (!pair || isNaN(entry) || !accountInput) { alert('Pair, Account, and Entry price are required.'); return; }
-
   const sl = parseFloat(document.getElementById('f-sl').value) || null;
   const tp = parseFloat(document.getElementById('f-tp').value) || null;
   let rr = null;
@@ -494,7 +532,6 @@ async function saveTrade() {
     const tpDist = Math.abs(tp - entry);
     if (slDist > 0) rr = (tpDist / slDist).toFixed(2);
   }
-
   const trade = {
     id: editingId || Date.now(),
     account: accountInput,
@@ -519,16 +556,12 @@ async function saveTrade() {
     grade: document.getElementById('f-grade').value,
     images: [...tempImages],
   };
-
   const btn = document.getElementById('save-btn');
   btn.disabled = true;
   btn.textContent = editingId ? 'Updating…' : 'Saving…';
-
   const ok = await upsertTrade(trade);
-
   btn.disabled = false;
   btn.textContent = editingId ? 'Update trade' : 'Save trade';
-
   if (ok) {
     if (editingId) {
       const index = trades.findIndex(t => t.id === editingId);
@@ -550,7 +583,6 @@ async function saveTrade() {
 function clearForm() {
   editingId = null;
   document.getElementById('save-btn').textContent = 'Save trade';
-
   ['f-pair','f-account','f-entry','f-sl','f-tp','f-exit','f-pnl','f-reason','f-tf','f-tags','f-early-reason','f-well','f-improve','f-size','f-risk']
     .forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('f-dir').value = 'long';
@@ -563,11 +595,13 @@ function clearForm() {
   tempImages = []; document.getElementById('img-preview').innerHTML = '';
 }
 
+/* ====================== FORMATTING ====================== */
 function fmt(n) { if (n === null || n === undefined || isNaN(n)) return '—'; return (n >= 0 ? '+' : '') + '$' + parseFloat(n).toFixed(2); }
 function fmtPct(n) { return (n * 100).toFixed(1) + '%'; }
 function dateStr(t) { return t ? t.slice(0, 10) : '—'; }
 function pnlClass(v) { return v > 0 ? 'pnl-pos' : v < 0 ? 'pnl-neg' : ''; }
 
+/* ====================== DASHBOARD ====================== */
 function renderDashboard() {
   const filtered = getFilteredTrades();
   const closed = filtered.filter(t => t.status !== 'open');
@@ -578,13 +612,22 @@ function renderDashboard() {
   const avgWin = wins.length ? wins.reduce((s, t) => s + (t.pnl || 0), 0) / wins.length : 0;
   const avgLoss = losses.length ? losses.reduce((s, t) => s + (t.pnl || 0), 0) / losses.length : 0;
   const pf = avgLoss < 0 ? (avgWin / Math.abs(avgLoss)).toFixed(2) : '∞';
+
+  // New: Current Balance
+  const currentBalance = getBalance(currentAccount);
+
   document.getElementById('stats-grid').innerHTML =
+    `<div class="stat">
+       <div class="stat-label">CURRENT BALANCE</div>
+       <div class="stat-val ${currentBalance >= 0 ? 'pos' : 'neg'}">$${currentBalance.toFixed(2)}</div>
+     </div>` +
     '<div class="stat"><div class="stat-label">Total PNL</div><div class="stat-val ' + (totalPnl >= 0 ? 'pos' : 'neg') + '">' + fmt(totalPnl) + '</div></div>' +
     '<div class="stat"><div class="stat-label">Win rate</div><div class="stat-val">' + fmtPct(wr) + '</div></div>' +
     '<div class="stat"><div class="stat-label">Trades taken</div><div class="stat-val">' + filtered.length + '</div></div>' +
     '<div class="stat"><div class="stat-label">Profit factor</div><div class="stat-val">' + pf + '</div></div>' +
     '<div class="stat"><div class="stat-label">Avg win</div><div class="stat-val pos">' + (avgWin ? fmt(avgWin) : '—') + '</div></div>' +
     '<div class="stat"><div class="stat-label">Avg loss</div><div class="stat-val neg">' + (avgLoss ? fmt(avgLoss) : '—') + '</div></div>';
+
   const recent = filtered.slice(0, 5);
   document.getElementById('recent-list').innerHTML = recent.length ? recent.map(t =>
     '<div onclick="openDetail(' + t.id + ')" style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px;cursor:pointer;">' +
@@ -594,9 +637,12 @@ function renderDashboard() {
     '<span style="font-size:11px;color:var(--color-text-tertiary)">' + dateStr(t.time) + '</span>' +
     '</div>'
   ).join('') : '<div class="empty-state">No trades yet</div>';
+
   renderTopPairs('top-pairs-list');
+  populateAccountSelector();   // Refresh selector with latest balances
 }
 
+/* ====================== TOP PAIRS ====================== */
 function renderTopPairs(id) {
   const filtered = getFilteredTrades();
   const pairMap = {};
@@ -620,6 +666,7 @@ function renderTopPairs(id) {
   }).join('') : '<div style="font-size:13px;color:var(--color-text-tertiary)">Close some trades first</div>';
 }
 
+/* ====================== LOG ====================== */
 function populateFilterPairs() {
   const sel = document.getElementById('filter-pair');
   const current = sel.value;
@@ -656,9 +703,16 @@ function renderLog() {
 async function deleteTrade(id) {
   if (!confirm('Delete this trade?')) return;
   const ok = await deleteTradeRemote(id);
-  if (ok) { trades = trades.filter(t => t.id !== id); extractAndSaveAccounts(); renderLog(); renderDashboard(); }
+  if (ok) { 
+    trades = trades.filter(t => t.id !== id); 
+    extractAndSaveAccounts(); 
+    renderLog(); 
+    renderDashboard(); 
+    renderAnalytics();
+  }
 }
 
+/* ====================== DETAIL MODAL ====================== */
 function openDetail(id) {
   const t = trades.find(x => x.id === id);
   if (!t) return;
@@ -696,6 +750,7 @@ function closeModal(e) {
     document.getElementById('detail-modal').style.display = 'none';
 }
 
+/* ====================== ANALYTICS ====================== */
 function renderAnalytics() {
   const filtered = getFilteredTrades();
   const closed = filtered.filter(t => t.status !== 'open');
@@ -704,13 +759,19 @@ function renderAnalytics() {
   const avgRR = closed.filter(t => t.rr).reduce((s, t, _, a) => s + parseFloat(t.rr) / a.length, 0);
   const streak = getStreak(filtered);
   const avgEmotion = filtered.length ? (filtered.reduce((s, t) => s + t.emotion, 0) / filtered.length).toFixed(1) : '—';
+
   document.getElementById('analytics-stats').innerHTML =
+    `<div class="stat">
+       <div class="stat-label">CURRENT BALANCE</div>
+       <div class="stat-val ${getBalance(currentAccount) >= 0 ? 'pos' : 'neg'}">$${getBalance(currentAccount).toFixed(2)}</div>
+     </div>` +
     '<div class="stat"><div class="stat-label">Total PNL</div><div class="stat-val ' + (totalPnl >= 0 ? 'pos' : 'neg') + '">' + fmt(totalPnl) + '</div></div>' +
     '<div class="stat"><div class="stat-label">Win rate</div><div class="stat-val">' + (closed.length ? fmtPct(wins.length / closed.length) : '—') + '</div></div>' +
     '<div class="stat"><div class="stat-label">Avg R:R</div><div class="stat-val">' + (avgRR ? '1:' + avgRR.toFixed(2) : '—') + '</div></div>' +
     '<div class="stat"><div class="stat-label">Current streak</div><div class="stat-val ' + (streak.type === 'win' ? 'pos' : 'neg') + '">' + streak.count + ' ' + streak.type + '</div></div>' +
     '<div class="stat"><div class="stat-label">Avg emotion</div><div class="stat-val">' + avgEmotion + '/10</div></div>' +
     '<div class="stat"><div class="stat-label">Closed trades</div><div class="stat-val">' + closed.length + '</div></div>';
+
   renderTopPairs('pair-perf');
   const sessions = {};
   closed.forEach(t => {
@@ -731,7 +792,9 @@ function renderAnalytics() {
         '<span style="font-size:12px;color:var(--color-text-secondary);min-width:36px">' + fmtPct(wr) + '</span>' +
         '<span style="font-size:12px;' + pnlClass(d.pnl) + '">' + fmt(d.pnl) + '</span></div>';
     }).join('') : '<div style="font-size:13px;color:var(--color-text-tertiary)">No session data yet</div>';
+
   renderPnlChart(closed);
+  populateAccountSelector();
 }
 
 function getStreak(filtered) {
@@ -757,6 +820,72 @@ function renderPnlChart(closed) {
   });
 }
 
+/* ====================== BALANCE MODAL ====================== */
+function showBalanceModal() {
+  renderBalancesList();
+  document.getElementById('balance-modal').style.display = 'flex';
+}
+
+function closeBalanceModal() {
+  document.getElementById('balance-modal').style.display = 'none';
+}
+
+function renderBalancesList() {
+  let html = '';
+  if (knownAccounts.length === 0) {
+    html = '<div class="empty-state"><b>No accounts yet</b><p>Use the selector or add a new one below</p></div>';
+  } else {
+    html += '<div style="max-height:420px;overflow-y:auto;">';
+    knownAccounts.forEach(a => {
+      const initial = initialBalances[a] || 0;
+      const current = getSingleBalance(a);
+      html += `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:0.5px solid var(--color-border-tertiary);">
+          <div style="font-weight:500;font-size:15px;">${a}</div>
+          <div style="text-align:right;">
+            <div style="font-size:12px;color:var(--color-text-tertiary);">Initial capital</div>
+            <input type="number" step="0.01" value="${initial}" 
+                   onchange="updateInitialBalance('${a}', this.value)" 
+                   class="balance-modal-input" style="background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);padding:4px 8px;border-radius:6px;">
+            <div style="margin-top:8px;font-size:13px;color:var(--color-text-tertiary);">Current balance 
+              <span class="${current >= 0 ? 'pnl-pos' : 'pnl-neg'}" style="font-weight:600;">$${current.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+  }
+  document.getElementById('balances-list').innerHTML = html;
+}
+
+function updateInitialBalance(acc, val) {
+  initialBalances[acc] = parseFloat(val) || 0;
+  saveInitialBalances();
+  renderBalancesList();
+  populateAccountSelector();
+  renderDashboard();
+  if (document.getElementById('page-analytics').classList.contains('active')) renderAnalytics();
+}
+
+function addNewAccountBalance() {
+  const name = prompt('New account / broker name (e.g. Demo, Interactive, Bybit):');
+  if (!name) return;
+  const clean = name.trim();
+  if (!clean) return;
+  if (knownAccounts.includes(clean)) {
+    showToast('Account already exists');
+    return;
+  }
+  knownAccounts.push(clean);
+  knownAccounts.sort();
+  initialBalances[clean] = 0;
+  saveInitialBalances();
+  extractAndSaveAccounts();
+  renderBalancesList();
+  showToast('✅ New account created');
+}
+
+/* ====================== INIT ====================== */
 async function init() {
   // Load saved account settings
   if (localStorage.getItem('knownAccounts')) {
@@ -765,7 +894,7 @@ async function init() {
   if (localStorage.getItem('currentAccount')) {
     currentAccount = localStorage.getItem('currentAccount');
   }
-
+  loadInitialBalances();          // ← New balance data
   await fetchTrades();
   extractAndSaveAccounts();
   document.getElementById('loading-overlay').style.display = 'none';
