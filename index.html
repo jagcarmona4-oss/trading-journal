@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -38,6 +39,8 @@
     .badge-loss { background: #501313 !important; color: #F09595 !important; }
     .badge-open { background: #042C53 !important; color: #85B7EB !important; }
     .btn-danger:hover { background: #501313 !important; }
+    .tl-connect-card { background: #1a2a1e !important; border-color: #1D9E75 !important; }
+    .tl-connected-banner { background: #0d1f14 !important; border-color: #1D9E75 !important; }
   }
   body { font-family: var(--font-sans); color: var(--color-text-primary); background: var(--color-background-tertiary); min-height: 100vh; }
   .app { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem; }
@@ -68,6 +71,9 @@
   .btn-danger:hover { background: #FCEBEB; }
   .btn-edit { background: transparent; border: 0.5px solid #1D9E75; color: #1D9E75; padding: 5px 12px; border-radius: var(--border-radius-md); font-size: 12px; cursor: pointer; font-family: var(--font-sans); }
   .btn-edit:hover { background: #E1F5EE; }
+  .btn-tl { background: transparent; border: 0.5px solid #1D9E75; color: #1D9E75; padding: 6px 14px; border-radius: var(--border-radius-md); font-size: 13px; cursor: pointer; font-family: var(--font-sans); display: flex; align-items: center; gap: 6px; }
+  .btn-tl:hover { background: rgba(29,158,117,0.1); }
+  .btn-tl.syncing { opacity: 0.6; cursor: not-allowed; }
   .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
   .trade-row { display: grid; grid-template-columns: 80px 70px 85px 60px 80px 80px 80px 1fr 110px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; cursor: pointer; }
   .trade-row:last-child { border-bottom: none; }
@@ -80,6 +86,7 @@
   .badge-loss { background: #FCEBEB; color: #A32D2D; }
   .badge-open { background: #E6F1FB; color: #185FA5; }
   .badge-breakeven { background: #FAEEDA; color: #854F0B; }
+  .badge-auto { background: #EDE6FB; color: #5B21B6; font-size: 10px; padding: 1px 6px; }
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .form-grid.cols3 { grid-template-columns: 1fr 1fr 1fr; }
   .form-grid.cols4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
@@ -132,14 +139,62 @@
   .spinner { width: 28px; height: 28px; border: 2px solid var(--color-border-secondary); border-top-color: var(--color-text-primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .balance-modal-input { width: 120px; text-align: right; font-size: 15px; font-weight: 500; }
-  @media (max-width: 700px) {
-    .form-grid.cols3 { grid-template-columns: 1fr 1fr; }
-    .form-grid.cols4 { grid-template-columns: 1fr 1fr; }
-    .trade-row, .trade-header { grid-template-columns: 70px 65px 75px 55px 70px 1fr 70px; }
-    .trade-row > span:nth-child(5), .trade-header > span:nth-child(5) { display: none; } /* hide SL/TP on mobile */
-    .detail-grid { grid-template-columns: 1fr; }
-  }
+
+/* ── TradeLocker Sync UI ── */
+.tl-connect-card {
+background: #f0fdf8;
+border: 1px solid #1D9E75;
+border-radius: var(–border-radius-lg);
+padding: 1.25rem 1.5rem;
+margin-bottom: 1rem;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 1rem;
+flex-wrap: wrap;
+}
+.tl-connect-card .tl-info { flex: 1; }
+.tl-connect-card .tl-title { font-size: 14px; font-weight: 600; color: #0F6E56; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.tl-connect-card .tl-desc { font-size: 12px; color: var(–color-text-secondary); }
+.tl-connected-banner {
+background: #f0fdf8;
+border: 0.5px solid #1D9E75;
+border-radius: var(–border-radius-md);
+padding: 10px 14px;
+font-size: 13px;
+color: #0F6E56;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 10px;
+flex-wrap: wrap;
+margin-bottom: 1rem;
+}
+.tl-connected-banner .tl-conn-left { display: flex; align-items: center; gap: 8px; }
+.tl-dot { width: 8px; height: 8px; border-radius: 50%; background: #1D9E75; flex-shrink: 0; animation: tl-pulse 2s infinite; }
+@keyframes tl-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(29,158,117,0.4)} 50%{box-shadow:0 0 0 4px rgba(29,158,117,0)} }
+.tl-env-tag { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600; }
+.tl-env-live { background: #FCEBEB; color: #A32D2D; }
+.tl-env-demo { background: #E6F1FB; color: #185FA5; }
+.tl-sync-log { font-size: 12px; background: var(–color-background-secondary); border-radius: var(–border-radius-md); padding: 10px 12px; margin-top: 10px; max-height: 120px; overflow-y: auto; color: var(–color-text-secondary); line-height: 1.8; }
+.tl-sync-log-entry { display: flex; align-items: flex-start; gap: 8px; }
+.tl-sync-log-entry.ok { color: #1D9E75; }
+.tl-sync-log-entry.skip { color: var(–color-text-tertiary); }
+.tl-sync-log-entry.err { color: #E24B4A; }
+.tl-progress { height: 3px; border-radius: 2px; background: var(–color-border-tertiary); margin-top: 8px; overflow: hidden; }
+.tl-progress-bar { height: 100%; background: #1D9E75; border-radius: 2px; transition: width 0.3s; }
+.tl-auto-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 1px 6px; border-radius: 20px; background: #EDE6FB; color: #5B21B6; font-weight: 600; }
+
+@media (max-width: 700px) {
+.form-grid.cols3 { grid-template-columns: 1fr 1fr; }
+.form-grid.cols4 { grid-template-columns: 1fr 1fr; }
+.trade-row, .trade-header { grid-template-columns: 70px 65px 75px 55px 70px 1fr 70px; }
+.trade-row > span:nth-child(5), .trade-header > span:nth-child(5) { display: none; }
+.detail-grid { grid-template-columns: 1fr; }
+.tl-connect-card { flex-direction: column; align-items: flex-start; }
+}
 </style>
+
 </head>
 <body>
 <div id="loading-overlay" class="loading-overlay">
@@ -153,18 +208,21 @@
     <button class="nav-btn" onclick="showPage('log')">Trade Log</button>
     <button class="nav-btn" onclick="showPage('analytics')">Analytics</button>
     <button class="nav-btn" onclick="showPage('add')">+ New Trade</button>
-   
-    <!-- Multiple Accounts Selector -->
     <select id="account-selector" class="account-selector" onchange="setCurrentAccount(this.value)"></select>
-   
-    <!-- New: Balance management button -->
-    <button class="nav-btn" onclick="showBalanceModal()" style="margin-left:8px;padding:6px 14px;white-space:nowrap;">💰 Balances</button>
-   
+    <button class="nav-btn" onclick="showBalanceModal()" style="padding:6px 14px;white-space:nowrap;">💰 Balances</button>
+    <!-- TradeLocker Sync Button -->
+    <button class="btn-tl" id="tl-sync-nav-btn" onclick="showPage('tl-sync')" style="margin-left:4px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+      TL Sync
+    </button>
     <div class="sync-status">
       <div class="sync-dot syncing" id="sync-dot"></div>
       <span id="sync-label">Connecting…</span>
     </div>
   </div>
+
+  <!-- ══ Dashboard ══ -->
+
   <div id="page-dashboard" class="page active">
     <div class="stats-grid" id="stats-grid"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
@@ -178,11 +236,15 @@
       </div>
     </div>
   </div>
+
+  <!-- ══ Trade Log ══ -->
+
   <div id="page-log" class="page">
     <div class="filter-bar">
       <select id="filter-pair" onchange="renderLog()"><option value="">All pairs</option></select>
       <select id="filter-dir" onchange="renderLog()"><option value="">Long & Short</option><option value="long">Long</option><option value="short">Short</option></select>
       <select id="filter-status" onchange="renderLog()"><option value="">All statuses</option><option value="win">Win</option><option value="loss">Loss</option><option value="open">Open</option><option value="breakeven">Breakeven</option></select>
+      <select id="filter-source" onchange="renderLog()"><option value="">All sources</option><option value="manual">Manual only</option><option value="auto">Auto-synced only</option></select>
       <button class="nav-btn" onclick="showPage('add')" style="margin-left:auto;">+ New Trade</button>
     </div>
     <div class="card" style="overflow-x:auto;">
@@ -192,6 +254,9 @@
       <div id="log-list"></div>
     </div>
   </div>
+
+  <!-- ══ Analytics ══ -->
+
   <div id="page-analytics" class="page">
     <div class="stats-grid" id="analytics-stats"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
@@ -209,6 +274,9 @@
       <canvas id="pnl-chart" height="100"></canvas>
     </div>
   </div>
+
+  <!-- ══ Add / Edit Trade ══ -->
+
   <div id="page-add" class="page">
     <div class="card">
       <p class="section-title">Trade details</p>
@@ -253,7 +321,7 @@
         <div class="form-group"><label>Status</label><select id="f-status"><option value="open">Open</option><option value="win">Win</option><option value="loss">Loss</option><option value="breakeven">Breakeven</option></select></div>
       </div>
       <div class="form-group" style="margin-top:12px;"><label>Closed early?</label><select id="f-early"><option value="no">No</option><option value="yes">Yes – moved to BE</option><option value="partial">Partial close</option><option value="stopped">Stopped out early</option></select></div>
-      <div class="form-group" style="margin-top:10px;"><label>Early close reason</label><textarea id="f-early-reason" placeholder="Why did you exit early? Fear, news event, target revised…" style="min-height:55px;"></textarea></div>
+      <div class="form-group" style="margin-top:10px;"><label>Early close reason</label><textarea id="f-early-reason" placeholder="Why did you exit early?" style="min-height:55px;"></textarea></div>
       <p class="section-title">Post-trade review</p>
       <div class="form-group"><label>What went well?</label><textarea id="f-well" placeholder="Patience, followed the plan, good entry timing…"></textarea></div>
       <div class="form-group" style="margin-top:10px;"><label>What could be improved?</label><textarea id="f-improve" placeholder="Sized too big, moved SL, entered too early…"></textarea></div>
@@ -277,19 +345,157 @@
       </div>
     </div>
   </div>
+
+  <!-- ══════════════════════════════════
+       NEW: TradeLocker Sync Page
+  ══════════════════════════════════ -->
+
+  <div id="page-tl-sync" class="page">
+
+```
+<!-- Connection status banner (shown when connected) -->
+<div id="tl-connected-banner" style="display:none;" class="tl-connected-banner">
+  <div class="tl-conn-left">
+    <div class="tl-dot"></div>
+    <span style="font-weight:600;">Connected to TradeLocker</span>
+    <span id="tl-env-tag" class="tl-env-tag tl-env-demo">DEMO</span>
+    <span id="tl-acct-name" style="font-size:12px;opacity:0.8;"></span>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <span id="tl-last-sync" style="font-size:12px;opacity:0.7;"></span>
+    <button class="btn-tl" id="tl-sync-now-btn" onclick="runTLSync()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+      Sync now
+    </button>
+    <button class="btn-danger" onclick="disconnectTL()" style="font-size:12px;">Disconnect</button>
+  </div>
 </div>
 
-<!-- Detail modal (unchanged) -->
+<!-- Connect card (shown when NOT connected) -->
+<div id="tl-connect-card" class="tl-connect-card">
+  <div class="tl-info">
+    <div class="tl-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+      Connect TradeLocker
+    </div>
+    <div class="tl-desc">Auto-import your closed trades and open positions directly from your funded account. Credentials are stored only in your browser (localStorage) and never sent anywhere except TradeLocker's own servers.</div>
+  </div>
+  <button class="btn-primary" onclick="showTLLoginForm()">Connect account →</button>
+</div>
+
+<!-- Login form -->
+<div id="tl-login-form" style="display:none;" class="card">
+  <p class="section-title" style="margin-top:0;padding-top:0;border-top:none;">TradeLocker credentials</p>
+  <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px;font-size:12px;color:var(--color-text-secondary);margin-bottom:14px;line-height:1.6;">
+    🔒 <strong>Privacy note:</strong> Your email, password and server name are saved in your browser's localStorage only. They are sent exclusively to <code>demo.tradelocker.com</code> or <code>live.tradelocker.com</code> — the same servers you use when you log in normally. They are never sent to any third-party service or this journal's Supabase database.
+  </div>
+  <div class="form-grid cols3">
+    <div class="form-group">
+      <label>Email *</label>
+      <input id="tl-email" type="email" placeholder="you@example.com">
+    </div>
+    <div class="form-group">
+      <label>Password *</label>
+      <input id="tl-password" type="password" placeholder="Your TradeLocker password">
+    </div>
+    <div class="form-group">
+      <label>Server name *</label>
+      <input id="tl-server" placeholder="e.g. OSP-DEMO or OSP-LIVE" list="tl-servers-list">
+      <datalist id="tl-servers-list">
+        <option value="OSP-DEMO"><option value="OSP-LIVE">
+        <option value="TFF-DEMO"><option value="TFF-LIVE">
+        <option value="FTMO-DEMO"><option value="FTMO-LIVE">
+      </datalist>
+    </div>
+  </div>
+  <div class="form-grid" style="margin-top:12px;">
+    <div class="form-group">
+      <label>Environment</label>
+      <select id="tl-env">
+        <option value="demo">Demo / Prop Challenge (demo.tradelocker.com)</option>
+        <option value="live">Live (live.tradelocker.com)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Journal account label (how it appears in your log)</label>
+      <input id="tl-acct-label" placeholder="e.g. Prop $100K, MyFirm Demo">
+    </div>
+  </div>
+  <!-- Auto sync settings -->
+  <div style="margin-top:14px;padding:12px 14px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);">
+    <div style="font-size:13px;font-weight:500;margin-bottom:10px;">Auto-sync settings</div>
+    <div style="display:flex;align-items:center;gap:10px;font-size:13px;">
+      <input type="checkbox" id="tl-auto-sync" checked style="width:16px;height:16px;">
+      <label for="tl-auto-sync">Automatically sync when journal loads</label>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;font-size:13px;margin-top:8px;">
+      <label style="white-space:nowrap;">Sync open positions as:</label>
+      <select id="tl-open-status" style="font-size:12px;padding:4px 8px;border-radius:6px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);">
+        <option value="open">Open (no outcome yet)</option>
+        <option value="skip">Skip open positions</option>
+      </select>
+    </div>
+  </div>
+  <div style="margin-top:1.25rem;display:flex;gap:10px;align-items:center;">
+    <button class="btn-primary" id="tl-connect-btn" onclick="connectTL()">Connect & sync</button>
+    <button class="nav-btn" onclick="hideTLLoginForm()">Cancel</button>
+    <span id="tl-connect-msg" style="font-size:13px;"></span>
+  </div>
+</div>
+
+<!-- Sync results / log (shown after connecting) -->
+<div id="tl-sync-results" style="display:none;" class="card">
+  <div style="font-size:14px;font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+    Sync results
+    <span id="tl-sync-counts" style="font-size:12px;color:var(--color-text-secondary);font-weight:400;"></span>
+  </div>
+  <div class="tl-progress"><div class="tl-progress-bar" id="tl-progress-bar" style="width:0%"></div></div>
+  <div class="tl-sync-log" id="tl-sync-log"></div>
+</div>
+
+<!-- How it works -->
+<div class="card" style="margin-top:1rem;">
+  <div style="font-size:14px;font-weight:500;margin-bottom:12px;">How the sync works</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;font-size:13px;color:var(--color-text-secondary);">
+    <div style="display:flex;gap:10px;">
+      <div style="font-size:20px;flex-shrink:0;">🔐</div>
+      <div><strong style="color:var(--color-text-primary);display:block;margin-bottom:3px;">Authenticate</strong>Logs in to TradeLocker's public REST API using your credentials to get a session token.</div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <div style="font-size:20px;flex-shrink:0;">📋</div>
+      <div><strong style="color:var(--color-text-primary);display:block;margin-bottom:3px;">Fetch trades</strong>Retrieves your filled orders history (closed trades) and current open positions from TradeLocker.</div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <div style="font-size:20px;flex-shrink:0;">🔄</div>
+      <div><strong style="color:var(--color-text-primary);display:block;margin-bottom:3px;">Smart merge</strong>New trades are imported automatically. Trades you've already annotated with notes, grades, or screenshots are never overwritten.</div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <div style="font-size:20px;flex-shrink:0;">✏️</div>
+      <div><strong style="color:var(--color-text-primary);display:block;margin-bottom:3px;">You add the insight</strong>Auto-imported trades are tagged with a purple <span class="tl-auto-badge">TL Auto</span> badge so you know which ones still need your review notes.</div>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+  <!-- ══ End TL Sync Page ══ -->
+
+</div><!-- /.app -->
+
+<!-- Detail modal -->
+
 <div id="detail-modal" style="display:none;" class="detail-modal" onclick="closeModal(event)">
   <div class="detail-box" id="detail-content" onclick="event.stopPropagation()"></div>
 </div>
 
-<!-- Lightbox (unchanged) -->
+<!-- Lightbox -->
+
 <div id="lightbox" style="display:none;" class="lightbox" onclick="this.style.display='none'">
   <img id="lb-img" src="" alt="Chart screenshot">
 </div>
 
-<!-- New: Account Balance Management Modal -->
+<!-- Balance Modal -->
+
 <div id="balance-modal" style="display:none;" class="detail-modal" onclick="if(event.target.id==='balance-modal')closeBalanceModal()">
   <div class="detail-box" onclick="event.stopPropagation()" style="max-width:520px;width:100%;">
     <h2 style="margin-bottom:1rem;">💰 Account Balances
@@ -307,7 +513,11 @@
 <div id="toast" class="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
 <script>
+/* ══════════════════════════════════════════════════════
+   SUPABASE CONFIG
+══════════════════════════════════════════════════════ */
 const SUPABASE_URL = 'https://lxkqqewbhijidehyvnde.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_b1CQbtRRsaXM8uWQH3tfWw_xPINGdzw';
 const API = SUPABASE_URL + '/rest/v1/trades';
@@ -323,8 +533,400 @@ let pnlChart = null;
 let editingId = null;
 let currentAccount = 'All';
 let knownAccounts = [];
-let initialBalances = {};   // New: { "Main": 10000, "Demo": 5000, ... }
+let initialBalances = {};
 
+/* ══════════════════════════════════════════════════════
+   TRADELOCKER STATE
+══════════════════════════════════════════════════════ */
+let tlCreds = null;       // { email, password, server, env, label, autoSync, openStatus }
+let tlToken = null;       // current access token
+let tlRefreshToken = null;
+let tlAccountId = null;
+let tlAccNum = null;
+let tlIsSyncing = false;
+
+function loadTLCreds() {
+  const saved = localStorage.getItem('tlCreds');
+  if (saved) {
+    try { tlCreds = JSON.parse(saved); } catch(e) { tlCreds = null; }
+  }
+}
+
+function saveTLCreds() {
+  if (tlCreds) localStorage.setItem('tlCreds', JSON.stringify(tlCreds));
+  else localStorage.removeItem('tlCreds');
+}
+
+function tlBaseUrl() {
+  return tlCreds && tlCreds.env === 'live'
+    ? 'https://live.tradelocker.com/backend-api'
+    : 'https://demo.tradelocker.com/backend-api';
+}
+
+/* ══════════════════════════════════════════════════════
+   TRADELOCKER API HELPERS
+══════════════════════════════════════════════════════ */
+async function tlAuth() {
+  const res = await fetch(tlBaseUrl() + '/auth/jwt/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: tlCreds.email, password: tlCreds.password, server: tlCreds.server })
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error('Auth failed (' + res.status + '): ' + body.slice(0,120));
+  }
+  const data = await res.json();
+  tlToken = data.accessToken;
+  tlRefreshToken = data.refreshToken;
+  return data;
+}
+
+async function tlGetAccounts() {
+  const res = await fetch(tlBaseUrl() + '/auth/jwt/all-accounts', {
+    headers: { 'Authorization': 'Bearer ' + tlToken, 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) throw new Error('Could not fetch accounts (' + res.status + ')');
+  const data = await res.json();
+  // data.accounts is an array of { id, accNum, ... }
+  const accounts = data.accounts || [];
+  if (!accounts.length) throw new Error('No accounts found in this TradeLocker profile.');
+  // Use the first account
+  tlAccountId = accounts[0].id;
+  tlAccNum = accounts[0].accNum;
+  return accounts;
+}
+
+async function tlFetch(path) {
+  const res = await fetch(tlBaseUrl() + path, {
+    headers: {
+      'Authorization': 'Bearer ' + tlToken,
+      'accNum': String(tlAccNum),
+      'Content-Type': 'application/json'
+    }
+  });
+  if (res.status === 401) {
+    // Try token refresh
+    await tlAuth();
+    return tlFetch(path);
+  }
+  if (!res.ok) throw new Error('TL API error ' + res.status + ' on ' + path);
+  return res.json();
+}
+
+/* ══════════════════════════════════════════════════════
+   TRADELOCKER SYNC UI HELPERS
+══════════════════════════════════════════════════════ */
+function showTLLoginForm() {
+  document.getElementById('tl-connect-card').style.display = 'none';
+  document.getElementById('tl-login-form').style.display = 'block';
+  if (tlCreds) {
+    document.getElementById('tl-email').value = tlCreds.email || '';
+    document.getElementById('tl-password').value = tlCreds.password || '';
+    document.getElementById('tl-server').value = tlCreds.server || '';
+    document.getElementById('tl-env').value = tlCreds.env || 'demo';
+    document.getElementById('tl-acct-label').value = tlCreds.label || '';
+    document.getElementById('tl-auto-sync').checked = tlCreds.autoSync !== false;
+    document.getElementById('tl-open-status').value = tlCreds.openStatus || 'open';
+  }
+}
+
+function hideTLLoginForm() {
+  document.getElementById('tl-login-form').style.display = 'none';
+  document.getElementById('tl-connect-card').style.display = 'flex';
+}
+
+function renderTLConnectedState() {
+  if (!tlCreds) return;
+  document.getElementById('tl-connect-card').style.display = 'none';
+  document.getElementById('tl-login-form').style.display = 'none';
+  document.getElementById('tl-connected-banner').style.display = 'flex';
+  document.getElementById('tl-env-tag').className = 'tl-env-tag ' + (tlCreds.env === 'live' ? 'tl-env-live' : 'tl-env-demo');
+  document.getElementById('tl-env-tag').textContent = tlCreds.env === 'live' ? 'LIVE' : 'DEMO';
+  document.getElementById('tl-acct-name').textContent = tlCreds.label || tlCreds.email;
+  const lastSync = localStorage.getItem('tlLastSync');
+  if (lastSync) document.getElementById('tl-last-sync').textContent = 'Last sync: ' + new Date(lastSync).toLocaleString();
+}
+
+function renderTLDisconnectedState() {
+  document.getElementById('tl-connected-banner').style.display = 'none';
+  document.getElementById('tl-sync-results').style.display = 'none';
+  document.getElementById('tl-connect-card').style.display = 'flex';
+  document.getElementById('tl-login-form').style.display = 'none';
+}
+
+function disconnectTL() {
+  if (!confirm('Disconnect TradeLocker? Your existing synced trades will remain in the journal.')) return;
+  tlCreds = null;
+  tlToken = null;
+  tlAccountId = null;
+  tlAccNum = null;
+  localStorage.removeItem('tlCreds');
+  localStorage.removeItem('tlLastSync');
+  renderTLDisconnectedState();
+  showToast('TradeLocker disconnected');
+}
+
+function addSyncLog(type, msg) {
+  const log = document.getElementById('tl-sync-log');
+  const entry = document.createElement('div');
+  entry.className = 'tl-sync-log-entry ' + type;
+  entry.textContent = (type === 'ok' ? '✓ ' : type === 'err' ? '✗ ' : '· ') + msg;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+function setProgress(pct) {
+  document.getElementById('tl-progress-bar').style.width = pct + '%';
+}
+
+/* ══════════════════════════════════════════════════════
+   TRADELOCKER CONNECT
+══════════════════════════════════════════════════════ */
+async function connectTL() {
+  const email = document.getElementById('tl-email').value.trim();
+  const password = document.getElementById('tl-password').value;
+  const server = document.getElementById('tl-server').value.trim();
+  const env = document.getElementById('tl-env').value;
+  const label = document.getElementById('tl-acct-label').value.trim() || email;
+  const autoSync = document.getElementById('tl-auto-sync').checked;
+  const openStatus = document.getElementById('tl-open-status').value;
+
+  if (!email || !password || !server) {
+    document.getElementById('tl-connect-msg').style.color = '#E24B4A';
+    document.getElementById('tl-connect-msg').textContent = 'Email, password and server are required.';
+    return;
+  }
+
+  tlCreds = { email, password, server, env, label, autoSync, openStatus };
+  saveTLCreds();
+
+  const btn = document.getElementById('tl-connect-btn');
+  btn.disabled = true;
+  btn.textContent = 'Connecting…';
+  document.getElementById('tl-connect-msg').textContent = '';
+
+  try {
+    await tlAuth();
+    await tlGetAccounts();
+    renderTLConnectedState();
+    document.getElementById('tl-login-form').style.display = 'none';
+    showToast('✅ Connected to TradeLocker!');
+    await runTLSync();
+  } catch(e) {
+    document.getElementById('tl-connect-msg').style.color = '#E24B4A';
+    document.getElementById('tl-connect-msg').textContent = '✗ ' + e.message;
+    btn.disabled = false;
+    btn.textContent = 'Connect & sync';
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   TRADELOCKER SYNC CORE
+══════════════════════════════════════════════════════ */
+
+// Normalize an instrument name: "EURUSD" → "EUR/USD"
+function normalizePair(sym) {
+  if (!sym) return sym;
+  sym = sym.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const forex6 = ['EURUSD','GBPUSD','USDJPY','AUDUSD','USDCAD','NZDUSD','USDCHF','EURGBP',
+                  'GBPJPY','EURJPY','AUDJPY','CADJPY','CHFJPY','EURCHF','EURAUD','AUDNZD',
+                  'GBPAUD','GBPCAD','GBPCHF','GBPNZD','EURNZD','EURCAD','AUDCAD','AUDCHF',
+                  'NZDJPY','NZDCHF','NZDCAD','CADCHF'];
+  const match = forex6.find(p => sym.startsWith(p));
+  if (match) return match.slice(0,3) + '/' + match.slice(3);
+  // metals / indices pass through
+  if (sym === 'XAUUSD') return 'XAU/USD';
+  if (sym === 'XAGUSD') return 'XAG/USD';
+  if (sym === 'BTCUSD') return 'BTC/USD';
+  if (sym === 'ETHUSD') return 'ETH/USD';
+  return sym;
+}
+
+function tlTradeToJournal(order, isOpen) {
+  const dir = (order.side || '').toUpperCase() === 'BUY' ? 'long' : 'short';
+  const pair = normalizePair(order.tradableInstrumentId || order.instrument || '');
+  const entry = parseFloat(order.price || order.openPrice || 0);
+  const exit = isOpen ? null : parseFloat(order.filledPrice || order.closePrice || order.avgPrice || 0) || null;
+  const pnl = isOpen ? null : (parseFloat(order.realizedPnl || order.pnl || 0) || null);
+  const size = parseFloat(order.qty || order.quantity || order.lots || 0) || null;
+  const sl = parseFloat(order.stopLoss || order.stopLossLimit || 0) || null;
+  const tp = parseFloat(order.takeProfit || order.takeProfitLimit || 0) || null;
+  const timeRaw = order.fillDate || order.createdDate || order.openDateTime || order.timestamp || '';
+  const time = timeRaw ? new Date(timeRaw).toISOString().slice(0,16) : '';
+
+  let status = 'open';
+  if (!isOpen) {
+    if (pnl === null) status = 'open';
+    else if (pnl > 0.005) status = 'win';
+    else if (pnl < -0.005) status = 'loss';
+    else status = 'breakeven';
+  }
+
+  // Compute R:R if we have SL + TP
+  let rr = null;
+  if (sl && tp && entry) {
+    const slDist = Math.abs(entry - sl);
+    const tpDist = Math.abs(tp - entry);
+    if (slDist > 0) rr = (tpDist / slDist).toFixed(2);
+  }
+
+  return {
+    id: 'tl_' + (order.id || order.positionId || order.orderId || Date.now()),
+    tlId: String(order.id || order.positionId || order.orderId || ''),
+    account: tlCreds.label,
+    pair, dir, entry, exit, pnl, size, sl, tp, rr, time, status,
+    session: '',
+    source: 'tradelocker',    // marks auto-imported
+    // journal-only fields blank — user fills these in
+    reason: '', tf: '', tags: '', early: 'no', earlyReason: '',
+    well: '', improve: '', emotion: 7, confidence: 7, grade: '', images: []
+  };
+}
+
+async function runTLSync() {
+  if (tlIsSyncing) return;
+  if (!tlCreds) { showToast('Not connected to TradeLocker'); return; }
+
+  tlIsSyncing = true;
+  const btn = document.getElementById('tl-sync-now-btn');
+  if (btn) { btn.classList.add('syncing'); btn.querySelector('svg').style.animation = 'spin 0.7s linear infinite'; }
+
+  // Show results panel
+  document.getElementById('tl-sync-results').style.display = 'block';
+  document.getElementById('tl-sync-log').innerHTML = '';
+  document.getElementById('tl-sync-counts').textContent = '';
+  setProgress(0);
+
+  let imported = 0, skipped = 0, updated = 0, errors = 0;
+
+  try {
+    // Step 1: Authenticate
+    addSyncLog('ok', 'Authenticating with TradeLocker…');
+    setProgress(10);
+    await tlAuth();
+
+    // Step 2: Get accounts
+    addSyncLog('ok', 'Fetching account info…');
+    setProgress(20);
+    await tlGetAccounts();
+    addSyncLog('ok', `Account ID: ${tlAccountId} (accNum: ${tlAccNum})`);
+
+    // Step 3: Fetch filled orders (closed trades)
+    addSyncLog('ok', 'Fetching closed trades (filled orders)…');
+    setProgress(35);
+    let filledOrders = [];
+    try {
+      const res = await tlFetch(`/trade/accounts/${tlAccountId}/filledOrders`);
+      filledOrders = (res.d && res.d.filledOrders) ? res.d.filledOrders
+                   : (Array.isArray(res) ? res : (res.filledOrders || res.data || []));
+      addSyncLog('ok', `Found ${filledOrders.length} filled orders`);
+    } catch(e) {
+      addSyncLog('err', 'Could not fetch filled orders: ' + e.message);
+      errors++;
+    }
+
+    setProgress(55);
+
+    // Step 4: Fetch open positions (optional)
+    let openPositions = [];
+    if (tlCreds.openStatus !== 'skip') {
+      addSyncLog('ok', 'Fetching open positions…');
+      try {
+        const res = await tlFetch(`/trade/accounts/${tlAccountId}/positions`);
+        openPositions = (res.d && res.d.positions) ? res.d.positions
+                      : (Array.isArray(res) ? res : (res.positions || res.data || []));
+        addSyncLog('ok', `Found ${openPositions.length} open positions`);
+      } catch(e) {
+        addSyncLog('skip', 'Could not fetch positions: ' + e.message);
+      }
+    }
+
+    setProgress(70);
+
+    // Step 5: Merge into journal
+    addSyncLog('ok', 'Merging trades into journal…');
+
+    const allTLTrades = [
+      ...filledOrders.map(o => ({ order: o, isOpen: false })),
+      ...openPositions.map(o => ({ order: o, isOpen: true }))
+    ];
+
+    for (const { order, isOpen } of allTLTrades) {
+      const journalTrade = tlTradeToJournal(order, isOpen);
+      const tlId = journalTrade.tlId;
+      if (!tlId) { addSyncLog('skip', 'Skipping order with no ID'); skipped++; continue; }
+
+      // Check if already exists by tlId
+      const existing = trades.find(t => t.tlId === tlId);
+      if (existing) {
+        // Smart merge: update price/pnl/status but never overwrite notes/screenshots
+        const hasUserContent = existing.reason || existing.well || existing.improve || existing.grade ||
+                               (existing.images && existing.images.length > 0);
+        const needsUpdate = existing.status !== journalTrade.status ||
+                            existing.pnl !== journalTrade.pnl ||
+                            existing.exit !== journalTrade.exit;
+        if (needsUpdate) {
+          const merged = Object.assign({}, journalTrade, {
+            id: existing.id,
+            reason: existing.reason, well: existing.well, improve: existing.improve,
+            earlyReason: existing.earlyReason, tags: existing.tags, tf: existing.tf,
+            grade: existing.grade, emotion: existing.emotion, confidence: existing.confidence,
+            images: existing.images, session: existing.session || journalTrade.session,
+            early: existing.early
+          });
+          await upsertTrade(merged);
+          const idx = trades.findIndex(t => t.tlId === tlId);
+          if (idx !== -1) trades[idx] = merged;
+          addSyncLog('ok', `Updated: ${journalTrade.pair} ${journalTrade.dir} ${journalTrade.time ? journalTrade.time.slice(0,10) : ''}`);
+          updated++;
+        } else {
+          skipped++;
+        }
+        continue;
+      }
+
+      // New trade — import it
+      const ok = await upsertTrade(journalTrade);
+      if (ok) {
+        trades.unshift(journalTrade);
+        addSyncLog('ok', `Imported: ${journalTrade.pair} ${journalTrade.dir} ${journalTrade.pnl !== null ? fmt(journalTrade.pnl) : '(open)'} ${journalTrade.time ? journalTrade.time.slice(0,10) : ''}`);
+        imported++;
+      } else {
+        addSyncLog('err', `Failed to save: ${journalTrade.pair}`);
+        errors++;
+      }
+    }
+
+    setProgress(95);
+    extractAndSaveAccounts();
+    renderDashboard();
+    renderLog();
+    renderAnalytics();
+
+    const now = new Date().toISOString();
+    localStorage.setItem('tlLastSync', now);
+    document.getElementById('tl-last-sync').textContent = 'Last sync: ' + new Date(now).toLocaleString();
+
+    setProgress(100);
+    document.getElementById('tl-sync-counts').textContent =
+      `${imported} new · ${updated} updated · ${skipped} skipped` + (errors ? ` · ${errors} errors` : '');
+
+    addSyncLog('ok', `✅ Sync complete — ${imported} imported, ${updated} updated, ${skipped} already up-to-date`);
+    showToast(`✅ Synced! ${imported} new trade${imported !== 1 ? 's' : ''}`);
+
+  } catch(e) {
+    addSyncLog('err', 'Sync failed: ' + e.message);
+    showToast('Sync failed: ' + e.message);
+  } finally {
+    tlIsSyncing = false;
+    if (btn) { btn.classList.remove('syncing'); btn.querySelector('svg').style.animation = ''; }
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   SYNC STATUS / SUPABASE
+══════════════════════════════════════════════════════ */
 function setSyncStatus(state, label) {
   document.getElementById('sync-dot').className = 'sync-dot ' + state;
   document.getElementById('sync-label').textContent = label;
@@ -337,32 +939,6 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
-/* ====================== ACCOUNT BALANCE HELPERS ====================== */
-function loadInitialBalances() {
-  const saved = localStorage.getItem('initialBalances');
-  initialBalances = saved ? JSON.parse(saved) : {};
-}
-
-function saveInitialBalances() {
-  localStorage.setItem('initialBalances', JSON.stringify(initialBalances));
-}
-
-function getSingleBalance(acc) {
-  const filtered = trades.filter(t => t.account === acc);
-  const closedPnl = filtered
-    .filter(t => t.status !== 'open')
-    .reduce((sum, t) => sum + (parseFloat(t.pnl) || 0), 0);
-  return (initialBalances[acc] || 0) + closedPnl;
-}
-
-function getBalance(account) {
-  if (account === 'All') {
-    return knownAccounts.reduce((total, acc) => total + getSingleBalance(acc), 0);
-  }
-  return getSingleBalance(account);
-}
-
-/* ====================== SUPABASE + CORE ====================== */
 async function fetchTrades() {
   setSyncStatus('syncing', 'Loading…');
   try {
@@ -373,7 +949,7 @@ async function fetchTrades() {
     setSyncStatus('synced', 'Synced');
   } catch(e) {
     setSyncStatus('error', 'Offline');
-    showToast('Could not connect to database. Check your Supabase setup.');
+    showToast('Could not connect to database.');
   }
 }
 
@@ -404,16 +980,37 @@ async function deleteTradeRemote(id) {
     return true;
   } catch(e) {
     setSyncStatus('error', 'Delete failed');
-    showToast('Delete failed: ' + e.message);
     return false;
   }
+}
+
+/* ══════════════════════════════════════════════════════
+   ACCOUNTS
+══════════════════════════════════════════════════════ */
+function loadInitialBalances() {
+  const saved = localStorage.getItem('initialBalances');
+  initialBalances = saved ? JSON.parse(saved) : {};
+}
+
+function saveInitialBalances() {
+  localStorage.setItem('initialBalances', JSON.stringify(initialBalances));
+}
+
+function getSingleBalance(acc) {
+  const filtered = trades.filter(t => t.account === acc);
+  const closedPnl = filtered.filter(t => t.status !== 'open').reduce((sum, t) => sum + (parseFloat(t.pnl) || 0), 0);
+  return (initialBalances[acc] || 0) + closedPnl;
+}
+
+function getBalance(account) {
+  if (account === 'All') return knownAccounts.reduce((total, acc) => total + getSingleBalance(acc), 0);
+  return getSingleBalance(account);
 }
 
 function extractAndSaveAccounts() {
   const fromTrades = [...new Set(trades.map(t => t.account).filter(Boolean))];
   const fromBalances = Object.keys(initialBalances);
-  const all = [...new Set([...fromTrades, ...fromBalances])];
-  knownAccounts = all.sort();
+  knownAccounts = [...new Set([...fromTrades, ...fromBalances])].sort();
   localStorage.setItem('knownAccounts', JSON.stringify(knownAccounts));
   populateAccountSelector();
   populateAccountDatalist();
@@ -421,7 +1018,7 @@ function extractAndSaveAccounts() {
 
 function populateAccountSelector() {
   const sel = document.getElementById('account-selector');
-  let html = `<option value="All">All Accounts ($${getBalance('All').toFixed(2)})</option>`;
+  let html = `<option value="All">All ($${getBalance('All').toFixed(2)})</option>`;
   knownAccounts.forEach(a => {
     const bal = getSingleBalance(a);
     html += `<option value="${a}" ${a === currentAccount ? 'selected' : ''}>${a} ($${bal.toFixed(2)})</option>`;
@@ -452,14 +1049,22 @@ function showPage(p) {
   document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + p).classList.add('active');
   const idx = ['dashboard','log','analytics','add'].indexOf(p);
-  document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
+  if (idx !== -1) document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
+  if (p === 'tl-sync') { document.getElementById('tl-sync-nav-btn')?.classList.add('active'); renderTLSyncPage(); }
   if (p === 'dashboard') renderDashboard();
   if (p === 'log') { populateFilterPairs(); renderLog(); }
   if (p === 'analytics') renderAnalytics();
-  if (p === 'add') { populateAccountDatalist(); }
+  if (p === 'add') populateAccountDatalist();
 }
 
-/* ====================== FORM HELPERS ====================== */
+function renderTLSyncPage() {
+  if (tlCreds) renderTLConnectedState();
+  else renderTLDisconnectedState();
+}
+
+/* ══════════════════════════════════════════════════════
+   FORM
+══════════════════════════════════════════════════════ */
 document.getElementById('f-emotion').addEventListener('input', e => document.getElementById('emotion-out').textContent = e.target.value);
 document.getElementById('f-conf').addEventListener('input', e => document.getElementById('conf-out').textContent = e.target.value);
 
@@ -489,6 +1094,10 @@ function editTrade(id) {
   if (!trade) return;
   editingId = id;
   document.getElementById('save-btn').textContent = 'Update trade';
+  ['pair','account','entry','sl','tp','exit','pnl','size','risk','reason','tf','tags','early-reason','well','improve'].forEach(f => {
+    const el = document.getElementById('f-' + f);
+    if (el) el.value = trade[f.replace('-','R').replace('early-reason','earlyReason').replace('early','early')] ?? trade[f] ?? '';
+  });
   document.getElementById('f-pair').value = trade.pair || '';
   document.getElementById('f-account').value = trade.account || 'Main';
   document.getElementById('f-entry').value = trade.entry || '';
@@ -534,8 +1143,7 @@ async function saveTrade() {
   }
   const trade = {
     id: editingId || Date.now(),
-    account: accountInput,
-    pair, entry, sl, tp, rr,
+    account: accountInput, pair, entry, sl, tp, rr,
     dir: document.getElementById('f-dir').value,
     exit: parseFloat(document.getElementById('f-exit').value) || null,
     pnl: parseFloat(document.getElementById('f-pnl').value) || null,
@@ -555,6 +1163,7 @@ async function saveTrade() {
     confidence: parseInt(document.getElementById('f-conf').value),
     grade: document.getElementById('f-grade').value,
     images: [...tempImages],
+    source: 'manual'
   };
   const btn = document.getElementById('save-btn');
   btn.disabled = true;
@@ -595,13 +1204,17 @@ function clearForm() {
   tempImages = []; document.getElementById('img-preview').innerHTML = '';
 }
 
-/* ====================== FORMATTING ====================== */
+/* ══════════════════════════════════════════════════════
+   FORMATTING
+══════════════════════════════════════════════════════ */
 function fmt(n) { if (n === null || n === undefined || isNaN(n)) return '—'; return (n >= 0 ? '+' : '') + '$' + parseFloat(n).toFixed(2); }
 function fmtPct(n) { return (n * 100).toFixed(1) + '%'; }
 function dateStr(t) { return t ? t.slice(0, 10) : '—'; }
 function pnlClass(v) { return v > 0 ? 'pnl-pos' : v < 0 ? 'pnl-neg' : ''; }
 
-/* ====================== DASHBOARD ====================== */
+/* ══════════════════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════════════════ */
 function renderDashboard() {
   const filtered = getFilteredTrades();
   const closed = filtered.filter(t => t.status !== 'open');
@@ -612,37 +1225,35 @@ function renderDashboard() {
   const avgWin = wins.length ? wins.reduce((s, t) => s + (t.pnl || 0), 0) / wins.length : 0;
   const avgLoss = losses.length ? losses.reduce((s, t) => s + (t.pnl || 0), 0) / losses.length : 0;
   const pf = avgLoss < 0 ? (avgWin / Math.abs(avgLoss)).toFixed(2) : '∞';
-
-  // New: Current Balance
   const currentBalance = getBalance(currentAccount);
 
   document.getElementById('stats-grid').innerHTML =
-    `<div class="stat">
-       <div class="stat-label">CURRENT BALANCE</div>
-       <div class="stat-val ${currentBalance >= 0 ? 'pos' : 'neg'}">$${currentBalance.toFixed(2)}</div>
-     </div>` +
-    '<div class="stat"><div class="stat-label">Total PNL</div><div class="stat-val ' + (totalPnl >= 0 ? 'pos' : 'neg') + '">' + fmt(totalPnl) + '</div></div>' +
-    '<div class="stat"><div class="stat-label">Win rate</div><div class="stat-val">' + fmtPct(wr) + '</div></div>' +
-    '<div class="stat"><div class="stat-label">Trades taken</div><div class="stat-val">' + filtered.length + '</div></div>' +
-    '<div class="stat"><div class="stat-label">Profit factor</div><div class="stat-val">' + pf + '</div></div>' +
-    '<div class="stat"><div class="stat-label">Avg win</div><div class="stat-val pos">' + (avgWin ? fmt(avgWin) : '—') + '</div></div>' +
-    '<div class="stat"><div class="stat-label">Avg loss</div><div class="stat-val neg">' + (avgLoss ? fmt(avgLoss) : '—') + '</div></div>';
+    `<div class="stat"><div class="stat-label">CURRENT BALANCE</div><div class="stat-val ${currentBalance >= 0 ? 'pos' : 'neg'}">$${currentBalance.toFixed(2)}</div></div>` +
+    `<div class="stat"><div class="stat-label">Total PNL</div><div class="stat-val ${totalPnl >= 0 ? 'pos' : 'neg'}">${fmt(totalPnl)}</div></div>` +
+    `<div class="stat"><div class="stat-label">Win rate</div><div class="stat-val">${fmtPct(wr)}</div></div>` +
+    `<div class="stat"><div class="stat-label">Trades taken</div><div class="stat-val">${filtered.length}</div></div>` +
+    `<div class="stat"><div class="stat-label">Profit factor</div><div class="stat-val">${pf}</div></div>` +
+    `<div class="stat"><div class="stat-label">Avg win</div><div class="stat-val pos">${avgWin ? fmt(avgWin) : '—'}</div></div>` +
+    `<div class="stat"><div class="stat-label">Avg loss</div><div class="stat-val neg">${avgLoss ? fmt(avgLoss) : '—'}</div></div>`;
 
   const recent = filtered.slice(0, 5);
   document.getElementById('recent-list').innerHTML = recent.length ? recent.map(t =>
-    '<div onclick="openDetail(' + t.id + ')" style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px;cursor:pointer;">' +
-    '<span style="font-weight:500">' + t.pair + '</span>' +
-    '<span class="badge badge-' + t.dir + '">' + t.dir + '</span>' +
-    '<span class="' + pnlClass(t.pnl) + '">' + fmt(t.pnl) + '</span>' +
-    '<span style="font-size:11px;color:var(--color-text-tertiary)">' + dateStr(t.time) + '</span>' +
-    '</div>'
+    `<div onclick="openDetail(${t.id})" style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px;cursor:pointer;gap:6px;">
+      <span style="font-weight:500">${t.pair}</span>
+      <span class="badge badge-${t.dir}">${t.dir}</span>
+      ${t.source === 'tradelocker' ? '<span class="badge badge-auto">TL</span>' : ''}
+      <span class="${pnlClass(t.pnl)}">${fmt(t.pnl)}</span>
+      <span style="font-size:11px;color:var(--color-text-tertiary)">${dateStr(t.time)}</span>
+    </div>`
   ).join('') : '<div class="empty-state">No trades yet</div>';
 
   renderTopPairs('top-pairs-list');
-  populateAccountSelector();   // Refresh selector with latest balances
+  populateAccountSelector();
 }
 
-/* ====================== TOP PAIRS ====================== */
+/* ══════════════════════════════════════════════════════
+   TOP PAIRS
+══════════════════════════════════════════════════════ */
 function renderTopPairs(id) {
   const filtered = getFilteredTrades();
   const pairMap = {};
@@ -653,26 +1264,27 @@ function renderTopPairs(id) {
     pairMap[t.pair].pnl += (t.pnl || 0);
   });
   const pairs = Object.entries(pairMap).sort((a, b) => (b[1].wins / b[1].total) - (a[1].wins / a[1].total)).slice(0, 6);
-  document.getElementById(id).innerHTML = pairs.length ? pairs.map(function(entry) {
-    const pair = entry[0], d = entry[1];
+  document.getElementById(id).innerHTML = pairs.length ? pairs.map(([pair, d]) => {
     const wr = d.wins / d.total;
     const color = wr >= 0.6 ? '#1D9E75' : wr >= 0.4 ? '#BA7517' : '#E24B4A';
-    return '<div class="pairs-bar">' +
-      '<span style="min-width:70px;font-size:13px;font-weight:500">' + pair + '</span>' +
-      '<div class="bar-track"><div class="bar-fill" style="width:' + (wr * 100) + '%;background:' + color + '"></div></div>' +
-      '<span style="font-size:12px;color:var(--color-text-secondary);min-width:36px">' + fmtPct(wr) + '</span>' +
-      '<span style="font-size:12px;' + pnlClass(d.pnl) + '">' + fmt(d.pnl) + '</span>' +
-      '</div>';
+    return `<div class="pairs-bar">
+      <span style="min-width:70px;font-size:13px;font-weight:500">${pair}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${wr*100}%;background:${color}"></div></div>
+      <span style="font-size:12px;color:var(--color-text-secondary);min-width:36px">${fmtPct(wr)}</span>
+      <span style="font-size:12px;${pnlClass(d.pnl)}">${fmt(d.pnl)}</span>
+    </div>`;
   }).join('') : '<div style="font-size:13px;color:var(--color-text-tertiary)">Close some trades first</div>';
 }
 
-/* ====================== LOG ====================== */
+/* ══════════════════════════════════════════════════════
+   TRADE LOG
+══════════════════════════════════════════════════════ */
 function populateFilterPairs() {
   const sel = document.getElementById('filter-pair');
   const current = sel.value;
   const filtered = getFilteredTrades();
   const pairs = [...new Set(filtered.map(t => t.pair))].sort();
-  sel.innerHTML = '<option value="">All pairs</option>' + pairs.map(p => '<option value="' + p + '">' + p + '</option>').join('');
+  sel.innerHTML = '<option value="">All pairs</option>' + pairs.map(p => `<option value="${p}">${p}</option>`).join('');
   sel.value = current;
 }
 
@@ -680,65 +1292,80 @@ function renderLog() {
   const fp = document.getElementById('filter-pair').value;
   const fd = document.getElementById('filter-dir').value;
   const fs = document.getElementById('filter-status').value;
+  const fsrc = document.getElementById('filter-source').value;
   const filtered = getFilteredTrades();
-  const list = filtered.filter(t => (!fp || t.pair === fp) && (!fd || t.dir === fd) && (!fs || t.status === fs));
+  const list = filtered.filter(t =>
+    (!fp || t.pair === fp) &&
+    (!fd || t.dir === fd) &&
+    (!fs || t.status === fs) &&
+    (!fsrc || (fsrc === 'auto' ? t.source === 'tradelocker' : t.source !== 'tradelocker'))
+  );
   document.getElementById('log-list').innerHTML = list.length ? list.map(t =>
-    '<div class="trade-row" onclick="openDetail(' + t.id + ')">' +
-    '<span style="color:var(--color-text-secondary)">' + dateStr(t.time) + '</span>' +
-    '<span style="font-weight:500">' + t.pair + '</span>' +
-    '<span style="font-weight:500;color:var(--color-text-secondary)">' + (t.account || '—') + '</span>' +
-    '<span><span class="badge badge-' + t.dir + '">' + t.dir + '</span></span>' +
-    '<span>' + t.entry + '</span>' +
-    '<span style="color:var(--color-text-tertiary);font-size:12px">' + (t.sl || '—') + ' / ' + (t.tp || '—') + '</span>' +
-    '<span class="' + pnlClass(t.pnl) + '">' + fmt(t.pnl) + '</span>' +
-    '<span><span class="badge badge-' + t.status + '">' + t.status + '</span></span>' +
-    '<span style="display:flex;gap:6px;">' +
-    '<button class="btn-edit" onclick="event.stopPropagation();editTrade(' + t.id + ')">Edit</button>' +
-    '<button class="btn-danger" onclick="event.stopPropagation();deleteTrade(' + t.id + ')">Delete</button>' +
-    '</span>' +
-    '</div>'
+    `<div class="trade-row" onclick="openDetail(${t.id})">
+      <span style="color:var(--color-text-secondary)">${dateStr(t.time)}</span>
+      <span style="font-weight:500">${t.pair}</span>
+      <span style="font-weight:500;color:var(--color-text-secondary)">${t.account || '—'}</span>
+      <span><span class="badge badge-${t.dir}">${t.dir}</span></span>
+      <span>${t.entry}</span>
+      <span style="color:var(--color-text-tertiary);font-size:12px">${t.sl || '—'} / ${t.tp || '—'}</span>
+      <span class="${pnlClass(t.pnl)}">${fmt(t.pnl)}</span>
+      <span style="display:flex;align-items:center;gap:4px;">
+        <span class="badge badge-${t.status}">${t.status}</span>
+        ${t.source === 'tradelocker' ? '<span class="badge badge-auto">TL Auto</span>' : ''}
+      </span>
+      <span style="display:flex;gap:6px;">
+        <button class="btn-edit" onclick="event.stopPropagation();editTrade(${t.id})">Edit</button>
+        <button class="btn-danger" onclick="event.stopPropagation();deleteTrade(${t.id})">Delete</button>
+      </span>
+    </div>`
   ).join('') : '<div class="empty-state"><b>No trades found</b><p>Add your first trade or adjust filters</p></div>';
 }
 
 async function deleteTrade(id) {
   if (!confirm('Delete this trade?')) return;
   const ok = await deleteTradeRemote(id);
-  if (ok) { 
-    trades = trades.filter(t => t.id !== id); 
-    extractAndSaveAccounts(); 
-    renderLog(); 
-    renderDashboard(); 
+  if (ok) {
+    trades = trades.filter(t => t.id !== id);
+    extractAndSaveAccounts();
+    renderLog();
+    renderDashboard();
     renderAnalytics();
   }
 }
 
-/* ====================== DETAIL MODAL ====================== */
+/* ══════════════════════════════════════════════════════
+   DETAIL MODAL
+══════════════════════════════════════════════════════ */
 function openDetail(id) {
-  const t = trades.find(x => x.id === id);
+  const t = trades.find(x => x.id == id);
   if (!t) return;
   const rr = t.rr ? '1:' + t.rr : '—';
-  let html = '<h2>' + t.pair + ' — ' + t.dir.toUpperCase() + ' <button class="close-btn" onclick="document.getElementById(\'detail-modal\').style.display=\'none\'">✕</button></h2>';
+  let html = `<h2>${t.pair} — ${t.dir.toUpperCase()} ${t.source === 'tradelocker' ? '<span class="badge badge-auto" style="font-size:11px;">TL Auto</span>' : ''}
+    <button class="close-btn" onclick="document.getElementById('detail-modal').style.display='none'">✕</button></h2>`;
   html += '<div class="detail-grid">';
   const fields = [
-    ['Date/time', (t.time||'').replace('T',' ')],['Account', t.account || '—'],['Session', t.session||'—'],
+    ['Date/time', (t.time||'').replace('T',' ')],['Account', t.account||'—'],['Session', t.session||'—'],
     ['Entry', t.entry],['Exit', t.exit||'—'],['Stop loss', t.sl||'—'],['Take profit', t.tp||'—'],
     ['R:R ratio', rr],['Size (lots)', t.size||'—'],['Risk ($)', t.risk?'$'+t.risk:'—'],
-    ['PNL', '<span class="' + pnlClass(t.pnl) + '">' + fmt(t.pnl) + '</span>'],
+    ['PNL', `<span class="${pnlClass(t.pnl)}">${fmt(t.pnl)}</span>`],
     ['Status', t.status],['Grade', t.grade||'—'],['Timeframes', t.tf||'—'],['Closed early', t.early||'no']
   ];
-  fields.forEach(function(f) {
-    html += '<div class="detail-item"><div class="lbl">' + f[0] + '</div><div class="val">' + f[1] + '</div></div>';
-  });
+  fields.forEach(f => { html += `<div class="detail-item"><div class="lbl">${f[0]}</div><div class="val">${f[1]}</div></div>`; });
   html += '</div>';
-  if (t.reason) html += '<div style="margin-top:12px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Entry reason</div><div class="notes-block">' + t.reason + '</div></div>';
-  if (t.earlyReason) html += '<div style="margin-top:10px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Early close reason</div><div class="notes-block">' + t.earlyReason + '</div></div>';
-  if (t.well) html += '<div style="margin-top:10px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">What went well</div><div class="notes-block">' + t.well + '</div></div>';
-  if (t.improve) html += '<div style="margin-top:10px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Improvements</div><div class="notes-block">' + t.improve + '</div></div>';
-  html += '<div style="display:flex;gap:20px;margin-top:12px;font-size:13px;"><span>😌 Emotion: <b>' + t.emotion + '/10</b></span><span>🎯 Confidence: <b>' + t.confidence + '/10</b></span></div>';
-  if (t.tags) html += '<div class="chip-row">' + t.tags.split(',').map(function(tag){ return '<span class="tag">' + tag.trim() + '</span>'; }).join('') + '</div>';
+  if (t.reason) html += `<div style="margin-top:12px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Entry reason</div><div class="notes-block">${t.reason}</div></div>`;
+  if (t.earlyReason) html += `<div style="margin-top:10px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Early close reason</div><div class="notes-block">${t.earlyReason}</div></div>`;
+  if (t.well) html += `<div style="margin-top:10px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">What went well</div><div class="notes-block">${t.well}</div></div>`;
+  if (t.improve) html += `<div style="margin-top:10px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Improvements</div><div class="notes-block">${t.improve}</div></div>`;
+  if (t.source === 'tradelocker' && !t.reason && !t.grade) {
+    html += `<div style="margin-top:12px;padding:10px 12px;background:#EDE6FB;border-radius:var(--border-radius-md);font-size:12px;color:#5B21B6;">
+      <strong>Auto-imported trade</strong> — Click Edit to add your notes, grade, and post-trade review.
+    </div>`;
+  }
+  html += `<div style="display:flex;gap:20px;margin-top:12px;font-size:13px;"><span>😌 Emotion: <b>${t.emotion}/10</b></span><span>🎯 Confidence: <b>${t.confidence}/10</b></span></div>`;
+  if (t.tags) html += '<div class="chip-row">' + t.tags.split(',').map(tag => `<span class="tag">${tag.trim()}</span>`).join('') + '</div>';
   if (t.images && t.images.length) {
-    html += '<div style="margin-top:14px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">Screenshots (' + t.images.length + ')</div><div class="img-preview">';
-    t.images.forEach(function(src){ html += '<img src="' + src + '" class="img-thumb" onclick="openLightbox(\'' + src + '\')">'; });
+    html += `<div style="margin-top:14px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">Screenshots (${t.images.length})</div><div class="img-preview">`;
+    t.images.forEach(src => { html += `<img src="${src}" class="img-thumb" onclick="openLightbox('${src}')">`; });
     html += '</div></div>';
   }
   document.getElementById('detail-content').innerHTML = html;
@@ -750,7 +1377,9 @@ function closeModal(e) {
     document.getElementById('detail-modal').style.display = 'none';
 }
 
-/* ====================== ANALYTICS ====================== */
+/* ══════════════════════════════════════════════════════
+   ANALYTICS
+══════════════════════════════════════════════════════ */
 function renderAnalytics() {
   const filtered = getFilteredTrades();
   const closed = filtered.filter(t => t.status !== 'open');
@@ -758,19 +1387,16 @@ function renderAnalytics() {
   const totalPnl = closed.reduce((s, t) => s + (t.pnl || 0), 0);
   const avgRR = closed.filter(t => t.rr).reduce((s, t, _, a) => s + parseFloat(t.rr) / a.length, 0);
   const streak = getStreak(filtered);
-  const avgEmotion = filtered.length ? (filtered.reduce((s, t) => s + t.emotion, 0) / filtered.length).toFixed(1) : '—';
+  const avgEmotion = filtered.length ? (filtered.reduce((s, t) => s + (t.emotion||7), 0) / filtered.length).toFixed(1) : '—';
 
   document.getElementById('analytics-stats').innerHTML =
-    `<div class="stat">
-       <div class="stat-label">CURRENT BALANCE</div>
-       <div class="stat-val ${getBalance(currentAccount) >= 0 ? 'pos' : 'neg'}">$${getBalance(currentAccount).toFixed(2)}</div>
-     </div>` +
-    '<div class="stat"><div class="stat-label">Total PNL</div><div class="stat-val ' + (totalPnl >= 0 ? 'pos' : 'neg') + '">' + fmt(totalPnl) + '</div></div>' +
-    '<div class="stat"><div class="stat-label">Win rate</div><div class="stat-val">' + (closed.length ? fmtPct(wins.length / closed.length) : '—') + '</div></div>' +
-    '<div class="stat"><div class="stat-label">Avg R:R</div><div class="stat-val">' + (avgRR ? '1:' + avgRR.toFixed(2) : '—') + '</div></div>' +
-    '<div class="stat"><div class="stat-label">Current streak</div><div class="stat-val ' + (streak.type === 'win' ? 'pos' : 'neg') + '">' + streak.count + ' ' + streak.type + '</div></div>' +
-    '<div class="stat"><div class="stat-label">Avg emotion</div><div class="stat-val">' + avgEmotion + '/10</div></div>' +
-    '<div class="stat"><div class="stat-label">Closed trades</div><div class="stat-val">' + closed.length + '</div></div>';
+    `<div class="stat"><div class="stat-label">CURRENT BALANCE</div><div class="stat-val ${getBalance(currentAccount) >= 0 ? 'pos' : 'neg'}">$${getBalance(currentAccount).toFixed(2)}</div></div>` +
+    `<div class="stat"><div class="stat-label">Total PNL</div><div class="stat-val ${totalPnl >= 0 ? 'pos' : 'neg'}">${fmt(totalPnl)}</div></div>` +
+    `<div class="stat"><div class="stat-label">Win rate</div><div class="stat-val">${closed.length ? fmtPct(wins.length/closed.length) : '—'}</div></div>` +
+    `<div class="stat"><div class="stat-label">Avg R:R</div><div class="stat-val">${avgRR ? '1:'+avgRR.toFixed(2) : '—'}</div></div>` +
+    `<div class="stat"><div class="stat-label">Current streak</div><div class="stat-val ${streak.type==='win'?'pos':'neg'}">${streak.count} ${streak.type}</div></div>` +
+    `<div class="stat"><div class="stat-label">Avg emotion</div><div class="stat-val">${avgEmotion}/10</div></div>` +
+    `<div class="stat"><div class="stat-label">Closed trades</div><div class="stat-val">${closed.length}</div></div>`;
 
   renderTopPairs('pair-perf');
   const sessions = {};
@@ -782,15 +1408,15 @@ function renderAnalytics() {
     sessions[s].pnl += (t.pnl || 0);
   });
   document.getElementById('session-perf').innerHTML = Object.keys(sessions).length ?
-    Object.entries(sessions).map(function(entry) {
-      const s = entry[0], d = entry[1];
+    Object.entries(sessions).map(([s, d]) => {
       const wr = d.wins / d.total;
       const color = wr >= 0.6 ? '#1D9E75' : wr >= 0.4 ? '#BA7517' : '#E24B4A';
-      return '<div class="pairs-bar">' +
-        '<span style="min-width:90px;font-size:13px;font-weight:500;text-transform:capitalize">' + s.replace('_', ' ') + '</span>' +
-        '<div class="bar-track"><div class="bar-fill" style="width:' + (wr * 100) + '%;background:' + color + '"></div></div>' +
-        '<span style="font-size:12px;color:var(--color-text-secondary);min-width:36px">' + fmtPct(wr) + '</span>' +
-        '<span style="font-size:12px;' + pnlClass(d.pnl) + '">' + fmt(d.pnl) + '</span></div>';
+      return `<div class="pairs-bar">
+        <span style="min-width:90px;font-size:13px;font-weight:500;text-transform:capitalize">${s.replace('_',' ')}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${wr*100}%;background:${color}"></div></div>
+        <span style="font-size:12px;color:var(--color-text-secondary);min-width:36px">${fmtPct(wr)}</span>
+        <span style="font-size:12px;${pnlClass(d.pnl)}">${fmt(d.pnl)}</span>
+      </div>`;
     }).join('') : '<div style="font-size:13px;color:var(--color-text-tertiary)">No session data yet</div>';
 
   renderPnlChart(closed);
@@ -807,51 +1433,45 @@ function getStreak(filtered) {
 
 function renderPnlChart(closed) {
   if (pnlChart) { pnlChart.destroy(); pnlChart = null; }
-  const sorted = [...closed].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+  const sorted = [...closed].sort((a, b) => (a.time||'').localeCompare(b.time||''));
   let cum = 0;
   const data = sorted.map(t => { cum += (t.pnl || 0); return parseFloat(cum.toFixed(2)); });
   if (!data.length) return;
   const ctx = document.getElementById('pnl-chart').getContext('2d');
-  const lineColor = data[data.length - 1] >= 0 ? '#1D9E75' : '#E24B4A';
+  const lineColor = data[data.length-1] >= 0 ? '#1D9E75' : '#E24B4A';
   pnlChart = new Chart(ctx, {
     type: 'line',
-    data: { labels: sorted.map((_, i) => i + 1), datasets: [{ data, borderColor: lineColor, borderWidth: 1.5, pointRadius: 3, pointBackgroundColor: lineColor, fill: false, tension: 0.3 }] },
-    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { font: { size: 11 } }, grid: { display: false } }, y: { ticks: { font: { size: 11 }, callback: function(v){ return '$' + v; } }, grid: { color: 'rgba(128,128,128,0.1)' } } } }
+    data: { labels: sorted.map((_,i)=>i+1), datasets: [{ data, borderColor: lineColor, borderWidth: 1.5, pointRadius: 3, pointBackgroundColor: lineColor, fill: false, tension: 0.3 }] },
+    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { font: { size:11 } }, grid: { display:false } }, y: { ticks: { font: { size:11 }, callback: v=>'$'+v }, grid: { color:'rgba(128,128,128,0.1)' } } } }
   });
 }
 
-/* ====================== BALANCE MODAL ====================== */
-function showBalanceModal() {
-  renderBalancesList();
-  document.getElementById('balance-modal').style.display = 'flex';
-}
-
-function closeBalanceModal() {
-  document.getElementById('balance-modal').style.display = 'none';
-}
+/* ══════════════════════════════════════════════════════
+   BALANCE MODAL
+══════════════════════════════════════════════════════ */
+function showBalanceModal() { renderBalancesList(); document.getElementById('balance-modal').style.display = 'flex'; }
+function closeBalanceModal() { document.getElementById('balance-modal').style.display = 'none'; }
 
 function renderBalancesList() {
   let html = '';
   if (knownAccounts.length === 0) {
-    html = '<div class="empty-state"><b>No accounts yet</b><p>Use the selector or add a new one below</p></div>';
+    html = '<div class="empty-state"><b>No accounts yet</b></div>';
   } else {
     html += '<div style="max-height:420px;overflow-y:auto;">';
     knownAccounts.forEach(a => {
       const initial = initialBalances[a] || 0;
       const current = getSingleBalance(a);
-      html += `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:0.5px solid var(--color-border-tertiary);">
-          <div style="font-weight:500;font-size:15px;">${a}</div>
-          <div style="text-align:right;">
-            <div style="font-size:12px;color:var(--color-text-tertiary);">Initial capital</div>
-            <input type="number" step="0.01" value="${initial}" 
-                   onchange="updateInitialBalance('${a}', this.value)" 
-                   class="balance-modal-input" style="background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);padding:4px 8px;border-radius:6px;">
-            <div style="margin-top:8px;font-size:13px;color:var(--color-text-tertiary);">Current balance 
-              <span class="${current >= 0 ? 'pnl-pos' : 'pnl-neg'}" style="font-weight:600;">$${current.toFixed(2)}</span>
-            </div>
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:0.5px solid var(--color-border-tertiary);">
+        <div style="font-weight:500;font-size:15px;">${a}</div>
+        <div style="text-align:right;">
+          <div style="font-size:12px;color:var(--color-text-tertiary);">Initial capital</div>
+          <input type="number" step="0.01" value="${initial}" onchange="updateInitialBalance('${a}', this.value)"
+                 class="balance-modal-input" style="background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);padding:4px 8px;border-radius:6px;">
+          <div style="margin-top:8px;font-size:13px;color:var(--color-text-tertiary);">Balance
+            <span class="${current >= 0 ? 'pnl-pos' : 'pnl-neg'}" style="font-weight:600;">$${current.toFixed(2)}</span>
           </div>
-        </div>`;
+        </div>
+      </div>`;
     });
     html += '</div>';
   }
@@ -868,14 +1488,11 @@ function updateInitialBalance(acc, val) {
 }
 
 function addNewAccountBalance() {
-  const name = prompt('New account / broker name (e.g. Demo, Interactive, Bybit):');
+  const name = prompt('New account / broker name:');
   if (!name) return;
   const clean = name.trim();
   if (!clean) return;
-  if (knownAccounts.includes(clean)) {
-    showToast('Account already exists');
-    return;
-  }
+  if (knownAccounts.includes(clean)) { showToast('Account already exists'); return; }
   knownAccounts.push(clean);
   knownAccounts.sort();
   initialBalances[clean] = 0;
@@ -885,22 +1502,30 @@ function addNewAccountBalance() {
   showToast('✅ New account created');
 }
 
-/* ====================== INIT ====================== */
+/* ══════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════ */
 async function init() {
-  // Load saved account settings
-  if (localStorage.getItem('knownAccounts')) {
-    knownAccounts = JSON.parse(localStorage.getItem('knownAccounts'));
-  }
-  if (localStorage.getItem('currentAccount')) {
-    currentAccount = localStorage.getItem('currentAccount');
-  }
-  loadInitialBalances();          // ← New balance data
+  if (localStorage.getItem('knownAccounts')) knownAccounts = JSON.parse(localStorage.getItem('knownAccounts'));
+  if (localStorage.getItem('currentAccount')) currentAccount = localStorage.getItem('currentAccount');
+  loadInitialBalances();
+  loadTLCreds();
   await fetchTrades();
   extractAndSaveAccounts();
   document.getElementById('loading-overlay').style.display = 'none';
   renderDashboard();
+
+  // Auto-sync TradeLocker if configured
+  if (tlCreds && tlCreds.autoSync !== false) {
+    setTimeout(async () => {
+      showPage('tl-sync');
+      await runTLSync();
+      showPage('dashboard');
+    }, 800);
+  }
 }
 init();
 </script>
+
 </body>
 </html>
