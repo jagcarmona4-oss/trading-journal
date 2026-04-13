@@ -897,7 +897,7 @@ async function runTLSync() {
     for (const { order, isOpen } of allTLTrades) {
       const journalTrade = tlTradeToJournal(order, isOpen);
       const tlId = journalTrade.tlId;
-      if (!jt) { skipped++; continue; } 
+      if (tlId) { skipped++; continue; } 
       if (!tlId || tlId.length < 2) { 
         addSyncLog('skip', 'Skipping order with no ID'); 
         skipped++; 
