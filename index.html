@@ -744,15 +744,33 @@ function normalizePair(sym) {
 }
 
 function tlTradeToJournal(order, isOpen) {
+  // Log the actual keys so we can see the structure (check browser console after sync)
+  if (console && typeof console.log === 'function' && !window.tlLoggedOnce) {
+    console.log('🔍 TradeLocker order structure:', Object.keys(order));
+    window.tlLoggedOnce = true; // only once
+  }
+
+  // More flexible ID detection (covers most TradeLocker variations)
+  const possibleIds = [
+    order.id, order.positionId, order.orderId, order.OrderID,
+    order.order_id, order.ticket, order.tradeId, order.position_id,
+    order.OrderId, order.PositionId
+  ];
+  const tlId = String(possibleIds.find(id => id != null && id !== '') || Date.now() + Math.random()).trim();
+
+  if (!tlId || tlId === 'NaN' || tlId.length < 2) {
+    console.warn('⚠️ Order with no usable ID:', order); // visible in console
+  }
+
   const dir = (order.side || '').toUpperCase() === 'BUY' ? 'long' : 'short';
-  const pair = normalizePair(order.tradableInstrumentId || order.instrument || '');
-  const entry = parseFloat(order.price || order.openPrice || 0);
-  const exit = isOpen ? null : parseFloat(order.filledPrice || order.closePrice || order.avgPrice || 0) || null;
-  const pnl = isOpen ? null : (parseFloat(order.realizedPnl || order.pnl || 0) || null);
-  const size = parseFloat(order.qty || order.quantity || order.lots || 0) || null;
+  const pair = normalizePair(order.tradableInstrumentId || order.instrument || order.symbol || '');
+  const entry = parseFloat(order.price || order.openPrice || order.avgPrice || order.entryPrice || 0);
+  const exit = isOpen ? null : parseFloat(order.filledPrice || order.closePrice || order.exitPrice || order.avgPrice || 0) || null;
+  const pnl = isOpen ? null : parseFloat(order.realizedPnl || order.pnl || order.profit || order.realizedPl || 0) || null;
+  const size = parseFloat(order.qty || order.quantity || order.lots || order.volume || 0) || null;
   const sl = parseFloat(order.stopLoss || order.stopLossLimit || 0) || null;
   const tp = parseFloat(order.takeProfit || order.takeProfitLimit || 0) || null;
-  const timeRaw = order.fillDate || order.createdDate || order.openDateTime || order.timestamp || '';
+  const timeRaw = order.fillDate || order.closedDate || order.createdDate || order.openDateTime || order.timestamp || order.openDate || '';
   const time = timeRaw ? new Date(timeRaw).toISOString().slice(0,16) : '';
 
   let status = 'open';
@@ -763,7 +781,6 @@ function tlTradeToJournal(order, isOpen) {
     else status = 'breakeven';
   }
 
-  // Compute R:R if we have SL + TP
   let rr = null;
   if (sl && tp && entry) {
     const slDist = Math.abs(entry - sl);
@@ -772,13 +789,12 @@ function tlTradeToJournal(order, isOpen) {
   }
 
   return {
-    id: 'tl_' + (order.id || order.positionId || order.orderId || Date.now()),
-    tlId: String(order.id || order.positionId || order.orderId || ''),
+    id: 'tl_' + tlId,
+    tlId: tlId,
     account: tlCreds.label,
     pair, dir, entry, exit, pnl, size, sl, tp, rr, time, status,
     session: '',
-    source: 'tradelocker',    // marks auto-imported
-    // journal-only fields blank — user fills these in
+    source: 'tradelocker',
     reason: '', tf: '', tags: '', early: 'no', earlyReason: '',
     well: '', improve: '', emotion: 7, confidence: 7, grade: '', images: []
   };
