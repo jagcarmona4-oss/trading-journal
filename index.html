@@ -717,25 +717,25 @@ function normalizePair(sym) {
   return sym;
 }
 
-/* FIXED tlTradeToJournal - uses numeric ID for Supabase */
 function tlTradeToJournal(order, isOpen) {
-  // Flexible ID detection
-  const possibleIds = [
-    order.id, order.positionId, order.orderId, order.OrderID,
-    order.order_id, order.ticket, order.tradeId, order.position_id,
-    order.OrderId, order.PositionId
-  ];
-  const tlId = String(possibleIds.find(id => id != null && id !== '') || Date.now() + Math.random()).trim();
+  // Debug log (only once) - check F12 Console after sync
+  if (!window.tlDebugLogged) {
+    console.log('🔍 FULL TradeLocker order object:', order);
+    console.log('🔑 Available keys:', Object.keys(order));
+    window.tlDebugLogged = true;
+  }
 
-  const dir = (order.side || '').toUpperCase() === 'BUY' ? 'long' : 'short';
-  const pair = normalizePair(order.tradableInstrumentId || order.instrument || order.symbol || '');
-  const entry = parseFloat(order.price || order.openPrice || order.avgPrice || order.entryPrice || 0);
-  const exit = isOpen ? null : parseFloat(order.filledPrice || order.closePrice || order.exitPrice || order.avgPrice || 0) || null;
-  const pnl = isOpen ? null : parseFloat(order.realizedPnl || order.pnl || order.profit || order.realizedPl || 0) || null;
-  const size = parseFloat(order.qty || order.quantity || order.lots || order.volume || 0) || null;
+  const dir = (order.side || order.Side || '').toUpperCase() === 'BUY' ? 'long' : 'short';
+  const pair = normalizePair(order.symbol || order.tradableInstrumentId || order.instrument || '');
+
+  const entry = parseFloat(order.openPrice || order.entryPrice || order.price || 0);
+  const exit = isOpen ? null : parseFloat(order.closePrice || order.filledPrice || order.exitPrice || 0) || null;
+  const pnl = isOpen ? null : parseFloat(order.realizedPnl || order.netProfit || order.profit || order.pnl || 0) || null;
+  const size = parseFloat(order.volume || order.lots || order.qty || order.quantity || 0) || null;
   const sl = parseFloat(order.stopLoss || order.stopLossLimit || 0) || null;
   const tp = parseFloat(order.takeProfit || order.takeProfitLimit || 0) || null;
-  const timeRaw = order.fillDate || order.closedDate || order.createdDate || order.openDateTime || order.timestamp || order.openDate || '';
+
+  const timeRaw = order.closeDateTime || order.closedDate || order.fillDate || order.openDateTime || order.createdDate || order.timestamp || '';
   const time = timeRaw ? new Date(timeRaw).toISOString().slice(0,16) : '';
 
   let status = 'open';
@@ -753,8 +753,11 @@ function tlTradeToJournal(order, isOpen) {
     if (slDist > 0) rr = (tpDist / slDist).toFixed(2);
   }
 
+  // Use Order ID or Position ID for uniqueness
+  const tlId = String(order.orderId || order.positionId || order.OrderID || order.PositionID || order.id || Date.now() + Math.random());
+
   return {
-    id: Date.now() + Math.random() * 1000000 | 0,   // numeric ID required by Supabase
+    id: Date.now() + Math.random() * 1000000 | 0,
     tlId: tlId,
     account: tlCreds.label,
     pair, dir, entry, exit, pnl, size, sl, tp, rr, time, status,
