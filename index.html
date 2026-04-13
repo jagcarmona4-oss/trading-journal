@@ -812,17 +812,19 @@ async function runTLSync() {
     await tlGetAccounts();
     addSyncLog('ok', `Account ID: ${tlAccountId} (accNum: ${tlAccNum})`);
 
-    // Step 3: Fetch filled orders (closed trades)
-    addSyncLog('ok', 'Fetching closed trades (filled orders)…');
+        // Step 3: Fetch closed trades (filled orders) — FIXED ENDPOINT
+    addSyncLog('ok', 'Fetching closed trades (order history)…');
     setProgress(35);
     let filledOrders = [];
     try {
-      const res = await tlFetch(`/trade/accounts/${tlAccountId}/filledOrders`);
-      filledOrders = (res.d && res.d.filledOrders) ? res.d.filledOrders
-                   : (Array.isArray(res) ? res : (res.filledOrders || res.data || []));
-      addSyncLog('ok', `Found ${filledOrders.length} filled orders`);
+      const res = await tlFetch(`/trade/accounts/${tlAccountId}/ordersHistory`);
+      // TradeLocker usually wraps in .d or returns array directly
+      filledOrders = (res.d && res.d.ordersHistory) 
+                   ? res.d.ordersHistory 
+                   : (Array.isArray(res) ? res : (res.ordersHistory || res.data || res || []));
+      addSyncLog('ok', `Found ${filledOrders.length} closed trades`);
     } catch(e) {
-      addSyncLog('err', 'Could not fetch filled orders: ' + e.message);
+      addSyncLog('err', 'Could not fetch order history: ' + e.message);
       errors++;
     }
 
