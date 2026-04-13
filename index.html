@@ -455,53 +455,54 @@
 <div id="toast" class="toast"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
-/* ======================================================
-   SUPABASE CONFIG
-====================================================== */
 const SUPABASE_URL = 'https://lxkqqewbhijidehyvnde.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_b1CQbtRRsaXM8uWQH3tfWw_xPINGdzw';
 const API = SUPABASE_URL + '/rest/v1/trades';
 const HEADERS = {
-  'apikey': SUPABASE_KEY,
-  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  apikey: SUPABASE_KEY,
+  Authorization: 'Bearer ' + SUPABASE_KEY,
   'Content-Type': 'application/json'
 };
 
-let trades         = [];
-let tempImages     = [];
-let pnlChart       = null;
-let editingId      = null;
-let currentAccount = ‘All’;
-let knownAccounts  = [];
+let trades = [];
+let tempImages = [];
+let pnlChart = null;
+let editingId = null;
+let currentAccount = 'All';
+let knownAccounts = [];
 let initialBalances = {};
 
-/* ======================================================
-TRADELOCKER STATE
-====================================================== */
-let tlCreds         = null;
-let tlToken         = null;
-let tlRefreshToken  = null;
-let tlAccountId     = null;
-let tlAccNum        = null;
-let tlIsSyncing     = false;
+let tlCreds = null;
+let tlToken = null;
+let tlRefreshToken = null;
+let tlAccountId = null;
+let tlAccNum = null;
+let tlIsSyncing = false;
 let tlInstrumentMap = {};
 
 function loadTLCreds() {
-const saved = localStorage.getItem(‘tlCreds’);
-if (saved) { try { tlCreds = JSON.parse(saved); } catch(e) { tlCreds = null; } }
-const savedMap = localStorage.getItem(‘tlInstrumentMap’);
-if (savedMap) { try { tlInstrumentMap = JSON.parse(savedMap); } catch(e) { tlInstrumentMap = {}; } }
-}
-function saveTLCreds() {
-if (tlCreds) localStorage.setItem(‘tlCreds’, JSON.stringify(tlCreds));
-else localStorage.removeItem(‘tlCreds’);
-}
-function tlBaseUrl() {
-return (tlCreds && tlCreds.env === ‘live’)
-? ‘https://live.tradelocker.com/backend-api’
-: ‘https://demo.tradelocker.com/backend-api’;
+  const saved = localStorage.getItem('tlCreds');
+  if (saved) {
+    try { tlCreds = JSON.parse(saved); } catch (e) { tlCreds = null; }
+  }
+  const savedMap = localStorage.getItem('tlInstrumentMap');
+  if (savedMap) {
+    try { tlInstrumentMap = JSON.parse(savedMap); } catch (e) { tlInstrumentMap = {}; }
+  }
 }
 
+function saveTLCreds() {
+  if (tlCreds) localStorage.setItem('tlCreds', JSON.stringify(tlCreds));
+  else localStorage.removeItem('tlCreds');
+}
+
+function tlBaseUrl() {
+  return (tlCreds && tlCreds.env === 'live')
+    ? 'https://live.tradelocker.com/backend-api'
+    : 'https://demo.tradelocker.com/backend-api';
+}
+</script>
+ 
 /* ======================================================
 TRADELOCKER API
 ====================================================== */
