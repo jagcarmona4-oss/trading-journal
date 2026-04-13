@@ -718,24 +718,25 @@ function normalizePair(sym) {
 }
 
 function tlTradeToJournal(order, isOpen) {
-  // Debug log (only once) - check F12 Console after sync
+  // Debug log (only once) - open F12 → Console after sync to see the data
   if (!window.tlDebugLogged) {
-    console.log('🔍 FULL TradeLocker order object:', order);
+    console.log('🔍 TradeLocker order object:', order);
     console.log('🔑 Available keys:', Object.keys(order));
     window.tlDebugLogged = true;
   }
 
   const dir = (order.side || order.Side || '').toUpperCase() === 'BUY' ? 'long' : 'short';
-  const pair = normalizePair(order.symbol || order.tradableInstrumentId || order.instrument || '');
+  const pair = normalizePair(order.symbol || order.Symbol || order.tradableInstrumentId || '');
 
-  const entry = parseFloat(order.openPrice || order.entryPrice || order.price || 0);
-  const exit = isOpen ? null : parseFloat(order.closePrice || order.filledPrice || order.exitPrice || 0) || null;
-  const pnl = isOpen ? null : parseFloat(order.realizedPnl || order.netProfit || order.profit || order.pnl || 0) || null;
-  const size = parseFloat(order.volume || order.lots || order.qty || order.quantity || 0) || null;
-  const sl = parseFloat(order.stopLoss || order.stopLossLimit || 0) || null;
-  const tp = parseFloat(order.takeProfit || order.takeProfitLimit || 0) || null;
+  const entry = parseFloat(order.openPrice || order.OpenPrice || order.price || 0);
+  const exit  = isOpen ? null : parseFloat(order.closePrice || order.ClosePrice || order.filledPrice || 0) || null;
+  const pnl   = isOpen ? null : parseFloat(order.pnl || order.PnL || order.netProfit || order.profit || 0) || null;
+  const size  = parseFloat(order.lots || order.Lots || order.volume || order.qty || 0) || null;
+  const sl    = parseFloat(order.sl || order.SL || order.stopLoss || 0) || null;
+  const tp    = parseFloat(order.tp || order.TP || order.takeProfit || 0) || null;
 
-  const timeRaw = order.closeDateTime || order.closedDate || order.fillDate || order.openDateTime || order.createdDate || order.timestamp || '';
+  // Time fields from your exact table
+  const timeRaw = order.closeTime || order.CloseTime || order.closeDateTime || order.openTime || order.OpenTime || '';
   const time = timeRaw ? new Date(timeRaw).toISOString().slice(0,16) : '';
 
   let status = 'open';
@@ -753,8 +754,8 @@ function tlTradeToJournal(order, isOpen) {
     if (slDist > 0) rr = (tpDist / slDist).toFixed(2);
   }
 
-  // Use Order ID or Position ID for uniqueness
-  const tlId = String(order.orderId || order.positionId || order.OrderID || order.PositionID || order.id || Date.now() + Math.random());
+  // Use Ticket # as the unique TL ID
+  const tlId = String(order.ticket || order.Ticket || order.orderId || order.positionId || Date.now() + Math.random());
 
   return {
     id: Date.now() + Math.random() * 1000000 | 0,
