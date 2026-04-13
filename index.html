@@ -46,6 +46,7 @@
   .nav-btn { font-size: 13px; padding: 6px 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-secondary); cursor: pointer; font-family: var(--font-sans); }
   .nav-btn.active { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); }
   .nav-btn:hover:not(.active) { background: var(--color-background-secondary); }
+  .account-selector { font-size: 13px; padding: 6px 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); margin-right: 8px; }
   .sync-status { font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-tertiary); display: flex; align-items: center; gap: 5px; }
   .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #9a9994; flex-shrink: 0; }
   .sync-dot.synced { background: #1D9E75; }
@@ -68,10 +69,10 @@
   .btn-edit { background: transparent; border: 0.5px solid #1D9E75; color: #1D9E75; padding: 5px 12px; border-radius: var(--border-radius-md); font-size: 12px; cursor: pointer; font-family: var(--font-sans); }
   .btn-edit:hover { background: #E1F5EE; }
   .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
-  .trade-row { display: grid; grid-template-columns: 80px 70px 60px 80px 80px 80px 1fr 90px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; cursor: pointer; }
+  .trade-row { display: grid; grid-template-columns: 80px 70px 85px 60px 80px 80px 80px 1fr 110px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; cursor: pointer; }
   .trade-row:last-child { border-bottom: none; }
   .trade-row:hover { background: var(--color-background-secondary); margin: 0 -4px; padding-left: 4px; padding-right: 4px; border-radius: var(--border-radius-md); }
-  .trade-header { display: grid; grid-template-columns: 80px 70px 60px 80px 80px 80px 1fr 90px; gap: 10px; padding: 0 0 8px; border-bottom: 0.5px solid var(--color-border-secondary); font-size: 11px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .trade-header { display: grid; grid-template-columns: 80px 70px 85px 60px 80px 80px 80px 1fr 110px; gap: 10px; padding: 0 0 8px; border-bottom: 0.5px solid var(--color-border-secondary); font-size: 11px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
   .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
   .badge-long { background: #E1F5EE; color: #0F6E56; }
   .badge-short { background: #FAECE7; color: #993C1D; }
@@ -81,6 +82,7 @@
   .badge-breakeven { background: #FAEEDA; color: #854F0B; }
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .form-grid.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.cols4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
   .form-group { display: flex; flex-direction: column; gap: 5px; }
   .form-group label { font-size: 12px; color: var(--color-text-secondary); }
   .form-group input, .form-group select, .form-group textarea {
@@ -131,8 +133,9 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   @media (max-width: 700px) {
     .form-grid.cols3 { grid-template-columns: 1fr 1fr; }
-    .trade-row, .trade-header { grid-template-columns: 70px 65px 55px 70px 1fr 70px; }
-    .trade-row > span:nth-child(4), .trade-header > span:nth-child(4) { display: none; }
+    .form-grid.cols4 { grid-template-columns: 1fr 1fr; }
+    .trade-row, .trade-header { grid-template-columns: 70px 65px 75px 55px 70px 1fr 70px; }
+    .trade-row > span:nth-child(5), .trade-header > span:nth-child(5) { display: none; } /* hide SL/TP on mobile */
     .detail-grid { grid-template-columns: 1fr; }
   }
 </style>
@@ -151,6 +154,10 @@
     <button class="nav-btn" onclick="showPage('log')">Trade Log</button>
     <button class="nav-btn" onclick="showPage('analytics')">Analytics</button>
     <button class="nav-btn" onclick="showPage('add')">+ New Trade</button>
+    
+    <!-- New: Multiple Accounts Selector -->
+    <select id="account-selector" class="account-selector" onchange="setCurrentAccount(this.value)"></select>
+    
     <div class="sync-status">
       <div class="sync-dot syncing" id="sync-dot"></div>
       <span id="sync-label">Connecting…</span>
@@ -180,7 +187,7 @@
     </div>
     <div class="card" style="overflow-x:auto;">
       <div class="trade-header">
-        <span>Date</span><span>Pair</span><span>Dir</span><span>Entry</span><span>SL / TP</span><span>PNL</span><span>Status</span><span></span>
+        <span>Date</span><span>Pair</span><span>Account</span><span>Dir</span><span>Entry</span><span>SL / TP</span><span>PNL</span><span>Status</span><span></span>
       </div>
       <div id="log-list"></div>
     </div>
@@ -207,7 +214,7 @@
   <div id="page-add" class="page">
     <div class="card">
       <p class="section-title">Trade details</p>
-      <div class="form-grid cols3">
+      <div class="form-grid cols4">
         <div class="form-group">
           <label>Pair *</label>
           <input id="f-pair" placeholder="EUR/USD" list="pairs-list">
@@ -218,6 +225,11 @@
             <option value="ETH/USD"><option value="XAU/USD"><option value="US30">
             <option value="NAS100"><option value="SPX500">
           </datalist>
+        </div>
+        <div class="form-group">
+          <label>Account *</label>
+          <input id="f-account" placeholder="Main" list="accounts-datalist">
+          <datalist id="accounts-datalist"></datalist>
         </div>
         <div class="form-group"><label>Direction *</label><select id="f-dir"><option value="long">Long</option><option value="short">Short</option></select></div>
         <div class="form-group"><label>Session</label><select id="f-session"><option value="">—</option><option value="london">London</option><option value="new_york">New York</option><option value="asian">Asian</option><option value="overlap">London/NY Overlap</option></select></div>
@@ -296,7 +308,9 @@ const HEADERS = {
 let trades = [];
 let tempImages = [];
 let pnlChart = null;
-let editingId = null;   // ← NEW: tracks which trade we are editing
+let editingId = null;
+let currentAccount = 'All';
+let knownAccounts = [];
 
 function setSyncStatus(state, label) {
   document.getElementById('sync-dot').className = 'sync-dot ' + state;
@@ -356,6 +370,41 @@ async function deleteTradeRemote(id) {
   }
 }
 
+function extractAndSaveAccounts() {
+  const fromTrades = [...new Set(trades.map(t => t.account).filter(Boolean))];
+  knownAccounts = [...new Set([...knownAccounts, ...fromTrades])].sort();
+  localStorage.setItem('knownAccounts', JSON.stringify(knownAccounts));
+  populateAccountSelector();
+  populateAccountDatalist();
+}
+
+function populateAccountSelector() {
+  const sel = document.getElementById('account-selector');
+  let html = '<option value="All">All Accounts</option>';
+  knownAccounts.forEach(a => {
+    html += `<option value="${a}" ${a === currentAccount ? 'selected' : ''}>${a}</option>`;
+  });
+  sel.innerHTML = html;
+}
+
+function populateAccountDatalist() {
+  const dl = document.getElementById('accounts-datalist');
+  dl.innerHTML = knownAccounts.map(a => `<option value="${a}"></option>`).join('');
+}
+
+function setCurrentAccount(val) {
+  currentAccount = val;
+  localStorage.setItem('currentAccount', currentAccount);
+  renderDashboard();
+  if (document.getElementById('page-log').classList.contains('active')) { populateFilterPairs(); renderLog(); }
+  if (document.getElementById('page-analytics').classList.contains('active')) renderAnalytics();
+}
+
+function getFilteredTrades() {
+  if (currentAccount === 'All') return trades;
+  return trades.filter(t => t.account === currentAccount);
+}
+
 function showPage(p) {
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -365,6 +414,7 @@ function showPage(p) {
   if (p === 'dashboard') renderDashboard();
   if (p === 'log') { populateFilterPairs(); renderLog(); }
   if (p === 'analytics') renderAnalytics();
+  if (p === 'add') { populateAccountDatalist(); }
 }
 
 document.getElementById('f-emotion').addEventListener('input', e => document.getElementById('emotion-out').textContent = e.target.value);
@@ -391,7 +441,6 @@ function renderImagePreview() {
 function removeImg(i) { tempImages.splice(i, 1); renderImagePreview(); }
 function openLightbox(src) { document.getElementById('lb-img').src = src; document.getElementById('lightbox').style.display = 'flex'; }
 
-// ====================== EDIT FUNCTIONALITY ======================
 function editTrade(id) {
   const trade = trades.find(t => t.id === id);
   if (!trade) return;
@@ -400,6 +449,7 @@ function editTrade(id) {
   document.getElementById('save-btn').textContent = 'Update trade';
 
   document.getElementById('f-pair').value = trade.pair || '';
+  document.getElementById('f-account').value = trade.account || 'Main';
   document.getElementById('f-entry').value = trade.entry || '';
   document.getElementById('f-sl').value = trade.sl || '';
   document.getElementById('f-tp').value = trade.tp || '';
@@ -432,8 +482,10 @@ function editTrade(id) {
 
 async function saveTrade() {
   const pair = document.getElementById('f-pair').value.trim().toUpperCase();
+  const accountInput = document.getElementById('f-account').value.trim();
   const entry = parseFloat(document.getElementById('f-entry').value);
-  if (!pair || isNaN(entry)) { alert('Pair and Entry price are required.'); return; }
+  if (!pair || isNaN(entry) || !accountInput) { alert('Pair, Account, and Entry price are required.'); return; }
+
   const sl = parseFloat(document.getElementById('f-sl').value) || null;
   const tp = parseFloat(document.getElementById('f-tp').value) || null;
   let rr = null;
@@ -442,8 +494,10 @@ async function saveTrade() {
     const tpDist = Math.abs(tp - entry);
     if (slDist > 0) rr = (tpDist / slDist).toFixed(2);
   }
+
   const trade = {
     id: editingId || Date.now(),
+    account: accountInput,
     pair, entry, sl, tp, rr,
     dir: document.getElementById('f-dir').value,
     exit: parseFloat(document.getElementById('f-exit').value) || null,
@@ -482,6 +536,7 @@ async function saveTrade() {
     } else {
       trades.unshift(trade);
     }
+    extractAndSaveAccounts();
     const msg = document.getElementById('save-msg');
     msg.style.display = 'inline';
     setTimeout(() => msg.style.display = 'none', 3000);
@@ -496,7 +551,7 @@ function clearForm() {
   editingId = null;
   document.getElementById('save-btn').textContent = 'Save trade';
 
-  ['f-pair','f-entry','f-sl','f-tp','f-exit','f-pnl','f-reason','f-tf','f-tags','f-early-reason','f-well','f-improve','f-size','f-risk']
+  ['f-pair','f-account','f-entry','f-sl','f-tp','f-exit','f-pnl','f-reason','f-tf','f-tags','f-early-reason','f-well','f-improve','f-size','f-risk']
     .forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('f-dir').value = 'long';
   document.getElementById('f-status').value = 'open';
@@ -514,7 +569,8 @@ function dateStr(t) { return t ? t.slice(0, 10) : '—'; }
 function pnlClass(v) { return v > 0 ? 'pnl-pos' : v < 0 ? 'pnl-neg' : ''; }
 
 function renderDashboard() {
-  const closed = trades.filter(t => t.status !== 'open');
+  const filtered = getFilteredTrades();
+  const closed = filtered.filter(t => t.status !== 'open');
   const wins = closed.filter(t => t.status === 'win');
   const losses = closed.filter(t => t.status === 'loss');
   const totalPnl = closed.reduce((s, t) => s + (t.pnl || 0), 0);
@@ -525,11 +581,11 @@ function renderDashboard() {
   document.getElementById('stats-grid').innerHTML =
     '<div class="stat"><div class="stat-label">Total PNL</div><div class="stat-val ' + (totalPnl >= 0 ? 'pos' : 'neg') + '">' + fmt(totalPnl) + '</div></div>' +
     '<div class="stat"><div class="stat-label">Win rate</div><div class="stat-val">' + fmtPct(wr) + '</div></div>' +
-    '<div class="stat"><div class="stat-label">Trades taken</div><div class="stat-val">' + trades.length + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Trades taken</div><div class="stat-val">' + filtered.length + '</div></div>' +
     '<div class="stat"><div class="stat-label">Profit factor</div><div class="stat-val">' + pf + '</div></div>' +
     '<div class="stat"><div class="stat-label">Avg win</div><div class="stat-val pos">' + (avgWin ? fmt(avgWin) : '—') + '</div></div>' +
     '<div class="stat"><div class="stat-label">Avg loss</div><div class="stat-val neg">' + (avgLoss ? fmt(avgLoss) : '—') + '</div></div>';
-  const recent = trades.slice(0, 5);
+  const recent = filtered.slice(0, 5);
   document.getElementById('recent-list').innerHTML = recent.length ? recent.map(t =>
     '<div onclick="openDetail(' + t.id + ')" style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px;cursor:pointer;">' +
     '<span style="font-weight:500">' + t.pair + '</span>' +
@@ -542,8 +598,9 @@ function renderDashboard() {
 }
 
 function renderTopPairs(id) {
+  const filtered = getFilteredTrades();
   const pairMap = {};
-  trades.filter(t => t.status !== 'open').forEach(t => {
+  filtered.filter(t => t.status !== 'open').forEach(t => {
     if (!pairMap[t.pair]) pairMap[t.pair] = { wins: 0, total: 0, pnl: 0 };
     pairMap[t.pair].total++;
     if (t.status === 'win') pairMap[t.pair].wins++;
@@ -566,7 +623,8 @@ function renderTopPairs(id) {
 function populateFilterPairs() {
   const sel = document.getElementById('filter-pair');
   const current = sel.value;
-  const pairs = [...new Set(trades.map(t => t.pair))].sort();
+  const filtered = getFilteredTrades();
+  const pairs = [...new Set(filtered.map(t => t.pair))].sort();
   sel.innerHTML = '<option value="">All pairs</option>' + pairs.map(p => '<option value="' + p + '">' + p + '</option>').join('');
   sel.value = current;
 }
@@ -575,11 +633,13 @@ function renderLog() {
   const fp = document.getElementById('filter-pair').value;
   const fd = document.getElementById('filter-dir').value;
   const fs = document.getElementById('filter-status').value;
-  const list = trades.filter(t => (!fp || t.pair === fp) && (!fd || t.dir === fd) && (!fs || t.status === fs));
+  const filtered = getFilteredTrades();
+  const list = filtered.filter(t => (!fp || t.pair === fp) && (!fd || t.dir === fd) && (!fs || t.status === fs));
   document.getElementById('log-list').innerHTML = list.length ? list.map(t =>
     '<div class="trade-row" onclick="openDetail(' + t.id + ')">' +
     '<span style="color:var(--color-text-secondary)">' + dateStr(t.time) + '</span>' +
     '<span style="font-weight:500">' + t.pair + '</span>' +
+    '<span style="font-weight:500;color:var(--color-text-secondary)">' + (t.account || '—') + '</span>' +
     '<span><span class="badge badge-' + t.dir + '">' + t.dir + '</span></span>' +
     '<span>' + t.entry + '</span>' +
     '<span style="color:var(--color-text-tertiary);font-size:12px">' + (t.sl || '—') + ' / ' + (t.tp || '—') + '</span>' +
@@ -596,7 +656,7 @@ function renderLog() {
 async function deleteTrade(id) {
   if (!confirm('Delete this trade?')) return;
   const ok = await deleteTradeRemote(id);
-  if (ok) { trades = trades.filter(t => t.id !== id); renderLog(); renderDashboard(); }
+  if (ok) { trades = trades.filter(t => t.id !== id); extractAndSaveAccounts(); renderLog(); renderDashboard(); }
 }
 
 function openDetail(id) {
@@ -606,7 +666,7 @@ function openDetail(id) {
   let html = '<h2>' + t.pair + ' — ' + t.dir.toUpperCase() + ' <button class="close-btn" onclick="document.getElementById(\'detail-modal\').style.display=\'none\'">✕</button></h2>';
   html += '<div class="detail-grid">';
   const fields = [
-    ['Date/time', (t.time||'').replace('T',' ')],['Session', t.session||'—'],
+    ['Date/time', (t.time||'').replace('T',' ')],['Account', t.account || '—'],['Session', t.session||'—'],
     ['Entry', t.entry],['Exit', t.exit||'—'],['Stop loss', t.sl||'—'],['Take profit', t.tp||'—'],
     ['R:R ratio', rr],['Size (lots)', t.size||'—'],['Risk ($)', t.risk?'$'+t.risk:'—'],
     ['PNL', '<span class="' + pnlClass(t.pnl) + '">' + fmt(t.pnl) + '</span>'],
@@ -637,12 +697,13 @@ function closeModal(e) {
 }
 
 function renderAnalytics() {
-  const closed = trades.filter(t => t.status !== 'open');
+  const filtered = getFilteredTrades();
+  const closed = filtered.filter(t => t.status !== 'open');
   const wins = closed.filter(t => t.status === 'win');
   const totalPnl = closed.reduce((s, t) => s + (t.pnl || 0), 0);
   const avgRR = closed.filter(t => t.rr).reduce((s, t, _, a) => s + parseFloat(t.rr) / a.length, 0);
-  const streak = getStreak();
-  const avgEmotion = trades.length ? (trades.reduce((s, t) => s + t.emotion, 0) / trades.length).toFixed(1) : '—';
+  const streak = getStreak(filtered);
+  const avgEmotion = filtered.length ? (filtered.reduce((s, t) => s + t.emotion, 0) / filtered.length).toFixed(1) : '—';
   document.getElementById('analytics-stats').innerHTML =
     '<div class="stat"><div class="stat-label">Total PNL</div><div class="stat-val ' + (totalPnl >= 0 ? 'pos' : 'neg') + '">' + fmt(totalPnl) + '</div></div>' +
     '<div class="stat"><div class="stat-label">Win rate</div><div class="stat-val">' + (closed.length ? fmtPct(wins.length / closed.length) : '—') + '</div></div>' +
@@ -673,8 +734,8 @@ function renderAnalytics() {
   renderPnlChart(closed);
 }
 
-function getStreak() {
-  const closed = trades.filter(t => t.status !== 'open');
+function getStreak(filtered) {
+  const closed = filtered.filter(t => t.status !== 'open');
   if (!closed.length) return { count: 0, type: '—' };
   let count = 1; const first = closed[0].status;
   for (let i = 1; i < closed.length; i++) { if (closed[i].status === first) count++; else break; }
@@ -697,7 +758,16 @@ function renderPnlChart(closed) {
 }
 
 async function init() {
+  // Load saved account settings
+  if (localStorage.getItem('knownAccounts')) {
+    knownAccounts = JSON.parse(localStorage.getItem('knownAccounts'));
+  }
+  if (localStorage.getItem('currentAccount')) {
+    currentAccount = localStorage.getItem('currentAccount');
+  }
+
   await fetchTrades();
+  extractAndSaveAccounts();
   document.getElementById('loading-overlay').style.display = 'none';
   renderDashboard();
 }
