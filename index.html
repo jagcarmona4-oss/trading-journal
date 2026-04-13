@@ -65,6 +65,8 @@
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-danger { background: transparent; border: 0.5px solid #E24B4A; color: #E24B4A; padding: 5px 12px; border-radius: var(--border-radius-md); font-size: 12px; cursor: pointer; font-family: var(--font-sans); }
   .btn-danger:hover { background: #FCEBEB; }
+  .btn-edit { background: transparent; border: 0.5px solid #1D9E75; color: #1D9E75; padding: 5px 12px; border-radius: var(--border-radius-md); font-size: 12px; cursor: pointer; font-family: var(--font-sans); }
+  .btn-edit:hover { background: #E1F5EE; }
   .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
   .trade-row { display: grid; grid-template-columns: 80px 70px 60px 80px 80px 80px 1fr 90px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; cursor: pointer; }
   .trade-row:last-child { border-bottom: none; }
@@ -294,6 +296,7 @@ const HEADERS = {
 let trades = [];
 let tempImages = [];
 let pnlChart = null;
+let editingId = null;   // ← NEW: tracks which trade we are editing
 
 function setSyncStatus(state, label) {
   document.getElementById('sync-dot').className = 'sync-dot ' + state;
@@ -388,6 +391,45 @@ function renderImagePreview() {
 function removeImg(i) { tempImages.splice(i, 1); renderImagePreview(); }
 function openLightbox(src) { document.getElementById('lb-img').src = src; document.getElementById('lightbox').style.display = 'flex'; }
 
+// ====================== EDIT FUNCTIONALITY ======================
+function editTrade(id) {
+  const trade = trades.find(t => t.id === id);
+  if (!trade) return;
+
+  editingId = id;
+  document.getElementById('save-btn').textContent = 'Update trade';
+
+  document.getElementById('f-pair').value = trade.pair || '';
+  document.getElementById('f-entry').value = trade.entry || '';
+  document.getElementById('f-sl').value = trade.sl || '';
+  document.getElementById('f-tp').value = trade.tp || '';
+  document.getElementById('f-exit').value = trade.exit || '';
+  document.getElementById('f-pnl').value = trade.pnl || '';
+  document.getElementById('f-dir').value = trade.dir || 'long';
+  document.getElementById('f-status').value = trade.status || 'open';
+  document.getElementById('f-session').value = trade.session || '';
+  document.getElementById('f-time').value = trade.time || '';
+  document.getElementById('f-size').value = trade.size || '';
+  document.getElementById('f-risk').value = trade.risk || '';
+  document.getElementById('f-reason').value = trade.reason || '';
+  document.getElementById('f-tf').value = trade.tf || '';
+  document.getElementById('f-tags').value = trade.tags || '';
+  document.getElementById('f-early').value = trade.early || 'no';
+  document.getElementById('f-early-reason').value = trade.earlyReason || '';
+  document.getElementById('f-well').value = trade.well || '';
+  document.getElementById('f-improve').value = trade.improve || '';
+  document.getElementById('f-emotion').value = trade.emotion || 7;
+  document.getElementById('emotion-out').textContent = trade.emotion || 7;
+  document.getElementById('f-conf').value = trade.confidence || 7;
+  document.getElementById('conf-out').textContent = trade.confidence || 7;
+  document.getElementById('f-grade').value = trade.grade || '';
+
+  tempImages = trade.images ? [...trade.images] : [];
+  renderImagePreview();
+
+  showPage('add');
+}
+
 async function saveTrade() {
   const pair = document.getElementById('f-pair').value.trim().toUpperCase();
   const entry = parseFloat(document.getElementById('f-entry').value);
@@ -401,7 +443,8 @@ async function saveTrade() {
     if (slDist > 0) rr = (tpDist / slDist).toFixed(2);
   }
   const trade = {
-    id: Date.now(), pair, entry, sl, tp, rr,
+    id: editingId || Date.now(),
+    pair, entry, sl, tp, rr,
     dir: document.getElementById('f-dir').value,
     exit: parseFloat(document.getElementById('f-exit').value) || null,
     pnl: parseFloat(document.getElementById('f-pnl').value) || null,
@@ -422,21 +465,37 @@ async function saveTrade() {
     grade: document.getElementById('f-grade').value,
     images: [...tempImages],
   };
+
   const btn = document.getElementById('save-btn');
-  btn.disabled = true; btn.textContent = 'Saving…';
+  btn.disabled = true;
+  btn.textContent = editingId ? 'Updating…' : 'Saving…';
+
   const ok = await upsertTrade(trade);
-  btn.disabled = false; btn.textContent = 'Save trade';
+
+  btn.disabled = false;
+  btn.textContent = editingId ? 'Update trade' : 'Save trade';
+
   if (ok) {
-    trades.unshift(trade);
+    if (editingId) {
+      const index = trades.findIndex(t => t.id === editingId);
+      if (index !== -1) trades[index] = trade;
+    } else {
+      trades.unshift(trade);
+    }
     const msg = document.getElementById('save-msg');
     msg.style.display = 'inline';
     setTimeout(() => msg.style.display = 'none', 3000);
     clearForm();
     renderDashboard();
+    renderLog();
+    renderAnalytics();
   }
 }
 
 function clearForm() {
+  editingId = null;
+  document.getElementById('save-btn').textContent = 'Save trade';
+
   ['f-pair','f-entry','f-sl','f-tp','f-exit','f-pnl','f-reason','f-tf','f-tags','f-early-reason','f-well','f-improve','f-size','f-risk']
     .forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('f-dir').value = 'long';
@@ -526,7 +585,10 @@ function renderLog() {
     '<span style="color:var(--color-text-tertiary);font-size:12px">' + (t.sl || '—') + ' / ' + (t.tp || '—') + '</span>' +
     '<span class="' + pnlClass(t.pnl) + '">' + fmt(t.pnl) + '</span>' +
     '<span><span class="badge badge-' + t.status + '">' + t.status + '</span></span>' +
-    '<span><button class="btn-danger" onclick="event.stopPropagation();deleteTrade(' + t.id + ')">Delete</button></span>' +
+    '<span style="display:flex;gap:6px;">' +
+    '<button class="btn-edit" onclick="event.stopPropagation();editTrade(' + t.id + ')">Edit</button>' +
+    '<button class="btn-danger" onclick="event.stopPropagation();deleteTrade(' + t.id + ')">Delete</button>' +
+    '</span>' +
     '</div>'
   ).join('') : '<div class="empty-state"><b>No trades found</b><p>Add your first trade or adjust filters</p></div>';
 }
