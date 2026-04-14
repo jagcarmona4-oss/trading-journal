@@ -49,6 +49,7 @@
   .nav-btn { font-size: 13px; padding: 6px 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-secondary); cursor: pointer; font-family: var(--font-sans); }
   .nav-btn.active { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); }
   .nav-btn:hover:not(.active) { background: var(--color-background-secondary); }
+  .account-selector { font-size: 13px; padding: 6px 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); margin-right: 8px; }
   .sync-status { font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-tertiary); display: flex; align-items: center; gap: 5px; }
   .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #9a9994; flex-shrink: 0; }
   .sync-dot.synced { background: #1D9E75; }
@@ -74,10 +75,10 @@
   .btn-tl:hover { background: rgba(29,158,117,0.1); }
   .btn-tl.syncing { opacity: 0.6; cursor: not-allowed; }
   .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
-  .trade-row { display: grid; grid-template-columns: 80px 70px 100px 60px 80px 80px 80px 1fr 110px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; cursor: pointer; }
+  .trade-row { display: grid; grid-template-columns: 80px 70px 85px 60px 80px 80px 80px 1fr 110px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; cursor: pointer; }
   .trade-row:last-child { border-bottom: none; }
   .trade-row:hover { background: var(--color-background-secondary); margin: 0 -4px; padding-left: 4px; padding-right: 4px; border-radius: var(--border-radius-md); }
-  .trade-header { display: grid; grid-template-columns: 80px 70px 100px 60px 80px 80px 80px 1fr 110px; gap: 10px; padding: 0 0 8px; border-bottom: 0.5px solid var(--color-border-secondary); font-size: 11px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .trade-header { display: grid; grid-template-columns: 80px 70px 85px 60px 80px 80px 80px 1fr 110px; gap: 10px; padding: 0 0 8px; border-bottom: 0.5px solid var(--color-border-secondary); font-size: 11px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
   .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
   .badge-long { background: #E1F5EE; color: #0F6E56; }
   .badge-short { background: #FAECE7; color: #993C1D; }
@@ -109,7 +110,7 @@
   .img-thumb:hover { opacity: 0.8; }
   .detail-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: flex-start; justify-content: center; z-index: 999; padding: 2rem 1rem; overflow-y: auto; }
   .detail-box { background: var(--color-background-primary); border-radius: var(--border-radius-lg); padding: 1.5rem; max-width: 680px; width: 100%; border: 0.5px solid var(--color-border-tertiary); margin: auto; }
-  .detail-box h2 { font-size: 16px; font-weight: 500; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .detail-box h2 { font-size: 16px; font-weight: 500; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
   .close-btn { background: transparent; border: none; cursor: pointer; font-size: 18px; color: var(--color-text-secondary); padding: 0 4px; }
   .close-btn:hover { color: var(--color-text-primary); }
   .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; font-size: 13px; }
@@ -132,7 +133,7 @@
   .pnl-pos { color: #1D9E75; font-weight: 500; }
   .pnl-neg { color: #E24B4A; font-weight: 500; }
   .chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-  .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--color-text-primary); color: var(--color-background-primary); padding: 10px 16px; border-radius: var(--border-radius-md); font-size: 13px; z-index: 9999; opacity: 0; transition: opacity 0.2s; pointer-events: none; max-width: 300px; }
+  .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--color-text-primary); color: var(--color-background-primary); padding: 10px 16px; border-radius: var(--border-radius-md); font-size: 13px; z-index: 9999; opacity: 0; transition: opacity 0.2s; pointer-events: none; max-width: 280px; }
   .toast.show { opacity: 1; }
   .loading-overlay { position: fixed; inset: 0; background: var(--color-background-tertiary); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; gap: 12px; }
   .spinner { width: 28px; height: 28px; border: 2px solid var(--color-border-secondary); border-top-color: var(--color-text-primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
@@ -157,11 +158,13 @@
   .tl-progress { height: 3px; border-radius: 2px; background: var(--color-border-tertiary); margin-top: 8px; overflow: hidden; }
   .tl-progress-bar { height: 100%; background: #1D9E75; border-radius: 2px; transition: width 0.3s; }
   .tl-auto-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 1px 6px; border-radius: 20px; background: #EDE6FB; color: #5B21B6; font-weight: 600; }
+  /* Account filter pills */
   .acct-filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center; }
-  .acct-filter-pill { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-secondary); cursor: pointer; font-family: var(--font-sans); white-space: nowrap; }
+  .acct-filter-pill { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-secondary); cursor: pointer; font-family: var(--font-sans); transition: all 0.15s; white-space: nowrap; }
   .acct-filter-pill:hover { background: var(--color-background-secondary); }
   .acct-filter-pill.active { background: var(--color-text-primary); color: var(--color-background-primary); border-color: var(--color-text-primary); }
   .acct-filter-label { font-size: 11px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; }
+  /* Drawdown warning */
   .dd-warning { background: #FCEBEB; border: 0.5px solid #E24B4A; border-radius: var(--border-radius-md); padding: 8px 12px; font-size: 12px; color: #A32D2D; display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; }
   .dd-ok { background: #EAF3DE; border: 0.5px solid #3B6D11; border-radius: var(--border-radius-md); padding: 8px 12px; font-size: 12px; color: #3B6D11; display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; }
   @media (max-width: 700px) {
@@ -177,29 +180,32 @@
 <body>
 <div id="loading-overlay" class="loading-overlay">
   <div class="spinner"></div>
-  <span style="font-size:13px;color:var(--color-text-secondary)">Loading trades…</span>
+  <span style="font-size:13px;color:var(--color-text-secondary)">Loading trades...</span>
 </div>
 <div class="app">
   <div class="nav">
-    <h1>📈 Trading Journal</h1>
+    <h1>&#x1F4C8; Trading Journal</h1>
     <button class="nav-btn active" onclick="showPage('dashboard')">Dashboard</button>
     <button class="nav-btn" onclick="showPage('log')">Trade Log</button>
     <button class="nav-btn" onclick="showPage('analytics')">Analytics</button>
     <button class="nav-btn" onclick="showPage('add')">+ New Trade</button>
-    <button class="nav-btn" onclick="showBalanceModal()" style="white-space:nowrap;">💰 Accounts</button>
+    <button class="nav-btn" onclick="showBalanceModal()" style="padding:6px 14px;white-space:nowrap;">&#x1F4B0; Accounts</button>
     <button class="btn-tl" id="tl-sync-nav-btn" onclick="showPage('tl-sync')" style="margin-left:4px;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
       TL Sync
     </button>
     <div class="sync-status">
       <div class="sync-dot syncing" id="sync-dot"></div>
-      <span id="sync-label">Connecting…</span>
+      <span id="sync-label">Connecting...</span>
     </div>
   </div>
 
   <!-- Dashboard -->
   <div id="page-dashboard" class="page active">
-    <div class="acct-filter-row" id="acct-filter-row"><span class="acct-filter-label">Account:</span></div>
+    <!-- Account filter pills -->
+    <div class="acct-filter-row" id="acct-filter-row">
+      <span class="acct-filter-label">Account:</span>
+    </div>
     <div id="dd-banner"></div>
     <div class="stats-grid" id="stats-grid"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
@@ -218,7 +224,7 @@
   <div id="page-log" class="page">
     <div class="filter-bar">
       <select id="filter-pair" onchange="renderLog()"><option value="">All pairs</option></select>
-      <select id="filter-dir" onchange="renderLog()"><option value="">Long & Short</option><option value="long">Long</option><option value="short">Short</option></select>
+      <select id="filter-dir" onchange="renderLog()"><option value="">Long &amp; Short</option><option value="long">Long</option><option value="short">Short</option></select>
       <select id="filter-status" onchange="renderLog()"><option value="">All statuses</option><option value="win">Win</option><option value="loss">Loss</option><option value="open">Open</option><option value="breakeven">Breakeven</option></select>
       <select id="filter-source" onchange="renderLog()"><option value="">All sources</option><option value="manual">Manual only</option><option value="auto">Auto-synced only</option></select>
       <select id="filter-account-log" onchange="renderLog()"><option value="">All accounts</option></select>
@@ -234,11 +240,19 @@
 
   <!-- Analytics -->
   <div id="page-analytics" class="page">
-    <div class="acct-filter-row" id="acct-filter-row-analytics"><span class="acct-filter-label">Account:</span></div>
+    <div class="acct-filter-row" id="acct-filter-row-analytics">
+      <span class="acct-filter-label">Account:</span>
+    </div>
     <div class="stats-grid" id="analytics-stats"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-      <div class="card"><div style="font-size:14px;font-weight:500;margin-bottom:12px;">Pair performance</div><div id="pair-perf"></div></div>
-      <div class="card"><div style="font-size:14px;font-weight:500;margin-bottom:12px;">Session breakdown</div><div id="session-perf"></div></div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:500;margin-bottom:12px;">Pair performance</div>
+        <div id="pair-perf"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:500;margin-bottom:12px;">Session breakdown</div>
+        <div id="session-perf"></div>
+      </div>
     </div>
     <div class="card">
       <div style="font-size:14px;font-weight:500;margin-bottom:12px;">Cumulative PNL</div>
@@ -251,10 +265,24 @@
     <div class="card">
       <p class="section-title">Trade details</p>
       <div class="form-grid cols4">
-        <div class="form-group"><label>Pair *</label><input id="f-pair" placeholder="EUR/USD" list="pairs-list"><datalist id="pairs-list"><option value="EUR/USD"><option value="GBP/USD"><option value="USD/JPY"><option value="AUD/USD"><option value="USD/CAD"><option value="NZD/USD"><option value="EUR/GBP"><option value="USD/CHF"><option value="BTC/USD"><option value="ETH/USD"><option value="XAU/USD"><option value="US30"><option value="NAS100"><option value="SPX500"></datalist></div>
-        <div class="form-group"><label>Account *</label><input id="f-account" placeholder="Main" list="accounts-datalist"><datalist id="accounts-datalist"></datalist></div>
+        <div class="form-group">
+          <label>Pair *</label>
+          <input id="f-pair" placeholder="EUR/USD" list="pairs-list">
+          <datalist id="pairs-list">
+            <option value="EUR/USD"><option value="GBP/USD"><option value="USD/JPY">
+            <option value="AUD/USD"><option value="USD/CAD"><option value="NZD/USD">
+            <option value="EUR/GBP"><option value="USD/CHF"><option value="BTC/USD">
+            <option value="ETH/USD"><option value="XAU/USD"><option value="US30">
+            <option value="NAS100"><option value="SPX500">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label>Account *</label>
+          <input id="f-account" placeholder="Main" list="accounts-datalist">
+          <datalist id="accounts-datalist"></datalist>
+        </div>
         <div class="form-group"><label>Direction *</label><select id="f-dir"><option value="long">Long</option><option value="short">Short</option></select></div>
-        <div class="form-group"><label>Session</label><select id="f-session"><option value="">—</option><option value="london">London</option><option value="new_york">New York</option><option value="asian">Asian</option><option value="overlap">London/NY Overlap</option></select></div>
+        <div class="form-group"><label>Session</label><select id="f-session"><option value="">--</option><option value="london">London</option><option value="new_york">New York</option><option value="asian">Asian</option><option value="overlap">London/NY Overlap</option></select></div>
       </div>
       <div class="form-grid cols3" style="margin-top:12px;">
         <div class="form-group"><label>Entry price *</label><input id="f-entry" type="number" step="any" placeholder="1.0850"></div>
@@ -266,30 +294,30 @@
         <div class="form-group"><label>Position size (lots)</label><input id="f-size" type="number" step="any" placeholder="0.10"></div>
         <div class="form-group"><label>Risk amount ($)</label><input id="f-risk" type="number" step="any" placeholder="50"></div>
       </div>
-      <p class="section-title">Setup & reason for entry</p>
-      <div class="form-group"><label>Why did you enter?</label><textarea id="f-reason" placeholder="Describe your setup, confluences, pattern, indicator signal…"></textarea></div>
+      <p class="section-title">Setup &amp; reason for entry</p>
+      <div class="form-group"><label>Why did you enter?</label><textarea id="f-reason" placeholder="Describe your setup, confluences, pattern, indicator signal..."></textarea></div>
       <div class="form-group" style="margin-top:10px;"><label>Timeframe(s)</label><input id="f-tf" placeholder="15m, 1H, 4H"></div>
-      <div class="form-group" style="margin-top:10px;"><label>Tags</label><input id="f-tags" placeholder="breakout, trend, fib, news, revenge…"></div>
+      <div class="form-group" style="margin-top:10px;"><label>Tags</label><input id="f-tags" placeholder="breakout, trend, fib, news, revenge..."></div>
       <p class="section-title">Trade outcome</p>
       <div class="form-grid cols3">
         <div class="form-group"><label>Exit price</label><input id="f-exit" type="number" step="any" placeholder="Leave blank if open"></div>
         <div class="form-group"><label>PNL ($)</label><input id="f-pnl" type="number" step="any" placeholder="Auto or manual"></div>
         <div class="form-group"><label>Status</label><select id="f-status"><option value="open">Open</option><option value="win">Win</option><option value="loss">Loss</option><option value="breakeven">Breakeven</option></select></div>
       </div>
-      <div class="form-group" style="margin-top:12px;"><label>Closed early?</label><select id="f-early"><option value="no">No</option><option value="yes">Yes – moved to BE</option><option value="partial">Partial close</option><option value="stopped">Stopped out early</option></select></div>
+      <div class="form-group" style="margin-top:12px;"><label>Closed early?</label><select id="f-early"><option value="no">No</option><option value="yes">Yes - moved to BE</option><option value="partial">Partial close</option><option value="stopped">Stopped out early</option></select></div>
       <div class="form-group" style="margin-top:10px;"><label>Early close reason</label><textarea id="f-early-reason" placeholder="Why did you exit early?" style="min-height:55px;"></textarea></div>
       <p class="section-title">Post-trade review</p>
-      <div class="form-group"><label>What went well?</label><textarea id="f-well" placeholder="Patience, followed the plan, good entry timing…"></textarea></div>
-      <div class="form-group" style="margin-top:10px;"><label>What could be improved?</label><textarea id="f-improve" placeholder="Sized too big, moved SL, entered too early…"></textarea></div>
+      <div class="form-group"><label>What went well?</label><textarea id="f-well" placeholder="Patience, followed the plan, good entry timing..."></textarea></div>
+      <div class="form-group" style="margin-top:10px;"><label>What could be improved?</label><textarea id="f-improve" placeholder="Sized too big, moved SL, entered too early..."></textarea></div>
       <div class="form-group" style="margin-top:10px;">
-        <label>Emotional state (1–10, 10=calm)</label>
+        <label>Emotional state (1-10, 10=calm)</label>
         <div style="display:flex;align-items:center;gap:10px;"><input id="f-emotion" type="range" min="1" max="10" value="7" style="flex:1"><span id="emotion-out" style="font-size:13px;color:var(--color-text-secondary);min-width:30px;">7</span></div>
       </div>
       <div class="form-group" style="margin-top:10px;">
-        <label>Confidence at entry (1–10)</label>
+        <label>Confidence at entry (1-10)</label>
         <div style="display:flex;align-items:center;gap:10px;"><input id="f-conf" type="range" min="1" max="10" value="7" style="flex:1"><span id="conf-out" style="font-size:13px;color:var(--color-text-secondary);min-width:30px;">7</span></div>
       </div>
-      <div class="form-group" style="margin-top:10px;"><label>Grade this trade</label><select id="f-grade"><option value="">—</option><option value="A">A — Textbook execution</option><option value="B">B — Good, minor issues</option><option value="C">C — Okay, needs work</option><option value="D">D — Poor, violated rules</option><option value="F">F — Should not have taken</option></select></div>
+      <div class="form-group" style="margin-top:10px;"><label>Grade this trade</label><select id="f-grade"><option value="">--</option><option value="A">A - Textbook execution</option><option value="B">B - Good, minor issues</option><option value="C">C - Okay, needs work</option><option value="D">D - Poor, violated rules</option><option value="F">F - Should not have taken</option></select></div>
       <p class="section-title">Screenshots</p>
       <div class="upload-zone" onclick="document.getElementById('img-input').click()">Click to add chart screenshots (PNG, JPG)</div>
       <input type="file" id="img-input" multiple accept="image/*" style="display:none" onchange="handleImages(event)">
@@ -297,7 +325,7 @@
       <div style="margin-top:1.5rem;display:flex;gap:10px;align-items:center;">
         <button class="btn-primary" id="save-btn" onclick="saveTrade()">Save trade</button>
         <button class="nav-btn" onclick="clearForm()">Clear</button>
-        <span id="save-msg" style="font-size:13px;color:#1D9E75;display:none;">✓ Saved!</span>
+        <span id="save-msg" style="font-size:13px;color:#1D9E75;display:none;">&#x2713; Saved!</span>
       </div>
     </div>
   </div>
@@ -327,29 +355,48 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
           Connect TradeLocker
         </div>
-        <div class="tl-desc">Auto-import your closed trades and open positions. Credentials stored only in your browser.</div>
+        <div class="tl-desc">Auto-import your closed trades and open positions directly from your funded account. Credentials stored only in your browser and never sent anywhere except TradeLocker's own servers.</div>
       </div>
-      <button class="btn-primary" onclick="showTLLoginForm()">Connect account →</button>
+      <button class="btn-primary" onclick="showTLLoginForm()">Connect account &rarr;</button>
     </div>
 
     <div id="tl-login-form" style="display:none;" class="card">
       <p class="section-title" style="margin-top:0;padding-top:0;border-top:none;">TradeLocker credentials</p>
       <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px;font-size:12px;color:var(--color-text-secondary);margin-bottom:14px;line-height:1.6;">
-        🔒 Credentials saved in your browser only, sent exclusively to TradeLocker's servers.
+        &#x1F512; <strong>Privacy note:</strong> Your credentials are saved in your browser's localStorage only and sent exclusively to TradeLocker's own servers.
       </div>
       <div class="form-grid cols3">
         <div class="form-group"><label>Email *</label><input id="tl-email" type="email" placeholder="you@example.com"></div>
         <div class="form-group"><label>Password *</label><input id="tl-password" type="password" placeholder="Your TradeLocker password"></div>
-        <div class="form-group"><label>Server name *</label><input id="tl-server" placeholder="e.g. OSP-DEMO" list="tl-servers-list"><datalist id="tl-servers-list"><option value="OSP-DEMO"><option value="OSP-LIVE"><option value="TFF-DEMO"><option value="TFF-LIVE"><option value="FTMO-DEMO"><option value="FTMO-LIVE"><option value="Alpha-DEMO"><option value="Alpha-LIVE"></datalist></div>
+        <div class="form-group">
+          <label>Server name *</label>
+          <input id="tl-server" placeholder="e.g. OSP-DEMO" list="tl-servers-list">
+          <datalist id="tl-servers-list">
+            <option value="OSP-DEMO"><option value="OSP-LIVE">
+            <option value="TFF-DEMO"><option value="TFF-LIVE">
+            <option value="FTMO-DEMO"><option value="FTMO-LIVE">
+            <option value="Alpha-DEMO"><option value="Alpha-LIVE">
+          </datalist>
+        </div>
       </div>
       <div class="form-grid" style="margin-top:12px;">
-        <div class="form-group"><label>Environment</label><select id="tl-env"><option value="demo">Demo / Prop Challenge (demo.tradelocker.com)</option><option value="live">Live (live.tradelocker.com)</option></select></div>
-        <div class="form-group"><label>Journal account label</label><input id="tl-acct-label" placeholder="e.g. Alpha $100K, Comeback 100K"></div>
+        <div class="form-group">
+          <label>Environment</label>
+          <select id="tl-env">
+            <option value="demo">Demo / Prop Challenge (demo.tradelocker.com)</option>
+            <option value="live">Live (live.tradelocker.com)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Journal account label</label>
+          <input id="tl-acct-label" placeholder="e.g. Alpha $100K">
+        </div>
       </div>
+      <!-- Account filter -->
       <div style="margin-top:12px;padding:12px 14px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);">
-        <div style="font-size:13px;font-weight:500;margin-bottom:8px;">Account ID filter <span style="font-weight:400;color:var(--color-text-tertiary)">(optional)</span></div>
-        <input id="tl-acct-filter" placeholder="e.g. 2094719, 2078985 — leave blank for all accounts" style="font-size:13px;border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);padding:8px 10px;font-family:var(--font-sans);outline:none;width:100%;">
-        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:5px;">Comma-separated account IDs. Leave blank to sync all accounts.</div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:8px;">Account ID filter <span style="font-weight:400;color:var(--color-text-tertiary)">(optional - only import these account IDs)</span></div>
+        <input id="tl-acct-filter" placeholder="e.g. 2094719, 2078985 - leave blank for all" style="font-size:13px;border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);padding:8px 10px;font-family:var(--font-sans);outline:none;width:100%;">
+        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:6px;">Comma-separated account IDs from your TradeLocker profile. Only trades from these accounts will be synced.</div>
       </div>
       <div style="margin-top:12px;padding:12px 14px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);">
         <div style="font-size:13px;font-weight:500;margin-bottom:10px;">Auto-sync settings</div>
@@ -367,10 +414,11 @@
         <div style="display:flex;align-items:center;gap:10px;font-size:13px;margin-top:8px;">
           <label style="white-space:nowrap;">Drawdown limit (%):</label>
           <input type="number" id="tl-dd-limit" value="10" min="1" max="100" step="0.1" style="font-size:12px;padding:4px 8px;border-radius:6px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);width:70px;">
+          <span style="font-size:11px;color:var(--color-text-tertiary);">Shows warning when approaching limit</span>
         </div>
       </div>
       <div style="margin-top:1.25rem;display:flex;gap:10px;align-items:center;">
-        <button class="btn-primary" id="tl-connect-btn" onclick="connectTL()">Connect & sync</button>
+        <button class="btn-primary" id="tl-connect-btn" onclick="connectTL()">Connect &amp; sync</button>
         <button class="nav-btn" onclick="hideTLLoginForm()">Cancel</button>
         <span id="tl-connect-msg" style="font-size:13px;"></span>
       </div>
@@ -378,7 +426,8 @@
 
     <div id="tl-sync-results" style="display:none;" class="card">
       <div style="font-size:14px;font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
-        Sync results <span id="tl-sync-counts" style="font-size:12px;color:var(--color-text-secondary);font-weight:400;"></span>
+        Sync results
+        <span id="tl-sync-counts" style="font-size:12px;color:var(--color-text-secondary);font-weight:400;"></span>
       </div>
       <div class="tl-progress"><div class="tl-progress-bar" id="tl-progress-bar" style="width:0%"></div></div>
       <div class="tl-sync-log" id="tl-sync-log"></div>
@@ -387,10 +436,10 @@
     <div class="card" style="margin-top:1rem;">
       <div style="font-size:14px;font-weight:500;margin-bottom:12px;">How the sync works</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;font-size:13px;color:var(--color-text-secondary);">
-        <div style="display:flex;gap:10px;"><div style="font-size:20px;flex-shrink:0;">🔐</div><div><strong style="color:var(--color-text-primary);display:block;margin-bottom:3px;">Authenticate</strong>Logs in to TradeLocker's API to get a session token.</div></div>
-        <div style="display:flex;gap:10px;"><div style="font-size:20px;flex-shrink:0;">📋</div><div><strong style="color:var(--color-text-primary);display:block;margin-bottom:3px;">Fetch trades</strong>Gets your filled order history from all filtered accounts.</div></div>
-        <div style="display:flex;gap:10px;"><div style="font-size:20px;flex-shrink:0;">🔄</div><div><strong style="color:var(--color-text-primary);display:block;margin-bottom:3px;">Smart merge</strong>Your notes, grades and screenshots are never overwritten.</div></div>
-        <div style="display:flex;gap:10px;"><div style="font-size:20px;flex-shrink:0;">✏️</div><div><strong style="color:var(--color-text-primary);display:block;margin-bottom:3px;">You add the insight</strong>Auto trades get a <span class="tl-auto-badge">TL Auto</span> badge.</div></div>
+        <div style="display:flex;gap:10px;"><div style="font-size:20px;flex-shrink:0;">&#x1F510;</div><div><strong style="color:var(--color-text-primary);display:block;margin-bottom:3px;">Authenticate</strong>Logs in to TradeLocker's public REST API using your credentials.</div></div>
+        <div style="display:flex;gap:10px;"><div style="font-size:20px;flex-shrink:0;">&#x1F4CB;</div><div><strong style="color:var(--color-text-primary);display:block;margin-bottom:3px;">Fetch trades</strong>Retrieves filled orders history from your selected account IDs.</div></div>
+        <div style="display:flex;gap:10px;"><div style="font-size:20px;flex-shrink:0;">&#x1F504;</div><div><strong style="color:var(--color-text-primary);display:block;margin-bottom:3px;">Smart merge</strong>Your notes, grades and screenshots are never overwritten.</div></div>
+        <div style="display:flex;gap:10px;"><div style="font-size:20px;flex-shrink:0;">&#x270F;&#xFE0F;</div><div><strong style="color:var(--color-text-primary);display:block;margin-bottom:3px;">You add the insight</strong>Auto-imported trades get a <span class="tl-auto-badge">TL Auto</span> badge.</div></div>
       </div>
     </div>
   </div>
@@ -400,15 +449,19 @@
 <div id="detail-modal" style="display:none;" class="detail-modal" onclick="closeModal(event)">
   <div class="detail-box" id="detail-content" onclick="event.stopPropagation()"></div>
 </div>
+
 <!-- Lightbox -->
 <div id="lightbox" style="display:none;" class="lightbox" onclick="this.style.display='none'">
   <img id="lb-img" src="" alt="Chart screenshot">
 </div>
+
 <!-- Account / Balance Modal -->
 <div id="balance-modal" style="display:none;" class="detail-modal" onclick="if(event.target.id==='balance-modal')closeBalanceModal()">
   <div class="detail-box" onclick="event.stopPropagation()" style="max-width:560px;width:100%;">
-    <h2 style="margin-bottom:1rem;">💰 Accounts <button class="close-btn" onclick="closeBalanceModal()">✕</button></h2>
-    <p style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:16px;">Balance = Initial capital + closed PNL. Deleting an account removes all its trades.</p>
+    <h2 style="margin-bottom:1rem;">&#x1F4B0; Accounts
+      <button class="close-btn" onclick="closeBalanceModal()">&#x2715;</button>
+    </h2>
+    <p style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:16px;">Current balance = Initial capital + sum of all closed trade PNLs. Deleting an account also removes all its trades.</p>
     <div id="balances-list" class="card" style="padding:0;"></div>
     <div style="margin-top:1rem;display:flex;gap:8px;">
       <button class="btn-primary" onclick="addNewAccountBalance()" style="flex:1;">+ Add account</button>
@@ -416,50 +469,73 @@
     </div>
   </div>
 </div>
-<div id="toast" class="toast"></div>
 
+<div id="toast" class="toast"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    SUPABASE CONFIG
-══════════════════════════════════════════════════════ */
+====================================================== */
 const SUPABASE_URL = 'https://lxkqqewbhijidehyvnde.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_b1CQbtRRsaXM8uWQH3tfWw_xPINGdzw';
 const API = SUPABASE_URL + '/rest/v1/trades';
-const HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' };
+const HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'Content-Type': 'application/json'
+};
 
-let trades = [], tempImages = [], pnlChart = null, editingId = null;
-let currentAccount = 'All', knownAccounts = [], initialBalances = {};
+let trades          = [];
+let tempImages      = [];
+let pnlChart        = null;
+let editingId       = null;
+let currentAccount  = 'All';
+let knownAccounts   = [];
+let initialBalances = {};
+let accountAliases  = {}; // accNum -> friendly label
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    TRADELOCKER STATE
-══════════════════════════════════════════════════════ */
-let tlCreds = null, tlToken = null, tlRefreshToken = null;
-let tlAccountId = null, tlAccNum = null, tlAllAccounts = [];
-let tlIsSyncing = false, tlInstrumentMap = {};
+====================================================== */
+let tlCreds         = null;
+let tlToken         = null;
+let tlRefreshToken  = null;
+let tlAccountId     = null;
+let tlAccNum        = null;
+let tlAllAccounts   = []; // all accounts from TL
+let tlIsSyncing     = false;
+let tlInstrumentMap = {};
 
 function loadTLCreds() {
-  try { const s = localStorage.getItem('tlCreds');     if (s) tlCreds = JSON.parse(s); } catch(e) {}
-  try { const s = localStorage.getItem('tlInstrumentMap'); if (s) tlInstrumentMap = JSON.parse(s); } catch(e) {}
+  const saved = localStorage.getItem('tlCreds');
+  if (saved) { try { tlCreds = JSON.parse(saved); } catch(e) { tlCreds = null; } }
+  const savedMap = localStorage.getItem('tlInstrumentMap');
+  if (savedMap) { try { tlInstrumentMap = JSON.parse(savedMap); } catch(e) { tlInstrumentMap = {}; } }
+  const savedAliases = localStorage.getItem('accountAliases');
+  if (savedAliases) { try { accountAliases = JSON.parse(savedAliases); } catch(e) { accountAliases = {}; } }
 }
 function saveTLCreds() {
   if (tlCreds) localStorage.setItem('tlCreds', JSON.stringify(tlCreds));
   else localStorage.removeItem('tlCreds');
 }
 function tlBaseUrl() {
-  return (tlCreds && tlCreds.env === 'live') ? 'https://live.tradelocker.com/backend-api' : 'https://demo.tradelocker.com/backend-api';
+  return (tlCreds && tlCreds.env === 'live')
+    ? 'https://live.tradelocker.com/backend-api'
+    : 'https://demo.tradelocker.com/backend-api';
 }
+// Parse the account ID filter list
 function getAcctFilterList() {
   if (!tlCreds || !tlCreds.acctFilter) return [];
   return tlCreds.acctFilter.split(',').map(s => s.trim()).filter(Boolean);
 }
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    TRADELOCKER API
-══════════════════════════════════════════════════════ */
+====================================================== */
 async function tlAuth() {
   const res = await fetch(tlBaseUrl() + '/auth/jwt/token', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: tlCreds.email, password: tlCreds.password, server: tlCreds.server })
   });
   if (!res.ok) { const b = await res.text(); throw new Error('Auth failed (' + res.status + '): ' + b.slice(0,120)); }
@@ -467,6 +543,7 @@ async function tlAuth() {
   tlToken = data.accessToken; tlRefreshToken = data.refreshToken;
   return data;
 }
+
 async function tlGetAccounts() {
   const res = await fetch(tlBaseUrl() + '/auth/jwt/all-accounts', {
     headers: { 'Authorization': 'Bearer ' + tlToken, 'Content-Type': 'application/json' }
@@ -474,17 +551,46 @@ async function tlGetAccounts() {
   if (!res.ok) throw new Error('Could not fetch accounts (' + res.status + ')');
   const data = await res.json();
   tlAllAccounts = data.accounts || [];
-  if (!tlAllAccounts.length) throw new Error('No accounts found.');
+  if (!tlAllAccounts.length) throw new Error('No accounts found in this TradeLocker profile.');
+
+  // Log ALL fields of every account so we can identify the correct field names
+  addSyncLog('ok', 'Total accounts in profile: ' + tlAllAccounts.length);
+  tlAllAccounts.forEach((a, i) => {
+    const allVals = Object.entries(a).map(([k,v]) => k + '=' + v).join(' | ');
+    addSyncLog('ok', 'Account[' + i + ']: ' + allVals);
+    console.log('TL Account[' + i + '] full object:', JSON.stringify(a));
+  });
+
   const filterList = getAcctFilterList();
-  let target = tlAllAccounts;
+  let targetAccounts = tlAllAccounts;
+
   if (filterList.length > 0) {
-    target = tlAllAccounts.filter(a => filterList.includes(String(a.id)) || filterList.includes(String(a.accNum)));
-    if (!target.length) { addSyncLog('skip', 'No accounts matched filter, using first'); target = [tlAllAccounts[0]]; }
+    // Search EVERY value in the account object -- not just id/accNum
+    // because the 7-digit account number (e.g. 2094719) may be in a different field
+    targetAccounts = tlAllAccounts.filter(a =>
+      Object.values(a).some(v => filterList.includes(String(v)))
+    );
+    if (!targetAccounts.length) {
+      // Show the user exactly what IDs are available so they can fix the filter
+      const available = tlAllAccounts.map(a =>
+        'id=' + a.id + ' accNum=' + a.accNum +
+        (a.accountId ? ' accountId=' + a.accountId : '') +
+        (a.number ? ' number=' + a.number : '')
+      ).join('; ');
+      addSyncLog('err', 'No accounts matched filter [' + filterList.join(', ') + ']');
+      addSyncLog('err', 'Available: ' + available);
+      addSyncLog('err', 'Update the Account ID filter field with correct IDs and re-sync.');
+      throw new Error('Account filter matched nothing. Check sync log for available IDs, then update the filter in TL Sync settings.');
+    }
+    addSyncLog('ok', 'Filter matched ' + targetAccounts.length + ' account(s)');
   }
-  tlAccountId = target[0].id; tlAccNum = target[0].accNum;
-  addSyncLog('ok', 'Found ' + tlAllAccounts.length + ' accounts, syncing ' + target.length);
-  return target;
+
+  tlAccountId = targetAccounts[0].id;
+  tlAccNum    = targetAccounts[0].accNum;
+  addSyncLog('ok', 'Syncing ' + targetAccounts.length + ' account(s)');
+  return targetAccounts;
 }
+
 async function tlFetch(path, accNum) {
   const num = accNum || tlAccNum;
   const res = await fetch(tlBaseUrl() + path, {
@@ -495,9 +601,9 @@ async function tlFetch(path, accNum) {
   return res.json();
 }
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    INSTRUMENT MAP
-══════════════════════════════════════════════════════ */
+====================================================== */
 async function tlLoadInstruments(accountId, accNum) {
   try {
     const res = await tlFetch('/trade/accounts/' + accountId + '/instruments', accNum);
@@ -516,12 +622,15 @@ async function tlLoadInstruments(accountId, accNum) {
     });
     localStorage.setItem('tlInstrumentMap', JSON.stringify(tlInstrumentMap));
     return count;
-  } catch(e) { addSyncLog('skip', 'Instruments error: ' + e.message); return 0; }
+  } catch(e) {
+    addSyncLog('skip', 'Could not load instruments for acct ' + accNum + ': ' + e.message);
+    return 0;
+  }
 }
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    PAIR NORMALISER
-══════════════════════════════════════════════════════ */
+====================================================== */
 function normalizePair(sym) {
   if (!sym) return sym;
   sym = sym.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -538,75 +647,101 @@ function normalizePair(sym) {
   if (['US30','DJ30','DOWJONES'].includes(sym)) return 'US30';
   if (['NAS100','NASDAQ','NQ100'].includes(sym)) return 'NAS100';
   if (['SPX500','SP500','US500'].includes(sym)) return 'SPX500';
-  if (sym === 'USOIL' || sym === 'WTIUSD') return 'USOIL';
   return sym;
 }
 
-/* ══════════════════════════════════════════════════════
-   ORDER → JOURNAL TRADE
-   
-   CONFIRMED array layout from live TL data:
+/* ======================================================
+   ORDER -> JOURNAL TRADE
+
+   TL array layout (determined from live data cross-reference):
    [0]  ticket ID
    [1]  instrument ID (numeric)
    [2]  ?
-   [3]  SIZE / LOTS  ← NOT entry price!
+   [3]  entry / open price
    [4]  side ('buy'|'sell')
    [5]  order type
-   [6]  status ('Filled' etc)
-   [7]  ENTRY / open price  ← NOT size!
+   [6]  status
+   [7]  size / lots
    [8]  close / fill price
-   [9]  another price
-   [14] open timestamp (epoch ms)
-   [15] close timestamp (epoch ms)
-   [19] SL price (candidate)
-   [20] TP price (candidate)
-   [21] net PNL
-══════════════════════════════════════════════════════ */
+   [14] open timestamp (epoch ms or seconds)
+   [15] close timestamp (epoch ms or seconds)
+   [19-21] PNL candidates (scan all three)
+
+   NOTE: the first sync with a new account will log ALL array values
+   to the browser console so you can verify the layout.
+====================================================== */
+let _tlDiagDone = false; // log raw array once per sync session
+
 function tlTradeToJournal(order, isOpen, acctLabel) {
   const isArr = Array.isArray(order);
 
-  // Ticket ID
+  // One-time diagnostic: log the full raw array so we can verify index layout
+  if (isArr && !_tlDiagDone) {
+    _tlDiagDone = true;
+    console.log('=== TL RAW ARRAY DIAGNOSTIC (first order) ===');
+    console.log('Full array:', JSON.stringify(order));
+    order.forEach((v, i) => console.log('  [' + i + '] = ' + v));
+    console.log('Compare against known values for this trade in your broker dashboard');
+    console.log('to verify which index holds entry price, lots, and PNL.');
+    addSyncLog('ok', 'Raw array diagnostic logged to browser console (F12 > Console)');
+  }
+
   const tlId = String(isArr ? order[0] : (order.ticket || order.orderId || order.positionId || Date.now()));
 
-  // Instrument → pair
   const instrId = String(isArr ? (order[1] || '') : (order.tradableInstrumentId || order.symbol || ''));
   let pair = tlInstrumentMap[instrId] || '';
   if (!pair && instrId && !instrId.match(/^\d+$/)) pair = normalizePair(instrId);
-  if (!pair) pair = instrId ? ('ID:' + instrId) : '—';
+  if (!pair) pair = instrId ? ('ID:' + instrId) : '--';
 
-  // Direction
   const sideRaw = String(isArr ? (order[4] || '') : (order.side || '')).toLowerCase();
   const dir = (sideRaw === 'buy') ? 'long' : 'short';
 
-  // ── CORRECTED: [3]=size/lots, [7]=entry price ──
-  const size  = parseFloat(isArr ? order[3] : (order.lots || order.volume || order.qty || 0)) || null;
-  const entry = parseFloat(isArr ? order[7] : (order.openPrice || order.price || 0)) || 0;
-
-  // Close price
+  // [3] = entry price, [7] = size/lots (original layout -- verified against real data)
+  const entry   = parseFloat(isArr ? order[3] : (order.openPrice  || order.price || 0)) || 0;
   const exitRaw = parseFloat(isArr ? order[8] : (order.closePrice || order.filledPrice || 0)) || null;
-  const exit = (exitRaw && exitRaw !== entry) ? exitRaw : null;
+  const exit    = (exitRaw && exitRaw !== entry) ? exitRaw : null;
+  const size    = parseFloat(isArr ? order[7] : (order.lots || order.volume || order.qty || 0)) || null;
 
-  // SL / TP from named fields (not in array reliably)
   const sl = parseFloat(isArr ? null : (order.sl || order.stopLoss   || 0)) || null;
   const tp = parseFloat(isArr ? null : (order.tp || order.takeProfit || 0)) || null;
 
-  // PNL — scan [21]→[19], take first sane value (≤$1M)
+  // PNL: scan indexes 19-21, scan wider range 17-23 as fallback
+  // No artificial cap -- trust TL's value. Filter only truly impossible values (>$10M for a prop account).
   let pnl = null;
   if (isArr) {
+    // Primary scan: [21], [20], [19]
     for (let i = 21; i >= 19; i--) {
       const raw = order[i];
       if (raw !== null && raw !== undefined && raw !== '' && raw !== false) {
         const v = parseFloat(raw);
-        if (!isNaN(v) && Math.abs(v) <= 1000000) { pnl = v; break; }
+        if (!isNaN(v) && Math.abs(v) < 10000000) { pnl = v; break; }
       }
     }
-    // Conservative fallback derivation for standard forex only
+    // Extended scan [17..23] if still null
+    if (pnl === null) {
+      for (let i = 23; i >= 17; i--) {
+        if (i >= 19 && i <= 21) continue; // already checked
+        const raw = order[i];
+        if (raw !== null && raw !== undefined && raw !== '' && raw !== false) {
+          const v = parseFloat(raw);
+          // Must look like a reasonable PNL (not a price like 1.3456 or timestamp like 1713000000000)
+          if (!isNaN(v) && Math.abs(v) < 10000000 && (Math.abs(v) < 10000 || Math.abs(v) > 0.001)) {
+            // Heuristic: exclude values that look like forex prices (0.5-10) unless they're suspiciously close to 0
+            const looksLikePrice = (Math.abs(v) > 0.1 && Math.abs(v) < 50000 && String(v).includes('.') && String(v).split('.')[1].length >= 3);
+            if (!looksLikePrice) { pnl = v; break; }
+          }
+        }
+      }
+    }
+    // Last resort fallback formula -- only for standard forex, never crypto/exotic
     if (pnl === null && entry && exit && size) {
       const diff     = (dir === 'long') ? (exit - entry) : (entry - exit);
-      const isCrypto = /BNB|IOT|BTC|ETH|SOL|XRP|ADA/.test(pair);
+      const isCrypto = /BNB|IOT|BTC|ETH|SOL|XRP|ADA|LTC/.test(pair);
       const isExotic = /SEK|PLN|NOK|HUF|CZK|TRY|ZAR|MXN/.test(pair);
-      if (!isCrypto && !isExotic) {
-        const pipMult = pair.includes('JPY') ? 1000 : (pair.includes('XAU') || pair === 'USOIL') ? 100 : 10000;
+      // Only attempt for majors where quote currency is USD (direct pairs)
+      const isDirectUSD = /USD$/.test(pair.replace('/',''));
+      if (!isCrypto && !isExotic && isDirectUSD) {
+        const pipMult = pair.includes('JPY') ? 1000 : 10000;
         pnl = parseFloat((diff * pipMult * size).toFixed(2));
       }
     }
@@ -615,7 +750,6 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
     if (!isNaN(v) && v !== 0) pnl = v;
   }
 
-  // Timestamps
   let time = '';
   if (isArr) {
     const ms = parseInt(order[15]) || parseInt(order[14]) || 0;
@@ -626,10 +760,8 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
     if (raw) time = new Date(raw).toISOString().slice(0,16);
   }
 
-  // Filter out bracket/pending orders (no time AND no entry)
   if (!time && !entry) return null;
 
-  // Status
   let status = 'open';
   if (!isOpen) {
     if      (pnl !== null && pnl >  0.005) status = 'win';
@@ -637,11 +769,10 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
     else if (pnl !== null)                  status = 'breakeven';
   }
 
-  // R:R
   let rr = null;
   if (sl && tp && entry) {
-    const sd = Math.abs(entry - sl), td = Math.abs(tp - entry);
-    if (sd > 0) rr = (td / sd).toFixed(2);
+    const slDist = Math.abs(entry - sl); const tpDist = Math.abs(tp - entry);
+    if (slDist > 0) rr = (tpDist / slDist).toFixed(2);
   }
 
   return {
@@ -654,9 +785,9 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
   };
 }
 
-/* ══════════════════════════════════════════════════════
-   TL SYNC UI
-══════════════════════════════════════════════════════ */
+/* ======================================================
+   TRADELOCKER SYNC UI
+====================================================== */
 function showTLLoginForm() {
   document.getElementById('tl-connect-card').style.display = 'none';
   document.getElementById('tl-login-form').style.display   = 'block';
@@ -684,8 +815,9 @@ function renderTLConnectedState() {
   const envTag = document.getElementById('tl-env-tag');
   envTag.className   = 'tl-env-tag ' + (tlCreds.env === 'live' ? 'tl-env-live' : 'tl-env-demo');
   envTag.textContent = tlCreds.env === 'live' ? 'LIVE' : 'DEMO';
-  const fl = getAcctFilterList();
-  document.getElementById('tl-acct-name').textContent = fl.length ? 'IDs: ' + fl.join(', ') : (tlCreds.label || tlCreds.email);
+  const filterList = getAcctFilterList();
+  const acctDisplay = filterList.length ? filterList.join(', ') : (tlCreds.label || tlCreds.email);
+  document.getElementById('tl-acct-name').textContent = acctDisplay;
   const ls = localStorage.getItem('tlLastSync');
   if (ls) document.getElementById('tl-last-sync').textContent = 'Last sync: ' + new Date(ls).toLocaleString();
 }
@@ -696,24 +828,28 @@ function renderTLDisconnectedState() {
   document.getElementById('tl-login-form').style.display       = 'none';
 }
 function disconnectTL() {
-  if (!confirm('Disconnect TradeLocker? Existing synced trades remain in the journal.')) return;
+  if (!confirm('Disconnect TradeLocker? Your existing synced trades will remain in the journal.')) return;
   tlCreds = null; tlToken = null; tlAccountId = null; tlAccNum = null; tlAllAccounts = [];
   localStorage.removeItem('tlCreds'); localStorage.removeItem('tlLastSync'); localStorage.removeItem('tlInstrumentMap');
   tlInstrumentMap = {};
   renderTLDisconnectedState(); showToast('TradeLocker disconnected');
 }
 function addSyncLog(type, msg) {
-  const log = document.getElementById('tl-sync-log'); if (!log) return;
-  const el = document.createElement('div');
-  el.className = 'tl-sync-log-entry ' + type;
-  el.textContent = (type === 'ok' ? '✓ ' : type === 'err' ? '✗ ' : '· ') + msg;
-  log.appendChild(el); log.scrollTop = log.scrollHeight;
+  const log = document.getElementById('tl-sync-log');
+  if (!log) return;
+  const entry = document.createElement('div');
+  entry.className = 'tl-sync-log-entry ' + type;
+  entry.textContent = (type === 'ok' ? '\u2713 ' : type === 'err' ? '\u2717 ' : '\u00b7 ') + msg;
+  log.appendChild(entry); log.scrollTop = log.scrollHeight;
 }
-function setProgress(pct) { const b = document.getElementById('tl-progress-bar'); if (b) b.style.width = pct + '%'; }
+function setProgress(pct) {
+  const bar = document.getElementById('tl-progress-bar');
+  if (bar) bar.style.width = pct + '%';
+}
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    CONNECT
-══════════════════════════════════════════════════════ */
+====================================================== */
 async function connectTL() {
   const email      = document.getElementById('tl-email').value.trim();
   const password   = document.getElementById('tl-password').value;
@@ -730,98 +866,95 @@ async function connectTL() {
   }
   tlCreds = { email, password, server, env, label, acctFilter, autoSync, openStatus, ddLimit }; saveTLCreds();
   const btn = document.getElementById('tl-connect-btn');
-  btn.disabled = true; btn.textContent = 'Connecting…';
+  btn.disabled = true; btn.textContent = 'Connecting...';
   document.getElementById('tl-connect-msg').textContent = '';
   try {
     await tlAuth(); await tlGetAccounts();
     renderTLConnectedState();
     document.getElementById('tl-login-form').style.display = 'none';
-    showToast('✅ Connected to TradeLocker!');
+    showToast('\u2705 Connected to TradeLocker!');
     await runTLSync();
   } catch(e) {
     const m = document.getElementById('tl-connect-msg');
-    m.style.color = '#E24B4A'; m.textContent = '✗ ' + e.message;
+    m.style.color = '#E24B4A'; m.textContent = '\u2717 ' + e.message;
     btn.disabled = false; btn.textContent = 'Connect & sync';
   }
 }
 
-/* ══════════════════════════════════════════════════════
-   SYNC CORE — force-updates all existing TL trades
-   to fix bad data, loops over all filtered accounts
-══════════════════════════════════════════════════════ */
+/* ======================================================
+   SYNC CORE - loops over all filtered accounts
+====================================================== */
 async function runTLSync() {
   if (tlIsSyncing) return;
   if (!tlCreds) { showToast('Not connected to TradeLocker'); return; }
   tlIsSyncing = true;
+  _tlDiagDone = false; // reset per-sync diagnostic flag
   const btn = document.getElementById('tl-sync-now-btn');
   if (btn) { btn.classList.add('syncing'); btn.querySelector('svg').style.animation = 'spin 0.7s linear infinite'; }
-  const rEl = document.getElementById('tl-sync-results');
-  const lEl = document.getElementById('tl-sync-log');
-  const cEl = document.getElementById('tl-sync-counts');
-  if (rEl) rEl.style.display = 'block';
-  if (lEl) lEl.innerHTML = '';
-  if (cEl) cEl.textContent = '';
+  const resultsEl = document.getElementById('tl-sync-results');
+  const logEl     = document.getElementById('tl-sync-log');
+  const countsEl  = document.getElementById('tl-sync-counts');
+  if (resultsEl) resultsEl.style.display = 'block';
+  if (logEl)     logEl.innerHTML = '';
+  if (countsEl)  countsEl.textContent = '';
   setProgress(0);
   let imported = 0, skipped = 0, updated = 0, errors = 0;
-
   try {
-    addSyncLog('ok', 'Authenticating…'); setProgress(5);
+    addSyncLog('ok', 'Authenticating with TradeLocker...'); setProgress(5);
     await tlAuth();
-    addSyncLog('ok', 'Fetching account list…'); setProgress(10);
+    addSyncLog('ok', 'Fetching account list...');           setProgress(10);
     const targetAccounts = await tlGetAccounts();
     setProgress(20);
 
-    for (let ai = 0; ai < targetAccounts.length; ai++) {
-      const acct    = targetAccounts[ai];
+    const totalAccts = targetAccounts.length;
+    for (let ai = 0; ai < totalAccts; ai++) {
+      const acct = targetAccounts[ai];
       const acctId  = acct.id;
       const acctNum = acct.accNum;
-      // Use the label the user typed, appended with #accNum if multiple accounts
-      const acctLabel = targetAccounts.length > 1
-        ? (tlCreds.label || tlCreds.email) + ' #' + acctNum
-        : (tlCreds.label || tlCreds.email);
+      // Build friendly label: use alias if set, else "accNum (label)"
+      const acctLabel = accountAliases[String(acctNum)] ||
+                        (tlCreds.label ? tlCreds.label + ' #' + acctNum : String(acctNum));
 
-      addSyncLog('ok', '── Account ' + acctNum + ' (' + acctLabel + ') ──');
-      const base = 20 + (ai / targetAccounts.length) * 70;
+      addSyncLog('ok', '--- Account ' + acctNum + ' (' + acctLabel + ') ---');
+      const baseProgress = 20 + (ai / totalAccts) * 70;
 
-      addSyncLog('ok', 'Loading instruments…'); setProgress(base + 5);
-      const ic = await tlLoadInstruments(acctId, acctNum);
-      addSyncLog('ok', ic + ' instruments loaded');
+      // Instruments
+      addSyncLog('ok', 'Loading instruments...'); setProgress(baseProgress + 5);
+      const instrCount = await tlLoadInstruments(acctId, acctNum);
+      addSyncLog('ok', 'Loaded ' + instrCount + ' instruments');
 
       // Closed trades
-      addSyncLog('ok', 'Fetching closed trades…'); setProgress(base + 15);
+      addSyncLog('ok', 'Fetching closed trades...'); setProgress(baseProgress + 15);
       let filledOrders = [];
       try {
         const res = await tlFetch('/trade/accounts/' + acctId + '/ordersHistory', acctNum);
         filledOrders = (res.d && Array.isArray(res.d.ordersHistory)) ? res.d.ordersHistory
                      : (Array.isArray(res) ? res : (res.ordersHistory || res.data || []));
-        addSyncLog('ok', filledOrders.length + ' closed trades found');
-        if (filledOrders.length > 0) {
-          console.log('📦 Sample order (acct ' + acctNum + '):', filledOrders[0]);
-          console.log('Indexes: [3]=' + filledOrders[0][3] + ' (size) [7]=' + filledOrders[0][7] + ' (entry) [21]=' + filledOrders[0][21] + ' (pnl)');
-        }
-      } catch(e) { addSyncLog('err', 'Order history error: ' + e.message); errors++; }
+        addSyncLog('ok', 'Found ' + filledOrders.length + ' closed trades');
+        if (filledOrders.length > 0) console.log('First order (acct ' + acctNum + '):', filledOrders[0]);
+      } catch(e) { addSyncLog('err', 'Could not fetch order history: ' + e.message); errors++; }
 
       // Open positions
       let openPositions = [];
       if (tlCreds.openStatus !== 'skip') {
-        addSyncLog('ok', 'Fetching open positions…'); setProgress(base + 25);
+        addSyncLog('ok', 'Fetching open positions...'); setProgress(baseProgress + 25);
         try {
           const res = await tlFetch('/trade/accounts/' + acctId + '/positions', acctNum);
           openPositions = (res.d && Array.isArray(res.d.positions)) ? res.d.positions
                         : (Array.isArray(res) ? res : (res.positions || res.data || []));
-          addSyncLog('ok', openPositions.length + ' open positions found');
-        } catch(e) { addSyncLog('skip', 'Positions error: ' + e.message); }
+          addSyncLog('ok', 'Found ' + openPositions.length + ' open positions');
+        } catch(e) { addSyncLog('skip', 'Could not fetch positions: ' + e.message); }
       }
 
-      setProgress(base + 35);
-      addSyncLog('ok', 'Merging…');
+      setProgress(baseProgress + 35);
+      addSyncLog('ok', 'Merging into journal...');
 
-      const allTL = [
+      const allTLTrades = [
         ...filledOrders.map(o  => ({ order: o, isOpen: false })),
         ...openPositions.map(o => ({ order: o, isOpen: true  }))
       ];
 
-      for (const { order, isOpen } of allTL) {
+      for (const { order, isOpen } of allTLTrades) {
         const jt = tlTradeToJournal(order, isOpen, acctLabel);
         if (!jt) { skipped++; continue; }
         const tlId = jt.tlId;
@@ -829,21 +962,13 @@ async function runTLSync() {
 
         const existing = trades.find(t => t.tlId === tlId);
         if (existing) {
-          // Always force-update TL fields while preserving user annotations
           const merged = Object.assign({}, jt, {
-            id:          existing.id,
-            reason:      existing.reason,
-            well:        existing.well,
-            improve:     existing.improve,
-            earlyReason: existing.earlyReason,
-            tags:        existing.tags,
-            tf:          existing.tf,
-            grade:       existing.grade,
-            emotion:     existing.emotion,
-            confidence:  existing.confidence,
-            images:      existing.images,
-            session:     existing.session || jt.session,
-            early:       existing.early
+            id: existing.id, reason: existing.reason, well: existing.well,
+            improve: existing.improve, earlyReason: existing.earlyReason,
+            tags: existing.tags, tf: existing.tf, grade: existing.grade,
+            emotion: existing.emotion, confidence: existing.confidence,
+            images: existing.images, session: existing.session || jt.session,
+            early: existing.early
           });
           await upsertTrade(merged);
           const idx = trades.findIndex(t => t.tlId === tlId);
@@ -860,14 +985,16 @@ async function runTLSync() {
 
     setProgress(95);
     extractAndSaveAccounts(); renderDashboard(); renderLog(); renderAnalytics();
+
     const now = new Date().toISOString();
     localStorage.setItem('tlLastSync', now);
-    const lsEl = document.getElementById('tl-last-sync');
-    if (lsEl) lsEl.textContent = 'Last sync: ' + new Date(now).toLocaleString();
+    const lastSyncEl = document.getElementById('tl-last-sync');
+    if (lastSyncEl) lastSyncEl.textContent = 'Last sync: ' + new Date(now).toLocaleString();
     setProgress(100);
-    if (cEl) cEl.textContent = imported + ' new · ' + updated + ' updated · ' + skipped + ' skipped' + (errors ? ' · ' + errors + ' errors' : '');
-    addSyncLog('ok', '✅ Done — ' + imported + ' imported, ' + updated + ' updated');
-    showToast('✅ Synced! ' + imported + ' new, ' + updated + ' updated');
+    if (countsEl) countsEl.textContent = imported + ' new \u00b7 ' + updated + ' updated \u00b7 ' + skipped + ' skipped' + (errors ? ' \u00b7 ' + errors + ' errors' : '');
+    addSyncLog('ok', '\u2705 Done -- ' + imported + ' imported, ' + updated + ' updated, ' + skipped + ' skipped');
+    showToast('\u2705 Synced! ' + imported + ' new, ' + updated + ' updated');
+
   } catch(e) {
     addSyncLog('err', 'Sync failed: ' + e.message); showToast('Sync failed: ' + e.message);
   } finally {
@@ -876,13 +1003,20 @@ async function runTLSync() {
   }
 }
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    SUPABASE HELPERS
-══════════════════════════════════════════════════════ */
-function setSyncStatus(s, l) { document.getElementById('sync-dot').className = 'sync-dot ' + s; document.getElementById('sync-label').textContent = l; }
-function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500); }
+====================================================== */
+function setSyncStatus(state, label) {
+  document.getElementById('sync-dot').className     = 'sync-dot ' + state;
+  document.getElementById('sync-label').textContent = label;
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
 async function upsertTrade(trade) {
-  setSyncStatus('syncing', 'Saving…');
+  setSyncStatus('syncing', 'Saving...');
   try {
     const res = await fetch(API, {
       method: 'POST',
@@ -891,98 +1025,135 @@ async function upsertTrade(trade) {
     });
     if (!res.ok) { const e = await res.text(); throw new Error('HTTP ' + res.status + ': ' + e); }
     setSyncStatus('synced', 'Synced'); return true;
-  } catch(e) { setSyncStatus('error', 'Save failed'); console.error('Save error:', e.message); return false; }
+  } catch(e) {
+    setSyncStatus('error', 'Save failed');
+    console.error('Supabase save error for', trade.pair, ':', e.message);
+    return false;
+  }
 }
 async function fetchTrades() {
-  setSyncStatus('syncing', 'Loading…');
+  setSyncStatus('syncing', 'Loading...');
   try {
     const res = await fetch(API + '?order=id.desc', { headers: HEADERS });
     if (!res.ok) throw new Error(await res.text());
-    trades = (await res.json()).map(r => r.data);
+    const rows = await res.json();
+    trades = rows.map(r => r.data);
     setSyncStatus('synced', 'Synced');
   } catch(e) { setSyncStatus('error', 'Offline'); showToast('Could not connect to database.'); }
 }
 async function deleteTradeRemote(id) {
-  try { const res = await fetch(API + '?id=eq.' + id, { method: 'DELETE', headers: HEADERS }); return res.ok; }
-  catch(e) { return false; }
+  setSyncStatus('syncing', 'Deleting...');
+  try {
+    const res = await fetch(API + '?id=eq.' + id, { method: 'DELETE', headers: HEADERS });
+    if (!res.ok) throw new Error(await res.text());
+    setSyncStatus('synced', 'Synced'); return true;
+  } catch(e) { setSyncStatus('error', 'Delete failed'); return false; }
 }
 async function deleteAllTradesForAccount(accName) {
+  // Delete all trades belonging to this account from Supabase one by one
   const toDelete = trades.filter(t => t.account === accName);
-  for (const t of toDelete) await deleteTradeRemote(t.id);
+  for (const t of toDelete) {
+    await deleteTradeRemote(t.id);
+  }
   trades = trades.filter(t => t.account !== accName);
 }
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    ACCOUNTS
-══════════════════════════════════════════════════════ */
-function loadInitialBalances() { try { initialBalances = JSON.parse(localStorage.getItem('initialBalances') || '{}'); } catch(e) {} }
+====================================================== */
+function loadInitialBalances() {
+  const s = localStorage.getItem('initialBalances');
+  initialBalances = s ? JSON.parse(s) : {};
+}
 function saveInitialBalances() { localStorage.setItem('initialBalances', JSON.stringify(initialBalances)); }
 function getSingleBalance(acc) {
-  return (initialBalances[acc] || 0) + trades.filter(t => t.account === acc && t.status !== 'open').reduce((s,t) => s + (parseFloat(t.pnl) || 0), 0);
+  const closedPnl = trades.filter(t => t.account === acc && t.status !== 'open')
+    .reduce((s,t) => s + (parseFloat(t.pnl) || 0), 0);
+  return (initialBalances[acc] || 0) + closedPnl;
 }
 function getBalance(account) {
-  return account === 'All' ? knownAccounts.reduce((t, a) => t + getSingleBalance(a), 0) : getSingleBalance(account);
+  if (account === 'All') return knownAccounts.reduce((tot,acc) => tot + getSingleBalance(acc), 0);
+  return getSingleBalance(account);
 }
 function extractAndSaveAccounts() {
-  const fromTrades = [...new Set(trades.map(t => t.account).filter(Boolean))];
-  knownAccounts = [...new Set([...fromTrades, ...Object.keys(initialBalances)])].sort();
+  const fromTrades   = [...new Set(trades.map(t => t.account).filter(Boolean))];
+  const fromBalances = Object.keys(initialBalances);
+  knownAccounts = [...new Set([...fromTrades, ...fromBalances])].sort();
   localStorage.setItem('knownAccounts', JSON.stringify(knownAccounts));
-  renderAccountPills(); populateAccountDatalist(); populateLogAccountFilter();
+  renderAccountPills();
+  populateAccountDatalist();
+  populateLogAccountFilter();
 }
 function renderAccountPills() {
-  ['acct-filter-row','acct-filter-row-analytics'].forEach(id => {
-    const row = document.getElementById(id); if (!row) return;
+  ['acct-filter-row','acct-filter-row-analytics'].forEach(rowId => {
+    const row = document.getElementById(rowId);
+    if (!row) return;
     row.innerHTML = '<span class="acct-filter-label">Account:</span>';
-    const mkPill = (label, val) => {
-      const b = document.createElement('button');
-      b.className = 'acct-filter-pill' + (currentAccount === val ? ' active' : '');
-      b.textContent = label; b.onclick = () => setCurrentAccount(val);
-      row.appendChild(b);
-    };
-    mkPill('All', 'All');
-    knownAccounts.forEach(a => mkPill(a, a));
+    const allPill = document.createElement('button');
+    allPill.className = 'acct-filter-pill' + (currentAccount === 'All' ? ' active' : '');
+    allPill.textContent = 'All';
+    allPill.onclick = () => setCurrentAccount('All');
+    row.appendChild(allPill);
+    knownAccounts.forEach(a => {
+      const pill = document.createElement('button');
+      pill.className = 'acct-filter-pill' + (currentAccount === a ? ' active' : '');
+      pill.textContent = a;
+      pill.onclick = () => setCurrentAccount(a);
+      row.appendChild(pill);
+    });
   });
 }
 function populateAccountDatalist() {
-  document.getElementById('accounts-datalist').innerHTML = knownAccounts.map(a => '<option value="' + a + '">').join('');
+  document.getElementById('accounts-datalist').innerHTML =
+    knownAccounts.map(a => '<option value="' + a + '"></option>').join('');
 }
 function populateLogAccountFilter() {
-  const sel = document.getElementById('filter-account-log'); if (!sel) return;
+  const sel = document.getElementById('filter-account-log');
+  if (!sel) return;
   const cur = sel.value;
-  sel.innerHTML = '<option value="">All accounts</option>' + knownAccounts.map(a => '<option value="' + a + '">' + a + '</option>').join('');
+  sel.innerHTML = '<option value="">All accounts</option>' +
+    knownAccounts.map(a => '<option value="' + a + '">' + a + '</option>').join('');
   sel.value = cur;
 }
 function setCurrentAccount(val) {
-  currentAccount = val; localStorage.setItem('currentAccount', val);
-  renderAccountPills(); renderDashboard();
+  currentAccount = val; localStorage.setItem('currentAccount', currentAccount);
+  renderAccountPills();
+  renderDashboard();
   if (document.getElementById('page-log').classList.contains('active'))       { populateFilterPairs(); renderLog(); }
   if (document.getElementById('page-analytics').classList.contains('active')) renderAnalytics();
 }
-function getFilteredTrades() { return currentAccount === 'All' ? trades : trades.filter(t => t.account === currentAccount); }
+function getFilteredTrades() {
+  if (currentAccount === 'All') return trades;
+  return trades.filter(t => t.account === currentAccount);
+}
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    DRAWDOWN BANNER
-══════════════════════════════════════════════════════ */
+====================================================== */
 function renderDDBanner() {
-  const banner = document.getElementById('dd-banner'); if (!banner) return;
-  if (currentAccount === 'All' || !tlCreds || !tlCreds.ddLimit) { banner.innerHTML = ''; return; }
+  const banner = document.getElementById('dd-banner');
+  if (!banner) return;
+  if (currentAccount === 'All' || !tlCreds) { banner.innerHTML = ''; return; }
+  const ddLimit = tlCreds.ddLimit || 10;
   const initial = initialBalances[currentAccount] || 0;
   if (!initial) { banner.innerHTML = ''; return; }
   const current = getSingleBalance(currentAccount);
   const ddPct   = ((initial - current) / initial) * 100;
-  const ddLimit = tlCreds.ddLimit || 10;
+  const ddWarn  = ddLimit * 0.7; // warn at 70% of limit
   if (ddPct >= ddLimit) {
-    banner.innerHTML = '<div class="dd-warning">⚠️ <strong>DRAWDOWN LIMIT BREACHED</strong> — ' + ddPct.toFixed(2) + '% (limit: ' + ddLimit + '%). Stop trading.</div>';
-  } else if (ddPct >= ddLimit * 0.7) {
-    banner.innerHTML = '<div class="dd-warning">⚠️ Drawdown warning: ' + ddPct.toFixed(2) + '% of ' + ddLimit + '% limit.</div>';
+    banner.innerHTML = '<div class="dd-warning">&#x26A0;&#xFE0F; <strong>DRAWDOWN LIMIT BREACHED</strong> -- Current drawdown: ' + ddPct.toFixed(2) + '% (limit: ' + ddLimit + '%). Stop trading immediately.</div>';
+  } else if (ddPct >= ddWarn) {
+    banner.innerHTML = '<div class="dd-warning">&#x26A0;&#xFE0F; Drawdown warning: ' + ddPct.toFixed(2) + '% of ' + ddLimit + '% limit used. Trade cautiously.</div>';
   } else if (ddPct > 0) {
-    banner.innerHTML = '<div class="dd-ok">🟢 Drawdown: ' + ddPct.toFixed(2) + '% / ' + ddLimit + '% limit. On track.</div>';
-  } else { banner.innerHTML = ''; }
+    banner.innerHTML = '<div class="dd-ok">&#x1F7E2; Drawdown: ' + ddPct.toFixed(2) + '% / ' + ddLimit + '% limit. On track.</div>';
+  } else {
+    banner.innerHTML = '';
+  }
 }
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    PAGE NAVIGATION
-══════════════════════════════════════════════════════ */
+====================================================== */
 function showPage(p) {
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -997,61 +1168,75 @@ function showPage(p) {
 }
 function renderTLSyncPage() { if (tlCreds) renderTLConnectedState(); else renderTLDisconnectedState(); }
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    FORM
-══════════════════════════════════════════════════════ */
+====================================================== */
 document.getElementById('f-emotion').addEventListener('input', e => document.getElementById('emotion-out').textContent = e.target.value);
 document.getElementById('f-conf').addEventListener('input',    e => document.getElementById('conf-out').textContent   = e.target.value);
+
 function handleImages(e) {
-  Array.from(e.target.files).forEach(f => { const r = new FileReader(); r.onload = ev => { tempImages.push(ev.target.result); renderImagePreview(); }; r.readAsDataURL(f); });
-  e.target.value = '';
+  Array.from(e.target.files).forEach(f => {
+    const r = new FileReader();
+    r.onload = ev => { tempImages.push(ev.target.result); renderImagePreview(); };
+    r.readAsDataURL(f);
+  }); e.target.value = '';
 }
 function renderImagePreview() {
   document.getElementById('img-preview').innerHTML = tempImages.map((src,i) =>
-    '<div style="position:relative;display:inline-block"><img src="' + src + '" class="img-thumb" onclick="openLightbox(\'' + src + '\')">' +
-    '<span onclick="removeImg(' + i + ')" style="position:absolute;top:-4px;right:-4px;background:#E24B4A;color:white;border-radius:50%;width:16px;height:16px;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1">×</span></div>'
+    '<div style="position:relative;display:inline-block"><img src="' + src + '" class="img-thumb" onclick="openLightbox(\'' + src + '\')"><span onclick="removeImg(' + i + ')" style="position:absolute;top:-4px;right:-4px;background:#E24B4A;color:white;border-radius:50%;width:16px;height:16px;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1">&times;</span></div>'
   ).join('');
 }
-function removeImg(i) { tempImages.splice(i,1); renderImagePreview(); }
-function openLightbox(s) { document.getElementById('lb-img').src = s; document.getElementById('lightbox').style.display = 'flex'; }
+function removeImg(i)    { tempImages.splice(i,1); renderImagePreview(); }
+function openLightbox(s) { document.getElementById('lb-img').src=s; document.getElementById('lightbox').style.display='flex'; }
 
 function editTrade(id) {
   const t = trades.find(x => x.id === id); if (!t) return;
   editingId = id; document.getElementById('save-btn').textContent = 'Update trade';
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-  set('f-pair', t.pair); set('f-account', t.account || 'Main'); set('f-entry', t.entry);
-  set('f-sl', t.sl); set('f-tp', t.tp); set('f-exit', t.exit); set('f-pnl', t.pnl);
-  document.getElementById('f-dir').value     = t.dir        || 'long';
-  document.getElementById('f-status').value  = t.status     || 'open';
-  document.getElementById('f-session').value = t.session    || '';
-  set('f-time', t.time); set('f-size', t.size); set('f-risk', t.risk);
-  set('f-reason', t.reason); set('f-tf', t.tf); set('f-tags', t.tags);
-  document.getElementById('f-early').value   = t.early      || 'no';
-  set('f-early-reason', t.earlyReason); set('f-well', t.well); set('f-improve', t.improve);
-  document.getElementById('f-emotion').value = t.emotion    || 7; document.getElementById('emotion-out').textContent = t.emotion    || 7;
-  document.getElementById('f-conf').value    = t.confidence || 7; document.getElementById('conf-out').textContent    = t.confidence || 7;
-  document.getElementById('f-grade').value   = t.grade      || '';
+  document.getElementById('f-pair').value         = t.pair        || '';
+  document.getElementById('f-account').value      = t.account     || 'Main';
+  document.getElementById('f-entry').value        = t.entry       || '';
+  document.getElementById('f-sl').value           = t.sl          || '';
+  document.getElementById('f-tp').value           = t.tp          || '';
+  document.getElementById('f-exit').value         = t.exit        || '';
+  document.getElementById('f-pnl').value          = t.pnl         || '';
+  document.getElementById('f-dir').value          = t.dir         || 'long';
+  document.getElementById('f-status').value       = t.status      || 'open';
+  document.getElementById('f-session').value      = t.session     || '';
+  document.getElementById('f-time').value         = t.time        || '';
+  document.getElementById('f-size').value         = t.size        || '';
+  document.getElementById('f-risk').value         = t.risk        || '';
+  document.getElementById('f-reason').value       = t.reason      || '';
+  document.getElementById('f-tf').value           = t.tf          || '';
+  document.getElementById('f-tags').value         = t.tags        || '';
+  document.getElementById('f-early').value        = t.early       || 'no';
+  document.getElementById('f-early-reason').value = t.earlyReason || '';
+  document.getElementById('f-well').value         = t.well        || '';
+  document.getElementById('f-improve').value      = t.improve     || '';
+  document.getElementById('f-emotion').value      = t.emotion     || 7; document.getElementById('emotion-out').textContent = t.emotion    || 7;
+  document.getElementById('f-conf').value         = t.confidence  || 7; document.getElementById('conf-out').textContent    = t.confidence || 7;
+  document.getElementById('f-grade').value        = t.grade       || '';
   tempImages = t.images ? [...t.images] : []; renderImagePreview(); showPage('add');
 }
+
 async function saveTrade() {
-  const pair  = document.getElementById('f-pair').value.trim().toUpperCase();
-  const acct  = document.getElementById('f-account').value.trim();
-  const entry = parseFloat(document.getElementById('f-entry').value);
-  if (!pair || isNaN(entry) || !acct) { alert('Pair, Account, and Entry price are required.'); return; }
+  const pair         = document.getElementById('f-pair').value.trim().toUpperCase();
+  const accountInput = document.getElementById('f-account').value.trim();
+  const entry        = parseFloat(document.getElementById('f-entry').value);
+  if (!pair || isNaN(entry) || !accountInput) { alert('Pair, Account, and Entry price are required.'); return; }
   const sl = parseFloat(document.getElementById('f-sl').value) || null;
   const tp = parseFloat(document.getElementById('f-tp').value) || null;
   let rr = null;
   if (sl && tp) { const sd = Math.abs(entry-sl), td = Math.abs(tp-entry); if (sd > 0) rr = (td/sd).toFixed(2); }
   const trade = {
-    id: editingId || Date.now(), account: acct, pair, entry, sl, tp, rr,
+    id: editingId || Date.now(), account: accountInput, pair, entry, sl, tp, rr,
     dir:         document.getElementById('f-dir').value,
-    exit:        parseFloat(document.getElementById('f-exit').value)   || null,
-    pnl:         parseFloat(document.getElementById('f-pnl').value)    || null,
+    exit:        parseFloat(document.getElementById('f-exit').value) || null,
+    pnl:         parseFloat(document.getElementById('f-pnl').value)  || null,
     status:      document.getElementById('f-status').value,
     session:     document.getElementById('f-session').value,
     time:        document.getElementById('f-time').value || new Date().toISOString().slice(0,16),
-    size:        parseFloat(document.getElementById('f-size').value)   || null,
-    risk:        parseFloat(document.getElementById('f-risk').value)   || null,
+    size:        parseFloat(document.getElementById('f-size').value) || null,
+    risk:        parseFloat(document.getElementById('f-risk').value) || null,
     reason:      document.getElementById('f-reason').value,
     tf:          document.getElementById('f-tf').value,
     tags:        document.getElementById('f-tags').value,
@@ -1065,14 +1250,15 @@ async function saveTrade() {
     images:      [...tempImages], source: 'manual'
   };
   const btn = document.getElementById('save-btn');
-  btn.disabled = true; btn.textContent = editingId ? 'Updating…' : 'Saving…';
+  btn.disabled = true; btn.textContent = editingId ? 'Updating...' : 'Saving...';
   const ok = await upsertTrade(trade);
   btn.disabled = false; btn.textContent = editingId ? 'Update trade' : 'Save trade';
   if (ok) {
-    if (editingId) { const i = trades.findIndex(t => t.id === editingId); if (i !== -1) trades[i] = trade; }
+    if (editingId) { const idx = trades.findIndex(t => t.id === editingId); if (idx !== -1) trades[idx] = trade; }
     else trades.unshift(trade);
     extractAndSaveAccounts();
-    const msg = document.getElementById('save-msg'); msg.style.display = 'inline'; setTimeout(() => msg.style.display = 'none', 3000);
+    const msg = document.getElementById('save-msg');
+    msg.style.display = 'inline'; setTimeout(() => msg.style.display = 'none', 3000);
     clearForm(); renderDashboard(); renderLog(); renderAnalytics();
   }
 }
@@ -1080,44 +1266,46 @@ function clearForm() {
   editingId = null; document.getElementById('save-btn').textContent = 'Save trade';
   ['f-pair','f-account','f-entry','f-sl','f-tp','f-exit','f-pnl','f-reason','f-tf','f-tags','f-early-reason','f-well','f-improve','f-size','f-risk']
     .forEach(id => { document.getElementById(id).value = ''; });
-  document.getElementById('f-dir').value = 'long'; document.getElementById('f-status').value = 'open';
-  document.getElementById('f-early').value = 'no';  document.getElementById('f-session').value = '';
-  document.getElementById('f-grade').value = '';
+  document.getElementById('f-dir').value     = 'long'; document.getElementById('f-status').value = 'open';
+  document.getElementById('f-early').value   = 'no';   document.getElementById('f-session').value = '';
+  document.getElementById('f-grade').value   = '';
   document.getElementById('f-emotion').value = 7; document.getElementById('emotion-out').textContent = '7';
   document.getElementById('f-conf').value    = 7; document.getElementById('conf-out').textContent    = '7';
   tempImages = []; document.getElementById('img-preview').innerHTML = '';
 }
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    FORMATTERS
-══════════════════════════════════════════════════════ */
-function fmt(n)     { if (n === null || n === undefined || isNaN(n)) return '—'; return (n >= 0 ? '+' : '') + '$' + parseFloat(n).toFixed(2); }
+====================================================== */
+function fmt(n)     { if (n === null || n === undefined || isNaN(n)) return '--'; return (n >= 0 ? '+' : '') + '$' + parseFloat(n).toFixed(2); }
 function fmtPct(n)  { return (n * 100).toFixed(1) + '%'; }
-function dateStr(t) { return t ? t.slice(0,10) : '—'; }
+function dateStr(t) { return t ? t.slice(0,10) : '--'; }
 function pnlClass(v){ return v > 0 ? 'pnl-pos' : v < 0 ? 'pnl-neg' : ''; }
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    DASHBOARD
-══════════════════════════════════════════════════════ */
+====================================================== */
 function renderDashboard() {
   renderDDBanner();
-  const ft = getFilteredTrades(), cl = ft.filter(t => t.status !== 'open');
-  const wins = cl.filter(t => t.status === 'win'), losses = cl.filter(t => t.status === 'loss');
-  const totalPnl = cl.reduce((s,t) => s + (t.pnl || 0), 0);
-  const wr = cl.length ? wins.length / cl.length : 0;
+  const filtered = getFilteredTrades(), closed = filtered.filter(t => t.status !== 'open');
+  const wins = closed.filter(t => t.status === 'win'), losses = closed.filter(t => t.status === 'loss');
+  const totalPnl = closed.reduce((s,t) => s + (t.pnl || 0), 0);
+  const wr = closed.length ? wins.length / closed.length : 0;
   const avgWin  = wins.length   ? wins.reduce((s,t)   => s + (t.pnl || 0), 0) / wins.length   : 0;
   const avgLoss = losses.length ? losses.reduce((s,t) => s + (t.pnl || 0), 0) / losses.length : 0;
-  const pf = avgLoss < 0 ? (avgWin / Math.abs(avgLoss)).toFixed(2) : '∞';
+  const pf = avgLoss < 0 ? (avgWin / Math.abs(avgLoss)).toFixed(2) : '\u221e';
   const cb = getBalance(currentAccount);
   document.getElementById('stats-grid').innerHTML =
-    stat('CURRENT BALANCE', '$' + cb.toFixed(2), cb >= 0 ? 'pos' : 'neg') +
-    stat('Total PNL', fmt(totalPnl), totalPnl >= 0 ? 'pos' : 'neg') +
-    stat('Win rate', fmtPct(wr)) + stat('Trades taken', ft.length) +
-    stat('Profit factor', pf) + stat('Avg win', avgWin ? fmt(avgWin) : '—', 'pos') +
-    stat('Avg loss', avgLoss ? fmt(avgLoss) : '—', 'neg');
-  document.getElementById('recent-list').innerHTML = ft.slice(0,5).map(t =>
+    '<div class="stat"><div class="stat-label">CURRENT BALANCE</div><div class="stat-val ' + (cb >= 0 ? 'pos' : 'neg') + '">$' + cb.toFixed(2) + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Total PNL</div><div class="stat-val ' + (totalPnl >= 0 ? 'pos' : 'neg') + '">' + fmt(totalPnl) + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Win rate</div><div class="stat-val">' + fmtPct(wr) + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Trades taken</div><div class="stat-val">' + filtered.length + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Profit factor</div><div class="stat-val">' + pf + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Avg win</div><div class="stat-val pos">' + (avgWin ? fmt(avgWin) : '--') + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Avg loss</div><div class="stat-val neg">' + (avgLoss ? fmt(avgLoss) : '--') + '</div></div>';
+  document.getElementById('recent-list').innerHTML = filtered.slice(0,5).map(t =>
     '<div onclick="openDetail(' + t.id + ')" style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px;cursor:pointer;gap:6px;">' +
-    '<span style="font-weight:500">' + (t.pair || '—') + '</span>' +
+    '<span style="font-weight:500">' + (t.pair || '--') + '</span>' +
     '<span class="badge badge-' + t.dir + '">' + t.dir + '</span>' +
     (t.source === 'tradelocker' ? '<span class="badge badge-auto">TL</span>' : '') +
     '<span class="' + pnlClass(t.pnl) + '">' + fmt(t.pnl) + '</span>' +
@@ -1125,16 +1313,16 @@ function renderDashboard() {
   ).join('') || '<div class="empty-state">No trades yet</div>';
   renderTopPairs('top-pairs-list');
 }
-function stat(lbl, val, cls) { return '<div class="stat"><div class="stat-label">' + lbl + '</div><div class="stat-val ' + (cls||'') + '">' + val + '</div></div>'; }
 function renderTopPairs(id) {
-  const pm = {};
+  const pairMap = {};
   getFilteredTrades().filter(t => t.status !== 'open').forEach(t => {
-    if (!pm[t.pair]) pm[t.pair] = { wins:0, total:0, pnl:0 };
-    pm[t.pair].total++; if (t.status === 'win') pm[t.pair].wins++; pm[t.pair].pnl += (t.pnl || 0);
+    if (!pairMap[t.pair]) pairMap[t.pair] = { wins: 0, total: 0, pnl: 0 };
+    pairMap[t.pair].total++; if (t.status === 'win') pairMap[t.pair].wins++; pairMap[t.pair].pnl += (t.pnl || 0);
   });
-  const pairs = Object.entries(pm).sort((a,b) => (b[1].wins/b[1].total) - (a[1].wins/a[1].total)).slice(0,6);
-  document.getElementById(id).innerHTML = pairs.length ? pairs.map(([pair, d]) => {
-    const wr = d.wins/d.total; const c = wr>=0.6?'#1D9E75':wr>=0.4?'#BA7517':'#E24B4A';
+  const pairs = Object.entries(pairMap).sort((a,b) => (b[1].wins/b[1].total) - (a[1].wins/a[1].total)).slice(0,6);
+  document.getElementById(id).innerHTML = pairs.length ? pairs.map(function(entry) {
+    var pair = entry[0], d = entry[1];
+    const wr = d.wins / d.total; const c = wr >= 0.6 ? '#1D9E75' : wr >= 0.4 ? '#BA7517' : '#E24B4A';
     return '<div class="pairs-bar"><span style="min-width:70px;font-size:13px;font-weight:500">' + pair + '</span>' +
       '<div class="bar-track"><div class="bar-fill" style="width:' + (wr*100) + '%;background:' + c + '"></div></div>' +
       '<span style="font-size:12px;color:var(--color-text-secondary);min-width:36px">' + fmtPct(wr) + '</span>' +
@@ -1142,33 +1330,39 @@ function renderTopPairs(id) {
   }).join('') : '<div style="font-size:13px;color:var(--color-text-tertiary)">Close some trades first</div>';
 }
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    TRADE LOG
-══════════════════════════════════════════════════════ */
+====================================================== */
 function populateFilterPairs() {
   const sel = document.getElementById('filter-pair'); const cur = sel.value;
-  sel.innerHTML = '<option value="">All pairs</option>' + [...new Set(trades.map(t => t.pair))].sort().map(p => '<option value="' + p + '">' + p + '</option>').join('');
+  const pairs = [...new Set(trades.map(t => t.pair))].sort();
+  sel.innerHTML = '<option value="">All pairs</option>' + pairs.map(p => '<option value="' + p + '">' + p + '</option>').join('');
   sel.value = cur;
 }
 function renderLog() {
-  const fp=document.getElementById('filter-pair').value, fd=document.getElementById('filter-dir').value,
-        fs=document.getElementById('filter-status').value, fsrc=document.getElementById('filter-source').value,
-        fa=document.getElementById('filter-account-log').value;
+  const fp   = document.getElementById('filter-pair').value,
+        fd   = document.getElementById('filter-dir').value,
+        fs   = document.getElementById('filter-status').value,
+        fsrc = document.getElementById('filter-source').value,
+        fa   = document.getElementById('filter-account-log').value;
   const list = trades.filter(t =>
-    (!fp||t.pair===fp) && (!fd||t.dir===fd) && (!fs||t.status===fs) && (!fa||t.account===fa) &&
-    (!fsrc||(fsrc==='auto'?t.source==='tradelocker':t.source!=='tradelocker'))
+    (!fp   || t.pair === fp) &&
+    (!fd   || t.dir === fd) &&
+    (!fs   || t.status === fs) &&
+    (!fa   || t.account === fa) &&
+    (!fsrc || (fsrc === 'auto' ? t.source === 'tradelocker' : t.source !== 'tradelocker'))
   );
   document.getElementById('log-list').innerHTML = list.length ? list.map(t =>
     '<div class="trade-row" onclick="openDetail(' + t.id + ')">' +
     '<span style="color:var(--color-text-secondary)">' + dateStr(t.time) + '</span>' +
-    '<span style="font-weight:500">' + (t.pair||'—') + '</span>' +
-    '<span style="font-weight:500;color:var(--color-text-secondary);font-size:11px;">' + (t.account||'—') + '</span>' +
+    '<span style="font-weight:500">' + (t.pair || '--') + '</span>' +
+    '<span style="font-weight:500;color:var(--color-text-secondary);font-size:11px;">' + (t.account || '--') + '</span>' +
     '<span><span class="badge badge-' + t.dir + '">' + t.dir + '</span></span>' +
-    '<span>' + (t.entry||'—') + '</span>' +
-    '<span style="color:var(--color-text-tertiary);font-size:12px">' + (t.sl||'—') + ' / ' + (t.tp||'—') + '</span>' +
+    '<span>' + (t.entry || '--') + '</span>' +
+    '<span style="color:var(--color-text-tertiary);font-size:12px">' + (t.sl || '--') + ' / ' + (t.tp || '--') + '</span>' +
     '<span class="' + pnlClass(t.pnl) + '">' + fmt(t.pnl) + '</span>' +
     '<span style="display:flex;align-items:center;gap:4px;"><span class="badge badge-' + t.status + '">' + t.status + '</span>' +
-    (t.source==='tradelocker'?'<span class="badge badge-auto">TL</span>':'') + '</span>' +
+    (t.source === 'tradelocker' ? '<span class="badge badge-auto">TL</span>' : '') + '</span>' +
     '<span style="display:flex;gap:6px;">' +
     '<button class="btn-edit" onclick="event.stopPropagation();editTrade(' + t.id + ')">Edit</button>' +
     '<button class="btn-danger" onclick="event.stopPropagation();deleteTrade(' + t.id + ')">Del</button></span></div>'
@@ -1176,131 +1370,156 @@ function renderLog() {
 }
 async function deleteTrade(id) {
   if (!confirm('Delete this trade?')) return;
-  if (await deleteTradeRemote(id)) { trades = trades.filter(t => t.id !== id); extractAndSaveAccounts(); renderLog(); renderDashboard(); renderAnalytics(); }
+  const ok = await deleteTradeRemote(id);
+  if (ok) { trades = trades.filter(t => t.id !== id); extractAndSaveAccounts(); renderLog(); renderDashboard(); renderAnalytics(); }
 }
 function openDetail(id) {
   const t = trades.find(x => x.id == id); if (!t) return;
-  let html = '<h2>' + (t.pair||'—') + ' — ' + (t.dir||'').toUpperCase() + ' ' +
-    (t.source==='tradelocker'?'<span class="badge badge-auto">TL Auto</span>':'') +
-    ' <button class="close-btn" onclick="document.getElementById(\'detail-modal\').style.display=\'none\'">✕</button></h2>' +
-    '<div class="detail-grid">';
-  [['Date/time',(t.time||'').replace('T',' ')],['Account',t.account||'—'],['Session',t.session||'—'],
-   ['Entry',t.entry||'—'],['Exit',t.exit||'—'],['Stop loss',t.sl||'—'],['Take profit',t.tp||'—'],
-   ['R:R',t.rr?'1:'+t.rr:'—'],['Size (lots)',t.size||'—'],['Risk ($)',t.risk?'$'+t.risk:'—'],
-   ['PNL','<span class="'+pnlClass(t.pnl)+'">'+fmt(t.pnl)+'</span>'],['Status',t.status||'—'],
-   ['Grade',t.grade||'—'],['Timeframes',t.tf||'—'],['Closed early',t.early||'no']
+  const rr = t.rr ? '1:' + t.rr : '--';
+  let html = '<h2>' + (t.pair || '--') + ' -- ' + (t.dir || '').toUpperCase() + ' ' +
+    (t.source === 'tradelocker' ? '<span class="badge badge-auto" style="font-size:11px;">TL Auto</span>' : '') +
+    ' <button class="close-btn" onclick="document.getElementById(\'detail-modal\').style.display=\'none\'">&#x2715;</button></h2>';
+  html += '<div class="detail-grid">';
+  [['Date/time',(t.time||'').replace('T',' ')],['Account',t.account||'--'],['Session',t.session||'--'],
+   ['Entry',t.entry||'--'],['Exit',t.exit||'--'],['Stop loss',t.sl||'--'],['Take profit',t.tp||'--'],
+   ['R:R ratio',rr],['Size (lots)',t.size||'--'],['Risk ($)',t.risk?'$'+t.risk:'--'],
+   ['PNL','<span class="' + pnlClass(t.pnl) + '">' + fmt(t.pnl) + '</span>'],['Status',t.status||'--'],
+   ['Grade',t.grade||'--'],['Timeframes',t.tf||'--'],['Closed early',t.early||'no']
   ].forEach(f => { html += '<div class="detail-item"><div class="lbl">' + f[0] + '</div><div class="val">' + f[1] + '</div></div>'; });
   html += '</div>';
-  if (t.reason)      html += '<div style="margin-top:12px"><div class="lbl" style="margin-bottom:4px">Entry reason</div><div class="notes-block">' + t.reason + '</div></div>';
-  if (t.earlyReason) html += '<div style="margin-top:10px"><div class="lbl" style="margin-bottom:4px">Early close reason</div><div class="notes-block">' + t.earlyReason + '</div></div>';
-  if (t.well)        html += '<div style="margin-top:10px"><div class="lbl" style="margin-bottom:4px">What went well</div><div class="notes-block">' + t.well + '</div></div>';
-  if (t.improve)     html += '<div style="margin-top:10px"><div class="lbl" style="margin-bottom:4px">Improvements</div><div class="notes-block">' + t.improve + '</div></div>';
-  if (t.source==='tradelocker'&&!t.reason&&!t.grade)
-    html += '<div style="margin-top:12px;padding:10px 12px;background:#EDE6FB;border-radius:var(--border-radius-md);font-size:12px;color:#5B21B6;"><strong>Auto-imported</strong> — Click Edit to add notes, grade, review.</div>';
-  html += '<div style="display:flex;gap:20px;margin-top:12px;font-size:13px;"><span>😌 Emotion: <b>' + (t.emotion||'—') + '/10</b></span><span>🎯 Confidence: <b>' + (t.confidence||'—') + '/10</b></span></div>';
-  if (t.tags) html += '<div class="chip-row">' + t.tags.split(',').map(g => '<span class="tag">' + g.trim() + '</span>').join('') + '</div>';
-  if (t.images&&t.images.length) {
-    html += '<div style="margin-top:14px"><div class="lbl" style="margin-bottom:6px">Screenshots (' + t.images.length + ')</div><div class="img-preview">';
+  if (t.reason)      html += '<div style="margin-top:12px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Entry reason</div><div class="notes-block">' + t.reason + '</div></div>';
+  if (t.earlyReason) html += '<div style="margin-top:10px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Early close reason</div><div class="notes-block">' + t.earlyReason + '</div></div>';
+  if (t.well)        html += '<div style="margin-top:10px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">What went well</div><div class="notes-block">' + t.well + '</div></div>';
+  if (t.improve)     html += '<div style="margin-top:10px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Improvements</div><div class="notes-block">' + t.improve + '</div></div>';
+  if (t.source === 'tradelocker' && !t.reason && !t.grade)
+    html += '<div style="margin-top:12px;padding:10px 12px;background:#EDE6FB;border-radius:var(--border-radius-md);font-size:12px;color:#5B21B6;"><strong>Auto-imported trade</strong> -- Click Edit to add your notes, grade, and post-trade review.</div>';
+  html += '<div style="display:flex;gap:20px;margin-top:12px;font-size:13px;"><span>&#x1F60C; Emotion: <b>' + (t.emotion || '--') + '/10</b></span><span>&#x1F3AF; Confidence: <b>' + (t.confidence || '--') + '/10</b></span></div>';
+  if (t.tags) html += '<div class="chip-row">' + t.tags.split(',').map(tag => '<span class="tag">' + tag.trim() + '</span>').join('') + '</div>';
+  if (t.images && t.images.length) {
+    html += '<div style="margin-top:14px"><div style="font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">Screenshots (' + t.images.length + ')</div><div class="img-preview">';
     t.images.forEach(src => { html += '<img src="' + src + '" class="img-thumb" onclick="openLightbox(\'' + src + '\')">'; });
     html += '</div></div>';
   }
   html += '<div style="margin-top:16px;display:flex;gap:8px;">' +
     '<button class="btn-edit" onclick="document.getElementById(\'detail-modal\').style.display=\'none\';editTrade(' + t.id + ')">Edit trade</button>' +
-    '<button class="btn-danger" onclick="document.getElementById(\'detail-modal\').style.display=\'none\';deleteTrade(' + t.id + ')">Delete</button></div>';
+    '<button class="btn-danger" onclick="document.getElementById(\'detail-modal\').style.display=\'none\';deleteTrade(' + t.id + ')">Delete</button>' +
+    '</div>';
   document.getElementById('detail-content').innerHTML = html;
   document.getElementById('detail-modal').style.display = 'flex';
 }
 function closeModal(e) { if (e.target === document.getElementById('detail-modal')) document.getElementById('detail-modal').style.display = 'none'; }
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    ANALYTICS
-══════════════════════════════════════════════════════ */
+====================================================== */
 function renderAnalytics() {
-  const ft = getFilteredTrades(), cl = ft.filter(t => t.status !== 'open');
-  const wins = cl.filter(t => t.status === 'win');
-  const totalPnl = cl.reduce((s,t) => s + (t.pnl || 0), 0);
-  const rrTrades = cl.filter(t => t.rr);
+  const filtered = getFilteredTrades(), closed = filtered.filter(t => t.status !== 'open');
+  const wins = closed.filter(t => t.status === 'win');
+  const totalPnl = closed.reduce((s,t) => s + (t.pnl || 0), 0);
+  const rrTrades = closed.filter(t => t.rr);
   const avgRR = rrTrades.length ? rrTrades.reduce((s,t) => s + parseFloat(t.rr), 0) / rrTrades.length : 0;
-  const streak = getStreak(ft);
-  const avgEmo = ft.length ? (ft.reduce((s,t) => s + (t.emotion||7), 0) / ft.length).toFixed(1) : '—';
+  const streak = getStreak(filtered);
+  const avgEmotion = filtered.length ? (filtered.reduce((s,t) => s + (t.emotion || 7), 0) / filtered.length).toFixed(1) : '--';
   const cb = getBalance(currentAccount);
   document.getElementById('analytics-stats').innerHTML =
-    stat('CURRENT BALANCE', '$' + cb.toFixed(2), cb >= 0 ? 'pos' : 'neg') +
-    stat('Total PNL', fmt(totalPnl), totalPnl >= 0 ? 'pos' : 'neg') +
-    stat('Win rate', cl.length ? fmtPct(wins.length/cl.length) : '—') +
-    stat('Avg R:R', avgRR ? '1:' + avgRR.toFixed(2) : '—') +
-    stat('Current streak', streak.count + ' ' + streak.type, streak.type === 'win' ? 'pos' : 'neg') +
-    stat('Avg emotion', avgEmo + '/10') + stat('Closed trades', cl.length);
+    '<div class="stat"><div class="stat-label">CURRENT BALANCE</div><div class="stat-val ' + (cb >= 0 ? 'pos' : 'neg') + '">$' + cb.toFixed(2) + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Total PNL</div><div class="stat-val ' + (totalPnl >= 0 ? 'pos' : 'neg') + '">' + fmt(totalPnl) + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Win rate</div><div class="stat-val">' + (closed.length ? fmtPct(wins.length / closed.length) : '--') + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Avg R:R</div><div class="stat-val">' + (avgRR ? '1:' + avgRR.toFixed(2) : '--') + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Current streak</div><div class="stat-val ' + (streak.type === 'win' ? 'pos' : 'neg') + '">' + streak.count + ' ' + streak.type + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Avg emotion</div><div class="stat-val">' + avgEmotion + '/10</div></div>' +
+    '<div class="stat"><div class="stat-label">Closed trades</div><div class="stat-val">' + closed.length + '</div></div>';
   renderTopPairs('pair-perf');
   const sessions = {};
-  cl.forEach(t => {
+  closed.forEach(t => {
     const s = t.session || 'unknown';
-    if (!sessions[s]) sessions[s] = {wins:0,total:0,pnl:0};
-    sessions[s].total++; if (t.status==='win') sessions[s].wins++; sessions[s].pnl+=(t.pnl||0);
+    if (!sessions[s]) sessions[s] = { wins: 0, total: 0, pnl: 0 };
+    sessions[s].total++; if (t.status === 'win') sessions[s].wins++; sessions[s].pnl += (t.pnl || 0);
   });
   document.getElementById('session-perf').innerHTML = Object.keys(sessions).length ?
-    Object.entries(sessions).map(([s, d]) => {
-      const wr = d.wins/d.total; const c = wr>=0.6?'#1D9E75':wr>=0.4?'#BA7517':'#E24B4A';
+    Object.entries(sessions).map(function(entry) {
+      var s = entry[0], d = entry[1];
+      const wr = d.wins / d.total; const c = wr >= 0.6 ? '#1D9E75' : wr >= 0.4 ? '#BA7517' : '#E24B4A';
       return '<div class="pairs-bar"><span style="min-width:90px;font-size:13px;font-weight:500;text-transform:capitalize">' + s.replace('_',' ') + '</span>' +
         '<div class="bar-track"><div class="bar-fill" style="width:' + (wr*100) + '%;background:' + c + '"></div></div>' +
         '<span style="font-size:12px;color:var(--color-text-secondary);min-width:36px">' + fmtPct(wr) + '</span>' +
         '<span style="font-size:12px;' + pnlClass(d.pnl) + '">' + fmt(d.pnl) + '</span></div>';
     }).join('') : '<div style="font-size:13px;color:var(--color-text-tertiary)">No session data yet</div>';
-  renderPnlChart(cl);
+  renderPnlChart(closed);
 }
-function getStreak(ft) {
-  const cl = ft.filter(t => t.status !== 'open');
-  if (!cl.length) return { count: 0, type: '—' };
-  let count = 1; const first = cl[0].status;
-  for (let i = 1; i < cl.length; i++) { if (cl[i].status === first) count++; else break; }
+function getStreak(filtered) {
+  const closed = filtered.filter(t => t.status !== 'open');
+  if (!closed.length) return { count: 0, type: '--' };
+  let count = 1; const first = closed[0].status;
+  for (let i = 1; i < closed.length; i++) { if (closed[i].status === first) count++; else break; }
   return { count, type: first };
 }
-function renderPnlChart(cl) {
+function renderPnlChart(closed) {
   if (pnlChart) { pnlChart.destroy(); pnlChart = null; }
-  const sorted = [...cl].sort((a,b) => (a.time||'').localeCompare(b.time||''));
-  let cum = 0; const data = sorted.map(t => { cum += (t.pnl||0); return parseFloat(cum.toFixed(2)); });
+  const sorted = [...closed].sort((a,b) => (a.time || '').localeCompare(b.time || ''));
+  let cum = 0; const data = sorted.map(t => { cum += (t.pnl || 0); return parseFloat(cum.toFixed(2)); });
   if (!data.length) return;
   const ctx = document.getElementById('pnl-chart').getContext('2d');
-  const lc = data[data.length-1] >= 0 ? '#1D9E75' : '#E24B4A';
+  const lc = data[data.length - 1] >= 0 ? '#1D9E75' : '#E24B4A';
   pnlChart = new Chart(ctx, {
     type: 'line',
-    data: { labels: sorted.map((_,i) => i+1), datasets: [{ data, borderColor: lc, borderWidth: 1.5, pointRadius: 3, pointBackgroundColor: lc, fill: false, tension: 0.3 }] },
-    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { font: { size:11 } }, grid: { display:false } }, y: { ticks: { font: { size:11 }, callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,0.1)' } } } }
+    data: { labels: sorted.map(function(_,i) { return i + 1; }), datasets: [{ data, borderColor: lc, borderWidth: 1.5, pointRadius: 3, pointBackgroundColor: lc, fill: false, tension: 0.3 }] },
+    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { font: { size: 11 } }, grid: { display: false } }, y: { ticks: { font: { size: 11 }, callback: function(v) { return '$' + v; } }, grid: { color: 'rgba(128,128,128,0.1)' } } } }
   });
 }
 
-/* ══════════════════════════════════════════════════════
-   ACCOUNT / BALANCE MODAL
-══════════════════════════════════════════════════════ */
+/* ======================================================
+   ACCOUNT / BALANCE MODAL  (with delete)
+====================================================== */
 function showBalanceModal()  { renderBalancesList(); document.getElementById('balance-modal').style.display = 'flex'; }
 function closeBalanceModal() { document.getElementById('balance-modal').style.display = 'none'; }
 function renderBalancesList() {
-  if (!knownAccounts.length) { document.getElementById('balances-list').innerHTML = '<div class="empty-state"><b>No accounts yet</b></div>'; return; }
-  document.getElementById('balances-list').innerHTML = '<div style="max-height:500px;overflow-y:auto;">' +
-    knownAccounts.map(a => {
-      const init = initialBalances[a] || 0, cur = getSingleBalance(a), tc = trades.filter(t => t.account === a).length;
-      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:0.5px solid var(--color-border-tertiary);gap:10px;">' +
-        '<div style="flex:1;"><div style="font-weight:500;font-size:14px;">' + a + '</div><div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px;">' + tc + ' trade' + (tc!==1?'s':'') + '</div></div>' +
-        '<div style="text-align:right;"><div style="font-size:11px;color:var(--color-text-tertiary);">Initial capital</div>' +
-        '<input type="number" step="0.01" value="' + init + '" onchange="updateInitialBalance(\'' + a + '\',this.value)" class="balance-modal-input" style="background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);padding:4px 8px;border-radius:6px;">' +
-        '<div style="margin-top:6px;font-size:12px;color:var(--color-text-tertiary);">Balance: <span class="' + (cur>=0?'pnl-pos':'pnl-neg') + '" style="font-weight:600;">$' + cur.toFixed(2) + '</span></div></div>' +
-        '<button class="btn-danger" style="flex-shrink:0;margin-left:8px;" onclick="deleteAccount(\'' + a.replace(/'/g,"\\'") + '\')">Delete</button></div>';
-    }).join('') + '</div>';
+  let html = '';
+  if (!knownAccounts.length) { html = '<div class="empty-state"><b>No accounts yet</b></div>'; }
+  else {
+    html += '<div style="max-height:480px;overflow-y:auto;">';
+    knownAccounts.forEach(a => {
+      const initial  = initialBalances[a] || 0;
+      const current  = getSingleBalance(a);
+      const tradeCount = trades.filter(t => t.account === a).length;
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:0.5px solid var(--color-border-tertiary);gap:10px;">' +
+        '<div style="flex:1;">' +
+        '<div style="font-weight:500;font-size:14px;">' + a + '</div>' +
+        '<div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px;">' + tradeCount + ' trade' + (tradeCount !== 1 ? 's' : '') + '</div>' +
+        '</div>' +
+        '<div style="text-align:right;">' +
+        '<div style="font-size:11px;color:var(--color-text-tertiary);">Initial capital</div>' +
+        '<input type="number" step="0.01" value="' + initial + '" onchange="updateInitialBalance(\'' + a + '\',this.value)" class="balance-modal-input" style="background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);padding:4px 8px;border-radius:6px;">' +
+        '<div style="margin-top:6px;font-size:12px;color:var(--color-text-tertiary);">Balance: <span class="' + (current >= 0 ? 'pnl-pos' : 'pnl-neg') + '" style="font-weight:600;">$' + current.toFixed(2) + '</span></div>' +
+        '</div>' +
+        '<button class="btn-danger" style="flex-shrink:0;margin-left:8px;" onclick="deleteAccount(\'' + a.replace(/'/g, "\\'") + '\')">Delete</button>' +
+        '</div>';
+    });
+    html += '</div>';
+  }
+  document.getElementById('balances-list').innerHTML = html;
 }
 async function deleteAccount(accName) {
-  const tc = trades.filter(t => t.account === accName).length;
-  if (!confirm('Delete "' + accName + '"?\n\nThis permanently deletes ' + tc + ' trade' + (tc!==1?'s':'') + '.\n\nCannot be undone.')) return;
-  showToast('Deleting ' + tc + ' trades…');
+  const tradeCount = trades.filter(t => t.account === accName).length;
+  const msg = 'Delete account "' + accName + '"?\n\nThis will permanently delete ' + tradeCount + ' trade' + (tradeCount !== 1 ? 's' : '') + ' from this account.\n\nThis cannot be undone.';
+  if (!confirm(msg)) return;
+  showToast('Deleting ' + tradeCount + ' trades...');
   await deleteAllTradesForAccount(accName);
-  delete initialBalances[accName]; saveInitialBalances();
+  delete initialBalances[accName];
+  saveInitialBalances();
+  // Remove from knownAccounts
   knownAccounts = knownAccounts.filter(a => a !== accName);
   localStorage.setItem('knownAccounts', JSON.stringify(knownAccounts));
+  // Reset current account if deleted
   if (currentAccount === accName) { currentAccount = 'All'; localStorage.setItem('currentAccount', 'All'); }
-  extractAndSaveAccounts(); renderBalancesList(); renderDashboard(); renderAnalytics();
-  showToast('✅ "' + accName + '" deleted');
+  extractAndSaveAccounts();
+  renderBalancesList();
+  renderDashboard(); renderAnalytics();
+  showToast('\u2705 Account "' + accName + '" deleted');
 }
 function updateInitialBalance(acc, val) {
-  initialBalances[acc] = parseFloat(val) || 0; saveInitialBalances(); renderBalancesList(); renderDashboard();
+  initialBalances[acc] = parseFloat(val) || 0; saveInitialBalances(); renderBalancesList();
+  renderDashboard();
   if (document.getElementById('page-analytics').classList.contains('active')) renderAnalytics();
 }
 function addNewAccountBalance() {
@@ -1309,15 +1528,15 @@ function addNewAccountBalance() {
   if (knownAccounts.includes(clean)) { showToast('Account already exists'); return; }
   knownAccounts.push(clean); knownAccounts.sort();
   initialBalances[clean] = 0; saveInitialBalances(); extractAndSaveAccounts(); renderBalancesList();
-  showToast('✅ "' + clean + '" created');
+  showToast('\u2705 Account "' + clean + '" created');
 }
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    INIT
-══════════════════════════════════════════════════════ */
+====================================================== */
 async function init() {
-  try { knownAccounts  = JSON.parse(localStorage.getItem('knownAccounts')  || '[]'); } catch(e) {}
-  try { currentAccount = localStorage.getItem('currentAccount') || 'All'; } catch(e) {}
+  if (localStorage.getItem('knownAccounts'))  knownAccounts  = JSON.parse(localStorage.getItem('knownAccounts'));
+  if (localStorage.getItem('currentAccount')) currentAccount = localStorage.getItem('currentAccount');
   loadInitialBalances(); loadTLCreds();
   await fetchTrades();
   extractAndSaveAccounts();
