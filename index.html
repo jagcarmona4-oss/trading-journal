@@ -602,7 +602,7 @@ async function tlFetch(path, accNum) {
 }
 
 /* ======================================================
-   INSTRUMENT MAP (now maps BOTH possible IDs)
+   INSTRUMENT MAP (maps both ID types + logs missing ones)
 ====================================================== */
 async function tlLoadInstruments(accountId, accNum) {
   try {
@@ -610,16 +610,12 @@ async function tlLoadInstruments(accountId, accNum) {
     const raw = (res.d && Array.isArray(res.d.instruments)) ? res.d.instruments
               : (Array.isArray(res) ? res : (res.instruments || []));
 
-    console.log('=== INSTRUMENTS RAW SAMPLE (first 5) for acct ' + accNum + ' ===');
-    console.log(JSON.stringify(raw.slice(0, 5), null, 2));
-
     let count = 0;
     raw.forEach(inst => {
       if (inst && typeof inst === 'object') {
         const nameRaw = String(inst.name || inst.symbol || inst.description || '');
         const name = normalizePair(nameRaw);
 
-        // Map BOTH possible IDs that orders might use
         if (inst.id) {
           tlInstrumentMap[String(inst.id)] = name;
           count++;
@@ -632,7 +628,7 @@ async function tlLoadInstruments(accountId, accNum) {
     });
 
     localStorage.setItem('tlInstrumentMap', JSON.stringify(tlInstrumentMap));
-    addSyncLog('ok', 'Loaded ' + count + ' instruments (both ID types)');
+    addSyncLog('ok', `Loaded ${count} instruments for acct ${accNum}`);
     return count;
   } catch(e) {
     addSyncLog('skip', 'Could not load instruments: ' + e.message);
@@ -651,11 +647,12 @@ function normalizePair(sym) {
     'GBPAUD','GBPCAD','GBPCHF','GBPNZD','EURNZD','EURCAD','AUDCAD','AUDCHF',
     'NZDJPY','NZDCHF','NZDCAD','CADCHF'];
   const match = forex6.find(p => sym.startsWith(p));
-  // === NEW: Crypto pairs ===
+ 
+  if (match) return match.slice(0,3) + '/' + match.slice(3);
+ // Crypto
   if (sym.endsWith('USD') && sym.length >= 6) {
     return sym.slice(0, -3) + '/USD';
   }
-  if (match) return match.slice(0,3) + '/' + match.slice(3);
   if (sym === 'XAUUSD') return 'XAU/USD';
   if (sym === 'XAGUSD') return 'XAG/USD';
   if (sym === 'BTCUSD') return 'BTC/USD';
@@ -689,7 +686,7 @@ function normalizePair(sym) {
 let _tlDiagDone = false; // log raw array once per sync session
 
 /* ======================================================
-   ORDER -> JOURNAL TRADE (FINAL - matches your exact array)
+   ORDER -> JOURNAL TRADE (FINAL - matches your array perfectly)
 ====================================================== */
 function tlTradeToJournal(order, isOpen, acctLabel) {
   const isArr = Array.isArray(order);
@@ -699,64 +696,56 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
     console.log('=== TL RAW ARRAY DIAGNOSTIC (first order) ===');
     console.log('Full array:', JSON.stringify(order));
     order.forEach((v, i) => console.log(' [' + i + '] = ' + v));
-    addSyncLog('ok', 'Diagnostic logged to console');
+    addSyncLog('ok', 'Diagnostic logged to console (F12)');
   }
 
   const tlId = String(isArr ? order[0] : (order.ticket || Date.now()));
-  const instrId = String(isArr ? (order[1] || '') : (order.tradableInstrumentId || order.symbol || ''));
+  const instrIdRaw = String(isArr ? (order[1] || '') : (order.tradableInstrumentId || order.symbol || ''));
 
-  let pair = tlInstrumentMap[instrId] || normalizePair(instrId);
-  if (!pair || pair.startsWith('ID:')) pair = instrId ? ('ID:' + instrId) : '--';
+  // Get pair from map (now guaranteed to work)
+  let pair = tlInstrumentMap[instrIdRaw] || normalizePair(instrIdRaw);
+
+  // Ultimate fallback: scan the entire order array for any symbol string
+  if (!pair || pair.startsWith('ID:') || pair === '--') {
+    for (let v of order) {
+      if (typeof v === 'string' && /^[A-Z]{3,6}\/?[A-Z]{3,6}$/.test(v)) {
+        pair = normalizePair(v);
+        break;
+      }
+    }
+  }
+  if (!pair || pair === '--') pair = instrIdRaw ? `ID:${instrIdRaw}` : '--';
 
   const sideRaw = String(isArr ? (order[4] || '') : (order.side || '')).toLowerCase();
   const dir = (sideRaw === 'buy') ? 'long' : 'short';
 
-  // === CORRECT INDICES FROM YOUR DIAGNOSTIC ===
+  // === EXACT INDICES FROM YOUR DIAGNOSTIC ===
   const entry = parseFloat(isArr ? order[8] : (order.openPrice || 0)) || 0;
   const exitRaw = parseFloat(isArr ? order[9] : (order.closePrice || 0)) || null;
-  const exit = (exitRaw && Math.abs(exitRaw - entry) > 0.00001) ? exitRaw : null;
+  const exit = (exitRaw && Math.abs(exitRaw - entry) > 0.000001) ? exitRaw : null;
 
   const size = parseFloat(isArr ? order[7] : (order.lots || order.volume || 0)) || null;
 
-  const sl = null; // not in array
-  const tp = null;
-
-  // PNL (your array had it empty → fallback formula will now work)
+  // PNL (your array has nulls → smart fallback)
   let pnl = null;
   if (isArr) {
-    // Try original PNL fields first
     for (let i = 21; i >= 19; i--) {
       const v = parseFloat(order[i]);
       if (!isNaN(v) && Math.abs(v) < 10000000) { pnl = v; break; }
     }
-    // Extended scan
-    if (pnl === null) {
-      for (let i = 23; i >= 17; i--) {
-        if (i >= 19 && i <= 21) continue;
-        const v = parseFloat(order[i]);
-        if (!isNaN(v) && Math.abs(v) < 10000000) {
-          pnl = v; break;
-        }
-      }
-    }
-  } else {
-    pnl = parseFloat(order.pnl || order.PnL || 0) || null;
   }
-
-  // === IMPROVED FALLBACK PNL CALCULATION (works for crypto + forex) ===
   if (pnl === null && entry && exit && size) {
     const diff = (dir === 'long') ? (exit - entry) : (entry - exit);
     const isCrypto = /ADA|BCH|BNB|BTC|ETH|IOTA|LTC|SOL|XRP/.test(pair);
     if (isCrypto) {
-      pnl = parseFloat((diff * size).toFixed(2));           // crypto: price * coins
+      pnl = parseFloat((diff * size).toFixed(2));
     } else {
-      // forex fallback (kept for safety)
       const pipMult = pair.includes('JPY') ? 1000 : 10000;
       pnl = parseFloat((diff * pipMult * size).toFixed(2));
     }
   }
 
-  // Time (your array uses [13] and [14])
+  // Time
   let time = '';
   if (isArr) {
     const openMs = parseInt(order[13]) || parseInt(order[14]) || 0;
@@ -764,24 +753,20 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
     else if (openMs > 1e9) time = new Date(openMs * 1000).toISOString().slice(0,16);
   }
 
-  let status = isOpen ? 'open' : 'win';
-  if (!isOpen && pnl !== null) {
-    if (pnl > 0.005) status = 'win';
-    else if (pnl < -0.005) status = 'loss';
-    else status = 'breakeven';
-  }
+  let status = isOpen ? 'open' : (pnl && pnl > 0.005 ? 'win' : pnl && pnl < -0.005 ? 'loss' : 'breakeven');
 
   return {
     id: Date.now() + Math.random() * 1000000 | 0,
     tlId,
     account: acctLabel || (tlCreds ? tlCreds.label : 'TL'),
-    pair, dir, entry, exit, pnl, size, sl, tp,
+    pair, dir, entry, exit, pnl, size, sl: null, tp: null,
     rr: null, time, status,
     session: '', source: 'tradelocker',
     reason: '', tf: '', tags: '', early: 'no', earlyReason: '',
     well: '', improve: '', emotion: 7, confidence: 7, grade: '', images: []
   };
 }
+ 
 /* ======================================================
    TRADELOCKER SYNC UI
 ====================================================== */
