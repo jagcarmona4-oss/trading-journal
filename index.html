@@ -697,10 +697,10 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
   const dir = (sideRaw === 'buy') ? 'long' : 'short';
 
   // [3] = entry price, [7] = size/lots (original layout -- verified against real data)
-  const size    = parseFloat(isArr ? order[3] : (order.lots || order.volume || order.qty || 0)) || null;
+  const entry   = parseFloat(isArr ? order[3] : (order.openPrice  || order.price || 0)) || 0;
   const exitRaw = parseFloat(isArr ? order[8] : (order.closePrice || order.filledPrice || 0)) || null;
   const exit    = (exitRaw && exitRaw !== entry) ? exitRaw : null;
-  const entry   = parseFloat(isArr ? order[7] : (order.openPrice  || order.price || 0)) || 0;
+  const size    = parseFloat(isArr ? order[7] : (order.lots || order.volume || order.qty || 0)) || null;
 
   const sl = parseFloat(isArr ? null : (order.sl || order.stopLoss   || 0)) || null;
   const tp = parseFloat(isArr ? null : (order.tp || order.takeProfit || 0)) || null;
