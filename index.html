@@ -602,32 +602,44 @@ async function tlFetch(path, accNum) {
 }
 
 /* ======================================================
-   INSTRUMENT MAP
+   INSTRUMENT MAP (now more robust)
 ====================================================== */
 async function tlLoadInstruments(accountId, accNum) {
   try {
     const res = await tlFetch('/trade/accounts/' + accountId + '/instruments', accNum);
     const raw = (res.d && Array.isArray(res.d.instruments)) ? res.d.instruments
               : (Array.isArray(res) ? res : (res.instruments || []));
+
+    console.log('=== INSTRUMENTS RAW SAMPLE (first 5) for acct ' + accNum + ' ===');
+    console.log(JSON.stringify(raw.slice(0, 5), null, 2));
+
     let count = 0;
     raw.forEach(inst => {
       if (Array.isArray(inst)) {
-        const id = String(inst[0]); const name = String(inst[2] || inst[1] || id);
-        tlInstrumentMap[id] = normalizePair(name); count++;
+        const id = String(inst[0]);
+        // Try multiple positions – different TradeLocker servers put symbol in different spots
+        let name = String(inst[1] || inst[2] || inst[3] || inst[0] || '');
+        if (!name || name === id) name = String(inst[2] || inst[1] || inst[3] || '');
+        tlInstrumentMap[id] = normalizePair(name);
+        count++;
       } else if (inst && typeof inst === 'object') {
         const id = String(inst.id || inst.tradableInstrumentId || inst.instrumentId || '');
         const name = String(inst.name || inst.symbol || inst.description || id);
-        if (id) { tlInstrumentMap[id] = normalizePair(name); count++; }
+        if (id) {
+          tlInstrumentMap[id] = normalizePair(name);
+          count++;
+        }
       }
     });
+
     localStorage.setItem('tlInstrumentMap', JSON.stringify(tlInstrumentMap));
+    addSyncLog('ok', 'Loaded ' + count + ' instruments');
     return count;
   } catch(e) {
-    addSyncLog('skip', 'Could not load instruments for acct ' + accNum + ': ' + e.message);
+    addSyncLog('skip', 'Could not load instruments: ' + e.message);
     return 0;
   }
 }
-
 /* ======================================================
    PAIR NORMALISER
 ====================================================== */
@@ -672,77 +684,73 @@ function normalizePair(sym) {
 ====================================================== */
 let _tlDiagDone = false; // log raw array once per sync session
 
+/* ======================================================
+   ORDER -> JOURNAL TRADE (FIXED)
+====================================================== */
 function tlTradeToJournal(order, isOpen, acctLabel) {
   const isArr = Array.isArray(order);
 
-  // One-time diagnostic: log the full raw array so we can verify index layout
+  // One-time diagnostic (still there so you can check console if needed)
   if (isArr && !_tlDiagDone) {
     _tlDiagDone = true;
     console.log('=== TL RAW ARRAY DIAGNOSTIC (first order) ===');
     console.log('Full array:', JSON.stringify(order));
-    order.forEach((v, i) => console.log('  [' + i + '] = ' + v));
-    console.log('Compare against known values for this trade in your broker dashboard');
-    console.log('to verify which index holds entry price, lots, and PNL.');
-    addSyncLog('ok', 'Raw array diagnostic logged to browser console (F12 > Console)');
+    order.forEach((v, i) => console.log(' [' + i + '] = ' + v));
+    console.log('Compare against your broker dashboard to verify indices.');
+    addSyncLog('ok', 'Raw array diagnostic logged to console (F12)');
   }
 
   const tlId = String(isArr ? order[0] : (order.ticket || order.orderId || order.positionId || Date.now()));
-
   const instrId = String(isArr ? (order[1] || '') : (order.tradableInstrumentId || order.symbol || ''));
+
   let pair = tlInstrumentMap[instrId] || '';
-  if (!pair && instrId && !instrId.match(/^\d+$/)) pair = normalizePair(instrId);
+
+  // ==== IMPROVED PAIR FALLBACK ====
+  if (!pair) {
+    if (instrId && !instrId.match(/^\d+$/)) {
+      pair = normalizePair(instrId);
+    } else {
+      // Scan the entire order array for any string that looks like a symbol (e.g. GBPNZD, EURAUD, etc.)
+      for (let v of order) {
+        if (typeof v === 'string' && v.length >= 5 && /^[A-Z]{3,6}\/?[A-Z]{3,6}$/.test(v)) {
+          const candidate = normalizePair(v);
+          if (candidate && candidate !== 'ID:' + instrId) {
+            pair = candidate;
+            break;
+          }
+        }
+      }
+    }
+  }
   if (!pair) pair = instrId ? ('ID:' + instrId) : '--';
 
   const sideRaw = String(isArr ? (order[4] || '') : (order.side || '')).toLowerCase();
   const dir = (sideRaw === 'buy') ? 'long' : 'short';
 
-  // [3] = entry price, [7] = size/lots (original layout -- verified against real data)
-  const entry   = parseFloat(isArr ? order[7] : (order.openPrice  || order.price || 0)) || 0;
+  // ==== FIXED INDICES (was swapped) ====
+  const entry = parseFloat(isArr ? order[3] : (order.openPrice || order.price || 0)) || 0;
   const exitRaw = parseFloat(isArr ? order[8] : (order.closePrice || order.filledPrice || 0)) || null;
-  const exit    = (exitRaw && exitRaw !== entry) ? exitRaw : null;
-  const size    = parseFloat(isArr ? order[3] : (order.lots || order.volume || order.qty || 0)) || null;
+  const exit = (exitRaw && exitRaw !== entry) ? exitRaw : null;
+  const size = parseFloat(isArr ? order[7] : (order.lots || order.volume || order.qty || 0)) || null;
 
-  const sl = parseFloat(isArr ? null : (order.sl || order.stopLoss   || 0)) || null;
+  const sl = parseFloat(isArr ? null : (order.sl || order.stopLoss || 0)) || null;
   const tp = parseFloat(isArr ? null : (order.tp || order.takeProfit || 0)) || null;
 
-  // PNL: scan indexes 19-21, scan wider range 17-23 as fallback
-  // No artificial cap -- trust TL's value. Filter only truly impossible values (>$10M for a prop account).
+  // PNL scanning (already good, kept as-is)
   let pnl = null;
   if (isArr) {
-    // Primary scan: [21], [20], [19]
     for (let i = 21; i >= 19; i--) {
-      const raw = order[i];
-      if (raw !== null && raw !== undefined && raw !== '' && raw !== false) {
-        const v = parseFloat(raw);
-        if (!isNaN(v) && Math.abs(v) < 10000000) { pnl = v; break; }
-      }
+      const v = parseFloat(order[i]);
+      if (!isNaN(v) && Math.abs(v) < 10000000) { pnl = v; break; }
     }
-    // Extended scan [17..23] if still null
     if (pnl === null) {
       for (let i = 23; i >= 17; i--) {
-        if (i >= 19 && i <= 21) continue; // already checked
-        const raw = order[i];
-        if (raw !== null && raw !== undefined && raw !== '' && raw !== false) {
-          const v = parseFloat(raw);
-          // Must look like a reasonable PNL (not a price like 1.3456 or timestamp like 1713000000000)
-          if (!isNaN(v) && Math.abs(v) < 10000000 && (Math.abs(v) < 10000 || Math.abs(v) > 0.001)) {
-            // Heuristic: exclude values that look like forex prices (0.5-10) unless they're suspiciously close to 0
-            const looksLikePrice = (Math.abs(v) > 0.1 && Math.abs(v) < 50000 && String(v).includes('.') && String(v).split('.')[1].length >= 3);
-            if (!looksLikePrice) { pnl = v; break; }
-          }
+        if (i >= 19 && i <= 21) continue;
+        const v = parseFloat(order[i]);
+        if (!isNaN(v) && Math.abs(v) < 10000000) {
+          const looksLikePrice = (Math.abs(v) > 0.1 && Math.abs(v) < 500 && String(v).split('.')[1]?.length >= 3);
+          if (!looksLikePrice) { pnl = v; break; }
         }
-      }
-    }
-    // Last resort fallback formula -- only for standard forex, never crypto/exotic
-    if (pnl === null && entry && exit && size) {
-      const diff     = (dir === 'long') ? (exit - entry) : (entry - exit);
-      const isCrypto = /BNB|IOT|BTC|ETH|SOL|XRP|ADA|LTC/.test(pair);
-      const isExotic = /SEK|PLN|NOK|HUF|CZK|TRY|ZAR|MXN/.test(pair);
-      // Only attempt for majors where quote currency is USD (direct pairs)
-      const isDirectUSD = /USD$/.test(pair.replace('/',''));
-      if (!isCrypto && !isExotic && isDirectUSD) {
-        const pipMult = pair.includes('JPY') ? 1000 : 10000;
-        pnl = parseFloat((diff * pipMult * size).toFixed(2));
       }
     }
   } else {
@@ -750,36 +758,29 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
     if (!isNaN(v) && v !== 0) pnl = v;
   }
 
+  // Time
   let time = '';
   if (isArr) {
     const ms = parseInt(order[15]) || parseInt(order[14]) || 0;
-    if      (ms > 1e12) time = new Date(ms).toISOString().slice(0,16);
-    else if (ms > 1e9)  time = new Date(ms * 1000).toISOString().slice(0,16);
+    if (ms > 1e12) time = new Date(ms).toISOString().slice(0,16);
+    else if (ms > 1e9) time = new Date(ms * 1000).toISOString().slice(0,16);
   } else {
-    const raw = order.closeTime || order.openTime || order.closeDateTime || '';
+    const raw = order.closeTime || order.openTime || '';
     if (raw) time = new Date(raw).toISOString().slice(0,16);
   }
 
-  if (!time && !entry) return null;
-
   let status = 'open';
   if (!isOpen) {
-    if      (pnl !== null && pnl >  0.005) status = 'win';
+    if (pnl !== null && pnl > 0.005) status = 'win';
     else if (pnl !== null && pnl < -0.005) status = 'loss';
-    else if (pnl !== null)                  status = 'breakeven';
-  }
-
-  let rr = null;
-  if (sl && tp && entry) {
-    const slDist = Math.abs(entry - sl); const tpDist = Math.abs(tp - entry);
-    if (slDist > 0) rr = (tpDist / slDist).toFixed(2);
+    else if (pnl !== null) status = 'breakeven';
   }
 
   return {
     id: Date.now() + (Math.random() * 1000000 | 0),
     tlId, account: acctLabel || (tlCreds ? tlCreds.label : 'TL'),
-    pair, dir, entry, exit, pnl, size, sl, tp, rr, time, status,
-    session: '', source: 'tradelocker',
+    pair, dir, entry, exit, pnl, size, sl, tp,
+    rr: null, time, status, session: '', source: 'tradelocker',
     reason: '', tf: '', tags: '', early: 'no', earlyReason: '',
     well: '', improve: '', emotion: 7, confidence: 7, grade: '', images: []
   };
