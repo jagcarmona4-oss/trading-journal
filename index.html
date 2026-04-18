@@ -202,7 +202,6 @@
       <span id="sync-label">Connecting...</span>
     </div>
   </div>
-
   <!-- Dashboard -->
   <div id="page-dashboard" class="page active">
     <div class="acct-filter-row" id="acct-filter-row"><span class="acct-filter-label">Account:</span></div>
@@ -219,7 +218,6 @@
       </div>
     </div>
   </div>
-
   <!-- Trade Log -->
   <div id="page-log" class="page">
     <div class="filter-bar">
@@ -237,7 +235,6 @@
       <div id="log-list"></div>
     </div>
   </div>
-
   <!-- Analytics -->
   <div id="page-analytics" class="page">
     <div class="acct-filter-row" id="acct-filter-row-analytics"><span class="acct-filter-label">Account:</span></div>
@@ -257,7 +254,6 @@
       <canvas id="pnl-chart" height="100"></canvas>
     </div>
   </div>
-
   <!-- Add / Edit Trade -->
   <div id="page-add" class="page">
     <div class="card">
@@ -327,7 +323,6 @@
       </div>
     </div>
   </div>
-
   <!-- TradeLocker Sync Page -->
   <div id="page-tl-sync" class="page">
     <div id="tl-connected-banner" style="display:none;" class="tl-connected-banner">
@@ -347,14 +342,12 @@
         <button class="btn-danger" onclick="disconnectTL()" style="font-size:12px;">Disconnect</button>
       </div>
     </div>
-
     <!-- Account Aliases panel (shown when connected) -->
     <div id="tl-aliases-panel" style="display:none;" class="card">
       <div style="font-size:14px;font-weight:500;margin-bottom:4px;">Account nicknames</div>
       <div style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:12px;">Give each account a friendly name. Changes take effect on next sync.</div>
       <div id="tl-aliases-list"></div>
     </div>
-
     <div id="tl-connect-card" class="tl-connect-card">
       <div class="tl-info">
         <div class="tl-title">
@@ -450,7 +443,6 @@
     </div>
   </div>
 </div>
-
 <!-- Detail modal -->
 <div id="detail-modal" style="display:none;" class="detail-modal" onclick="closeModal(event)">
   <div class="detail-box" id="detail-content" onclick="event.stopPropagation()"></div>
@@ -474,7 +466,6 @@
   </div>
 </div>
 <div id="toast" class="toast"></div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
 /* ======================================================
@@ -496,7 +487,6 @@ let currentAccount = 'All';
 let knownAccounts = [];
 let initialBalances = {};
 let accountAliases = {};
-
 /* ======================================================
    TRADELOCKER STATE
 ====================================================== */
@@ -506,9 +496,7 @@ let tlRefreshToken = null;
 let tlAllAccounts = [];
 let tlIsSyncing = false;
 let tlInstrumentMap = {};
-// Stores the raw accNums discovered during last auth (for alias UI)
 let tlDiscoveredAccNums = [];
-
 function loadTLCreds() {
   try { tlCreds = JSON.parse(localStorage.getItem('tlCreds')); } catch(e) { tlCreds = null; }
   try { tlInstrumentMap = JSON.parse(localStorage.getItem('tlInstrumentMap')) || {}; } catch(e) { tlInstrumentMap = {}; }
@@ -531,11 +519,8 @@ function getAcctFilterList() {
   if (!tlCreds || !tlCreds.acctFilter) return [];
   return tlCreds.acctFilter.split(',').map(s => s.trim()).filter(Boolean);
 }
-
 /* ======================================================
    ACCOUNT ALIAS HELPERS
-   Each TL account is stored by its real accNum.
-   accountAliases maps accNum -> friendly name.
 ====================================================== */
 function getAcctLabel(accNum) {
   const key = String(accNum);
@@ -566,7 +551,6 @@ function setAlias(accNum, val) {
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
-
 /* ======================================================
    TRADELOCKER AUTH
 ====================================================== */
@@ -590,14 +574,10 @@ async function tlGetAccounts() {
   tlAllAccounts = data.accounts || [];
   if (!tlAllAccounts.length) throw new Error('No accounts found in this TradeLocker profile.');
   addSyncLog('ok', 'Total accounts found: ' + tlAllAccounts.length);
-
-  // Log all account details for diagnosis
   tlAllAccounts.forEach((a, i) => {
     const allVals = Object.entries(a).map(([k,v]) => k + '=' + JSON.stringify(v)).join(' | ');
     addSyncLog('diag', 'Acct[' + i + ']: ' + allVals);
-    console.log('TL Account[' + i + ']:', JSON.stringify(a, null, 2));
   });
-
   const filterList = getAcctFilterList();
   let targetAccounts = tlAllAccounts;
   if (filterList.length > 0) {
@@ -611,11 +591,8 @@ async function tlGetAccounts() {
     }
     addSyncLog('ok', 'Filter matched ' + targetAccounts.length + ' account(s)');
   }
-
-  // Save discovered accNums for the alias UI
   tlDiscoveredAccNums = targetAccounts.map(a => String(a.accNum || a.id)).filter(Boolean);
   localStorage.setItem('tlDiscoveredAccNums', JSON.stringify(tlDiscoveredAccNums));
-
   return targetAccounts;
 }
 async function tlFetch(path, accNum) {
@@ -653,7 +630,6 @@ async function tlLoadInstruments(accountId, accNum) {
     return 0;
   }
 }
-
 /* ======================================================
    PAIR NORMALISER
 ====================================================== */
@@ -684,13 +660,21 @@ function normalizePair(sym) {
   if (['JP225','JPN225','NIKKEI'].includes(sym)) return 'JP225';
   return sym;
 }
-
 /* ======================================================
-   SAFE JSON PARSE  (handles 64-bit integer IDs)
+   MONEY PARSER (FIXED - handles "$306.19", "-$791.24", etc.)
+====================================================== */
+function parseMoney(str) {
+  if (str == null) return null;
+  let clean = String(str).replace(/[$€£¥,%\s]/g, '').trim();
+  if (clean.startsWith('(') && clean.endsWith(')')) clean = '-' + clean.slice(1, -1);
+  const v = parseFloat(clean);
+  return isNaN(v) ? null : parseFloat(v.toFixed(2));
+}
+/* ======================================================
+   SAFE JSON PARSE
 ====================================================== */
 function safeParseJSON(text) {
   try {
-    // Wrap large bare integers in quotes to avoid float precision loss
     const safe = text.replace(/(?<!["\d.])(\d{14,})(?!["\d.])/g, '"$1"');
     return JSON.parse(safe);
   } catch(e) {
@@ -706,94 +690,44 @@ async function tlFetchRaw(path, accNum) {
   const text = await res.text();
   return safeParseJSON(text);
 }
-
 /* ======================================================
-   PNL EXTRACTION  — completely rewritten
-   
-   TradeLocker array order (based on confirmed broker UI data):
-   [0]  = ticket/id
-   [1]  = instrument id or symbol
-   [2]  = side  (buy/sell) OR a numeric placeholder
-   [3]  = stop loss
-   [4]  = take profit OR lots
-   [5]  = open time
-   [6]  = open price
-   [7]  = close time
-   [8]  = close price
-   [9]  = duration string
-   [10] = gross PNL  ($766.33 for the GBPCAD example)
-   [11] = lots/volume
-   [12] = commissions (negative)
-   
-   We confirm this by cross-checking: pnl should have same sign as
-   (close-open) for long, (open-close) for short, and magnitude ~
-   lotsize * pip_value * pip_diff.
+   PNL EXTRACTION — FIXED (uses parseMoney + exact index 10/12 from your data)
 ====================================================== */
-function extractPnlFromArray(order, entry, exit, dir, pair, size) {
-  // Strategy: scan indices 9..18 for the most plausible gross PNL value.
-  // A valid PNL candidate:
-  //   - Is finite and non-zero
-  //   - Has magnitude < $500,000 (sanity)
-  //   - Is NOT a timestamp (> 1e9)
-  //   - Is NOT very close to entry or exit price (not a price field)
-  //   - Ideally has correct sign relative to trade direction
-
-  const priceRef = entry || 1;
+function extractPnlFromArray(order) {
   const candidates = [];
-
   for (let i = 9; i < Math.min(order.length, 20); i++) {
     const raw = order[i];
-    const v = parseFloat(raw);
-    if (isNaN(v) || !isFinite(v) || v === 0) continue;
-    if (Math.abs(v) > 500000) continue;           // too large — price or timestamp
-    if (v > 1e9) continue;                         // timestamp
-    if (Math.abs(v - priceRef) < priceRef * 0.1) continue;  // looks like a price
-    if (Math.abs(v) > 0.001 && Math.abs(v) < 100000) {
-      candidates.push({ idx: i, val: v });
-    }
+    const v = parseMoney(raw);
+    if (v === null || !isFinite(v) || v === 0) continue;
+    if (Math.abs(v) > 500000) continue;
+    if (v > 1e9) continue;
+    candidates.push({ idx: i, val: v, raw: String(raw) });
   }
-
   if (!candidates.length) return { pnl: null, commission: null };
-
-  // Log candidates for diagnosis
-  addSyncLog('diag', 'PNL candidates: ' + candidates.map(c => '[' + c.idx + ']=' + c.val).join(', '));
-
-  // Prefer index 10 if it's in the list (that's gross PNL in confirmed schema)
-  const atTen = candidates.find(c => c.idx === 10);
-  if (atTen) {
-    // Commission is usually index 12 (negative, smaller magnitude)
-    const atTwelve = candidates.find(c => c.idx === 12 && c.val < 0 && Math.abs(c.val) < Math.abs(atTen.val));
-    addSyncLog('diag', 'Using idx[10]=' + atTen.val + ' as gross PNL' + (atTwelve ? ', idx[12]=' + atTwelve.val + ' as commission' : ''));
-    return { pnl: parseFloat(atTen.val.toFixed(2)), commission: atTwelve ? parseFloat(atTwelve.val.toFixed(2)) : null };
+  addSyncLog('diag', 'PNL candidates: ' + candidates.map(c => '[' + c.idx + ']=' + c.raw + '→' + c.val).join(', '));
+  let pnlCand = candidates.find(c => c.idx === 10);
+  if (!pnlCand) {
+    candidates.sort((a, b) => Math.abs(b.val) - Math.abs(a.val));
+    pnlCand = candidates[0];
   }
-
-  // Fallback: pick the candidate with largest absolute value that isn't tiny
-  candidates.sort((a, b) => Math.abs(b.val) - Math.abs(a.val));
-  const best = candidates[0];
-  const commCand = candidates.find(c => c.val < 0 && Math.abs(c.val) < Math.abs(best.val) * 0.5);
-  return { pnl: parseFloat(best.val.toFixed(2)), commission: commCand ? parseFloat(commCand.val.toFixed(2)) : null };
+  let commCand = candidates.find(c => c.idx === 12 && c.val < 0);
+  if (!commCand) commCand = candidates.find(c => c.val < 0 && Math.abs(c.val) < Math.abs(pnlCand.val) * 0.5);
+  addSyncLog('diag', `Selected PNL[${pnlCand.idx}]=${pnlCand.val} ${commCand ? `| comm[${commCand.idx}]=${commCand.val}` : ''}`);
+  return { pnl: pnlCand.val, commission: commCand ? commCand.val : null };
 }
-
 /* ======================================================
-   ORDER -> JOURNAL TRADE  (rewritten PNL logic)
+   ORDER -> JOURNAL TRADE (with fixed PNL + date parsing)
 ====================================================== */
 let _tlDiagCount = 0;
 function tlTradeToJournal(order, isOpen, acctLabel) {
   const isArr = Array.isArray(order);
-
-  // ── Dump first few raw orders for diagnosis ──
   if (isArr && _tlDiagCount < 3) {
     _tlDiagCount++;
     const preview = order.map((v,i) => '[' + i + ']=' + JSON.stringify(v)).join(' ');
     addSyncLog('diag', 'RAW[' + _tlDiagCount + ']: ' + preview);
-    console.log('TL raw order #' + _tlDiagCount + ':', JSON.stringify(order));
   }
-
-  // ── Trade ID ──
   const tlId = String(isArr ? order[0] : (order.ticket || order.id || Date.now()));
   if (!tlId || tlId.length < 3) return null;
-
-  // ── Symbol / Pair ──
   let pair = '';
   if (isArr) {
     const raw1 = order[1];
@@ -803,8 +737,7 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
       const instrIdRaw = String(raw1 || '');
       pair = tlInstrumentMap[instrIdRaw] || normalizePair(instrIdRaw);
     }
-    // Fallback: scan for a recognisable symbol string anywhere in the array
-    if (!pair || /^\d+$/.test(pair.replace('/','')) ) {
+    if (!pair || /^\d+$/.test(pair.replace('/',''))) {
       for (const v of order) {
         if (typeof v === 'string' && v.length >= 5 && /^[A-Z]{3,6}[/]?[A-Z]{2,6}$/i.test(v.trim())) {
           pair = normalizePair(v.trim()); break;
@@ -818,11 +751,8 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
       : (tlInstrumentMap[String(sym)] || normalizePair(String(sym)));
   }
   if (!pair || !pair.length) pair = '--';
-
-  // ── Direction ──
   let sideRaw = '';
   if (isArr) {
-    // index 2 is often the side; scan first 6 indices
     for (const idx of [2, 3, 4, 5, 6]) {
       const v = String(order[idx] || '').toLowerCase();
       if (v === 'buy' || v === 'sell') { sideRaw = v; break; }
@@ -837,8 +767,6 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
     sideRaw = String(order.side || '').toLowerCase();
   }
   const dir = (sideRaw === 'buy') ? 'long' : 'short';
-
-  // ── SL / TP ──
   let sl = null, tp = null;
   if (isArr) {
     const slRaw = parseFloat(order[3]);
@@ -849,16 +777,12 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
     sl = parseFloat(order.stopLoss) || null;
     tp = parseFloat(order.takeProfit) || null;
   }
-
-  // ── Entry / Exit prices ──
   let entry = 0, exit = null;
   if (isArr) {
-    // confirmed: [6]=open price, [8]=close price
     const op = parseFloat(order[6]);
     const cl = parseFloat(order[8]);
     if (op > 0 && !isNaN(op) && op < 1e9) entry = op;
     if (cl > 0 && !isNaN(cl) && cl < 1e9 && Math.abs(cl - op) > 0.000001) exit = cl;
-    // If [6] doesn't look right, try [5],[7]
     if (!entry || entry > 1e6) {
       for (const idx of [5, 7]) {
         const v = parseFloat(order[idx]);
@@ -870,16 +794,11 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
     const cl = parseFloat(order.closePrice || 0);
     if (cl > 0 && Math.abs(cl - entry) > 0.000001) exit = cl;
   }
-
-  // ── Size (lots) ──
   let size = null;
   if (isArr) {
-    // confirmed: [11] = lots
     const v11 = parseFloat(order[11]);
-    if (v11 > 0 && v11 < 10000 && !isNaN(v11)) {
-      size = v11;
-    } else {
-      // fallback: small positive float not matching price
+    if (v11 > 0 && v11 < 10000 && !isNaN(v11)) size = v11;
+    else {
       for (const idx of [4, 7, 10]) {
         const v = parseFloat(order[idx]);
         if (v > 0 && v < 10000 && !isNaN(v) && Math.abs(v - entry) > 0.01) { size = v; break; }
@@ -888,31 +807,23 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
   } else {
     size = parseFloat(order.lots || order.volume || order.qty || 0) || null;
   }
-
-  // ── PNL — the main fix ──
   let pnl = null, commission = null;
   if (isArr) {
-    const extracted = extractPnlFromArray(order, entry, exit, dir, pair, size);
+    const extracted = extractPnlFromArray(order);
     pnl = extracted.pnl;
     commission = extracted.commission;
   } else {
-    // Object format: use explicit fields
     pnl = parseFloat(order.grossProfit || order.profit || order.pnl || 0) || null;
     commission = parseFloat(order.commission || order.commissions || 0) || null;
     if (pnl === 0) pnl = null;
     if (commission === 0) commission = null;
   }
-
-  // Apply net PNL (gross + commission, commission is negative)
   const useNetPnl = tlCreds && tlCreds.netPnl !== false;
   if (useNetPnl && pnl !== null && commission !== null) {
     pnl = parseFloat((pnl + commission).toFixed(2));
-    addSyncLog('diag', 'Net PNL after commission: ' + pnl);
   } else if (pnl !== null) {
     pnl = parseFloat(pnl.toFixed(2));
   }
-
-  // Last resort: estimate from price diff if we still have no PNL
   if ((pnl === null || pnl === 0) && entry > 0 && exit !== null && size !== null && size > 0) {
     const diff = (dir === 'long') ? (exit - entry) : (entry - exit);
     const isJPY = pair && pair.includes('JPY');
@@ -922,24 +833,38 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
     else pnl = parseFloat((diff * 100000 * size).toFixed(2));
     addSyncLog('skip', 'Estimated PNL from price diff for ' + pair + ': $' + pnl);
   }
-
-  // ── Open time ──
   let time = '';
   if (isArr) {
-    // confirmed: [5] = open time
     const tsRaw = order[5];
     if (tsRaw) {
       if (typeof tsRaw === 'string' && (tsRaw.includes('/') || tsRaw.includes('-'))) {
-        try { time = new Date(tsRaw).toISOString().slice(0,16); } catch(e) {}
+        try {
+          const dt = new Date(tsRaw);
+          if (!isNaN(dt)) time = dt.toISOString().slice(0, 16);
+        } catch(e) {}
         if (!time || time.startsWith('Invalid')) {
           const m = tsRaw.match(/(\d+)[\/\-](\d+)[\/\-](\d+)\s+(\d+):(\d+):(\d+)\s*(AM|PM)?/i);
           if (m) {
             let h = parseInt(m[4]);
-            if (m[7] && m[7].toUpperCase() === 'PM' && h !== 12) h += 12;
-            if (m[7] && m[7].toUpperCase() === 'AM' && h === 12) h = 0;
-            // Try both DD/MM/YYYY and MM/DD/YYYY
-            const dt = new Date(parseInt(m[3]), parseInt(m[1])-1, parseInt(m[2]), h, parseInt(m[5]), parseInt(m[6]));
-            time = dt.toISOString().slice(0,16);
+            const ampm = (m[7] || '').toUpperCase().trim();
+            if (ampm === 'PM' && h < 12) h += 12;
+            else if (ampm === 'AM' && h === 12) h = 0;
+            let g1 = parseInt(m[1]);
+            let g2 = parseInt(m[2]);
+            let year = parseInt(m[3]);
+            let month, day;
+            if (g1 > 12) {
+              day = g1;
+              month = g2 - 1;
+            } else if (g2 > 12) {
+              day = g2;
+              month = g1 - 1;
+            } else {
+              day = g2;
+              month = g1 - 1;
+            }
+            const dt = new Date(year, month, day, h, parseInt(m[5]), parseInt(m[6]));
+            if (!isNaN(dt)) time = dt.toISOString().slice(0, 16);
           }
         }
       } else {
@@ -950,7 +875,6 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
         }
       }
     }
-    // Fallback: check [7] (close time) for a timestamp
     if (!time) {
       for (const idx of [7, 12, 13]) {
         const v = order[idx];
@@ -967,23 +891,18 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
     const ts = order.openTime || order.time || order.createdAt;
     if (ts) { try { time = new Date(ts).toISOString().slice(0,16); } catch(e) {} }
   }
-
-  // ── Status ──
   let status = 'open';
   if (!isOpen) {
     if (pnl !== null && pnl > 0.5) status = 'win';
     else if (pnl !== null && pnl < -0.5) status = 'loss';
     else status = 'breakeven';
   }
-
-  // ── R:R ──
   let rr = null;
   if (sl && tp && entry) {
     const slDist = Math.abs(entry - sl);
     const tpDist = Math.abs(tp - entry);
     if (slDist > 0) rr = (tpDist / slDist).toFixed(2);
   }
-
   return {
     id: Date.now() + (Math.random() * 1000000 | 0),
     tlId,
@@ -995,7 +914,6 @@ function tlTradeToJournal(order, isOpen, acctLabel) {
     well: '', improve: '', emotion: 7, confidence: 7, grade: '', images: []
   };
 }
-
 /* ======================================================
    TRADELOCKER SYNC UI
 ====================================================== */
@@ -1066,7 +984,6 @@ function setProgress(pct) {
   const bar = document.getElementById('tl-progress-bar');
   if (bar) bar.style.width = pct + '%';
 }
-
 /* ======================================================
    CONNECT
 ====================================================== */
@@ -1103,11 +1020,8 @@ async function connectTL() {
     btn.disabled = false; btn.textContent = 'Connect & sync';
   }
 }
-
 /* ======================================================
    SYNC CORE
-   Key fix: each TL account gets its own journal account
-   label = accountAliases[accNum] or the raw accNum string.
 ====================================================== */
 async function runTLSync() {
   if (tlIsSyncing) return;
@@ -1132,26 +1046,17 @@ async function runTLSync() {
     setProgress(10);
     const targetAccounts = await tlGetAccounts();
     setProgress(20);
-
-    // Render alias panel now that we know the account numbers
     renderAliasesPanel();
-
     const totalAccts = targetAccounts.length;
     for (let ai = 0; ai < totalAccts; ai++) {
       const acct = targetAccounts[ai];
       const acctId = acct.id;
       const acctNum = acct.accNum;
-
-      // Each account uses its own numeric ID as the journal account name
-      // (with optional friendly alias from the alias panel)
       const acctLabel = getAcctLabel(acctNum);
       addSyncLog('ok', '─── Account ' + acctNum + ' → "' + acctLabel + '" ───');
-
       const baseProgress = 20 + (ai / totalAccts) * 70;
       setProgress(baseProgress + 5);
       await tlLoadInstruments(acctId, acctNum);
-
-      // ── Fetch closed orders ──
       addSyncLog('ok', 'Fetching order history...');
       setProgress(baseProgress + 15);
       let filledOrders = [];
@@ -1162,14 +1067,9 @@ async function runTLSync() {
         else if (res && Array.isArray(res.ordersHistory)) filledOrders = res.ordersHistory;
         else if (res && res.data && Array.isArray(res.data)) filledOrders = res.data;
         addSyncLog('ok', 'Found ' + filledOrders.length + ' closed orders');
-        if (filledOrders.length > 0) {
-          console.log('Account ' + acctNum + ' — first order raw:', JSON.stringify(filledOrders[0]));
-        }
       } catch(e) {
         addSyncLog('err', 'Could not fetch order history: ' + e.message); errors++;
       }
-
-      // ── Fetch open positions ──
       let openPositions = [];
       if (tlCreds.openStatus !== 'skip') {
         addSyncLog('ok', 'Fetching open positions...');
@@ -1184,29 +1084,23 @@ async function runTLSync() {
           addSyncLog('skip', 'Could not fetch positions: ' + e.message);
         }
       }
-
       setProgress(baseProgress + 35);
       addSyncLog('ok', 'Merging ' + (filledOrders.length + openPositions.length) + ' orders...');
-
       const allTLTrades = [
         ...filledOrders.map(o => ({ order: o, isOpen: false })),
         ...openPositions.map(o => ({ order: o, isOpen: true }))
       ];
-
       let acctImported = 0, acctUpdated = 0;
       for (const { order, isOpen } of allTLTrades) {
         const jt = tlTradeToJournal(order, isOpen, acctLabel);
         if (!jt) { skipped++; continue; }
         const tlId = jt.tlId;
         if (!tlId || tlId.length < 3) { addSyncLog('skip', 'Skipped: no valid ID'); skipped++; continue; }
-
         const existing = trades.find(t => t.tlId && String(t.tlId) === String(tlId));
         if (existing) {
-          // Merge: keep user-entered fields, update broker-sourced fields
           const merged = {
             ...jt,
             id: existing.id,
-            // Preserve all user-entered enrichment
             reason: existing.reason,
             well: existing.well,
             improve: existing.improve,
@@ -1235,7 +1129,6 @@ async function runTLSync() {
       }
       addSyncLog('ok', 'Account ' + acctNum + ' complete: ' + acctImported + ' new, ' + acctUpdated + ' updated.');
     }
-
     setProgress(95);
     extractAndSaveAccounts();
     renderDashboard(); renderLog(); renderAnalytics();
@@ -1257,7 +1150,6 @@ async function runTLSync() {
     if (btn) { btn.classList.remove('syncing'); const s = btn.querySelector('svg'); if (s) s.style.animation = ''; }
   }
 }
-
 /* ======================================================
    SUPABASE HELPERS
 ====================================================== */
@@ -1314,7 +1206,6 @@ async function deleteAllTradesForAccount(accName) {
   for (const t of toDelete) await deleteTradeRemote(t.id);
   trades = trades.filter(t => t.account !== accName);
 }
-
 /* ======================================================
    ACCOUNTS
 ====================================================== */
@@ -1380,7 +1271,6 @@ function getFilteredTrades() {
   if (currentAccount === 'All') return trades;
   return trades.filter(t => t.account === currentAccount);
 }
-
 /* ======================================================
    DRAWDOWN BANNER
 ====================================================== */
@@ -1401,7 +1291,6 @@ function renderDDBanner() {
     banner.innerHTML = '<div class="dd-ok">🟢 Drawdown: ' + ddPct.toFixed(2) + '% / ' + ddLimit + '% limit. On track.</div>';
   else banner.innerHTML = '';
 }
-
 /* ======================================================
    PAGE NAVIGATION
 ====================================================== */
@@ -1420,7 +1309,6 @@ function showPage(p) {
 function renderTLSyncPage() {
   if (tlCreds) renderTLConnectedState(); else renderTLDisconnectedState();
 }
-
 /* ======================================================
    FORM
 ====================================================== */
@@ -1522,7 +1410,6 @@ function clearForm() {
   tempImages = [];
   document.getElementById('img-preview').innerHTML = '';
 }
-
 /* ======================================================
    FORMATTERS
 ====================================================== */
@@ -1530,7 +1417,6 @@ function fmt(n) { if (n === null || n === undefined || isNaN(n)) return '--'; re
 function fmtPct(n) { return (n * 100).toFixed(1) + '%'; }
 function dateStr(t) { return t ? t.slice(0,10) : '--'; }
 function pnlClass(v){ return v > 0 ? 'pnl-pos' : v < 0 ? 'pnl-neg' : ''; }
-
 /* ======================================================
    DASHBOARD
 ====================================================== */
@@ -1584,7 +1470,6 @@ function renderTopPairs(id) {
       '<span style="font-size:12px;' + pnlClass(d.pnl) + '">' + fmt(d.pnl) + '</span></div>';
   }).join('') : '<div style="font-size:13px;color:var(--color-text-tertiary)">Close some trades first</div>';
 }
-
 /* ======================================================
    TRADE LOG
 ====================================================== */
@@ -1664,7 +1549,6 @@ function openDetail(id) {
 function closeModal(e) {
   if (e.target === document.getElementById('detail-modal')) document.getElementById('detail-modal').style.display = 'none';
 }
-
 /* ======================================================
    ANALYTICS
 ====================================================== */
@@ -1734,7 +1618,6 @@ function renderPnlChart(closed) {
     }
   });
 }
-
 /* ======================================================
    ACCOUNT / BALANCE MODAL
 ====================================================== */
@@ -1790,7 +1673,6 @@ function addNewAccountBalance() {
   saveInitialBalances(); extractAndSaveAccounts(); renderBalancesList();
   showToast('✅ Account "' + clean + '" created');
 }
-
 /* ======================================================
    INIT
 ====================================================== */
