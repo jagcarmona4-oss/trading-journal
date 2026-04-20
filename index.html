@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Trading Journal</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -136,6 +136,7 @@
   <div class="spinner"></div>
   <span style="font-size:13px;color:var(--text-secondary)">Loading trades…</span>
 </div>
+
 <div class="app">
   <div class="nav">
     <h1>📈 Trading Journal</h1>
@@ -145,7 +146,11 @@
     <button class="nav-btn" onclick="showPage('add')">+ New Trade</button>
     <button class="nav-btn" onclick="showBalanceModal()">💰 Accounts</button>
     <button class="btn-tl" id="tl-nav-btn" onclick="showPage('tl-sync')">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1 4 1 10 7 10"></polyline>
+        <polyline points="23 20 23 14 17 14"></polyline>
+        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+      </svg>
       TL Sync
     </button>
     <div class="sync-pill">
@@ -159,15 +164,21 @@
     <div id="dd-banner"></div>
     <div class="stats-grid" id="dash-stats"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-      <div class="card"><div style="font-size:13.5px;font-weight:500;margin-bottom:10px">Recent trades</div><div id="recent-list"></div></div>
-      <div class="card"><div style="font-size:13.5px;font-weight:500;margin-bottom:10px">Top pairs by win rate</div><div id="top-pairs"></div></div>
+      <div class="card">
+        <div style="font-size:13.5px;font-weight:500;margin-bottom:10px">Recent trades</div>
+        <div id="recent-list"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:13.5px;font-weight:500;margin-bottom:10px">Top pairs by win rate</div>
+        <div id="top-pairs"></div>
+      </div>
     </div>
   </div>
 
   <div id="page-log" class="page">
     <div class="filter-bar">
       <select id="f-pair" onchange="renderLog()"><option value="">All pairs</option></select>
-      <select id="f-dir" onchange="renderLog()"><option value="">Long &amp; Short</option><option value="long">Long</option><option value="short">Short</option></select>
+      <select id="f-dir" onchange="renderLog()"><option value="">Long & Short</option><option value="long">Long</option><option value="short">Short</option></select>
       <select id="f-status" onchange="renderLog()"><option value="">All statuses</option><option value="win">Win</option><option value="loss">Loss</option><option value="open">Open</option><option value="breakeven">Breakeven</option></select>
       <select id="f-src" onchange="renderLog()"><option value="">All sources</option><option value="manual">Manual</option><option value="auto">Auto-synced</option></select>
       <select id="f-acct" onchange="renderLog()"><option value="">All accounts</option></select>
@@ -193,7 +204,9 @@
     <div class="card">
       <p class="sec-title">Trade details</p>
       <div class="form-grid c4">
-        <div class="fg"><label>Pair *</label><input id="fp" placeholder="EUR/USD" list="pairs-dl"><datalist id="pairs-dl"><option value="EUR/USD"><option value="GBP/USD"><option value="USD/JPY"><option value="AUD/USD"><option value="USD/CAD"><option value="NZD/USD"><option value="EUR/GBP"><option value="USD/CHF"><option value="BTC/USD"><option value="ETH/USD"><option value="XAU/USD"><option value="US30"><option value="NAS100"><option value="SPX500"></datalist></div>
+        <div class="fg"><label>Pair *</label><input id="fp" placeholder="EUR/USD" list="pairs-dl"><datalist id="pairs-dl">
+          <option value="EUR/USD"><option value="GBP/USD"><option value="USD/JPY"><option value="AUD/USD"><option value="USD/CAD"><option value="NZD/USD"><option value="EUR/GBP"><option value="USD/CHF"><option value="BTC/USD"><option value="ETH/USD"><option value="XAU/USD"><option value="US30"><option value="NAS100"><option value="SPX500">
+        </datalist></div>
         <div class="fg"><label>Account *</label><input id="fa" placeholder="Main" list="accts-dl"><datalist id="accts-dl"></datalist></div>
         <div class="fg"><label>Direction *</label><select id="fd"><option value="long">Long</option><option value="short">Short</option></select></div>
         <div class="fg"><label>Session</label><select id="fss"><option value="">--</option><option value="london">London</option><option value="new_york">New York</option><option value="asian">Asian</option><option value="overlap">London/NY Overlap</option></select></div>
@@ -208,7 +221,7 @@
         <div class="fg"><label>Position size (lots)</label><input id="fsz" type="number" step="any" placeholder="0.10"></div>
         <div class="fg"><label>Risk amount ($)</label><input id="frk" type="number" step="any" placeholder="50"></div>
       </div>
-      <p class="sec-title">Setup &amp; reason</p>
+      <p class="sec-title">Setup & reason</p>
       <div class="fg"><label>Why did you enter?</label><textarea id="frs" placeholder="Setup, confluences, pattern…"></textarea></div>
       <div class="fg" style="margin-top:10px"><label>Timeframe(s)</label><input id="ftf" placeholder="15m, 1H, 4H"></div>
       <div class="fg" style="margin-top:10px"><label>Tags</label><input id="ftg" placeholder="breakout, trend, fib, news…"></div>
@@ -255,18 +268,24 @@
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <span id="tl-last-sync" style="font-size:12px;opacity:0.7"></span>
         <button class="btn-tl" id="tl-sync-btn" onclick="runTLSync()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <polyline points="23 20 23 14 17 14"></polyline>
+            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+          </svg>
           Sync now
         </button>
         <button class="nav-btn" onclick="showTLForm()">Edit settings</button>
         <button class="btn-danger" onclick="disconnectTL()">Disconnect</button>
       </div>
     </div>
+
     <div id="tl-aliases-panel" style="display:none" class="card">
       <div style="font-size:13.5px;font-weight:500;margin-bottom:4px">Account nicknames</div>
       <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">Set friendly labels for each account number.</div>
       <div id="aliases-list"></div>
     </div>
+
     <div id="tl-connect-card" class="tl-card">
       <div>
         <div style="font-size:14px;font-weight:600;color:#0F6E56;margin-bottom:4px">🔄 Connect TradeLocker</div>
@@ -274,13 +293,18 @@
       </div>
       <button class="btn-primary" onclick="showTLForm()">Connect account →</button>
     </div>
+
     <div id="tl-form" style="display:none" class="card">
       <p class="sec-title" style="margin-top:0;padding-top:0;border-top:none">TradeLocker credentials</p>
-      <div style="background:var(--bg-secondary);border-radius:var(--r-md);padding:10px 13px;font-size:12px;color:var(--text-secondary);margin-bottom:13px;line-height:1.6">🔒 Credentials saved in your browser only, sent exclusively to TradeLocker's servers.</div>
+      <div style="background:var(--bg-secondary);border-radius:var(--r-md);padding:10px 13px;font-size:12px;color:var(--text-secondary);margin-bottom:13px;line-height:1.6">
+        🔒 Credentials saved in your browser only, sent exclusively to TradeLocker's servers.
+      </div>
       <div class="form-grid c3">
         <div class="fg"><label>Email *</label><input id="tl-email" type="email" placeholder="you@example.com"></div>
         <div class="fg"><label>Password *</label><input id="tl-pass" type="password"></div>
-        <div class="fg"><label>Server name *</label><input id="tl-server" placeholder="e.g. Alpha-LIVE" list="srv-dl"><datalist id="srv-dl"><option value="OSP-DEMO"><option value="OSP-LIVE"><option value="TFF-DEMO"><option value="TFF-LIVE"><option value="FTMO-DEMO"><option value="FTMO-LIVE"><option value="Alpha-DEMO"><option value="Alpha-LIVE"></datalist></div>
+        <div class="fg"><label>Server name *</label><input id="tl-server" placeholder="e.g. Alpha-LIVE" list="srv-dl"><datalist id="srv-dl">
+          <option value="OSP-DEMO"><option value="OSP-LIVE"><option value="TFF-DEMO"><option value="TFF-LIVE"><option value="FTMO-DEMO"><option value="FTMO-LIVE"><option value="Alpha-DEMO"><option value="Alpha-LIVE">
+        </datalist></div>
       </div>
       <div class="form-grid" style="margin-top:12px">
         <div class="fg"><label>Environment</label><select id="tl-env"><option value="demo">Demo / Prop Challenge</option><option value="live">Live</option></select></div>
@@ -301,11 +325,12 @@
         <label style="display:flex;align-items:center;gap:9px;font-size:13px;margin-top:8px"><input type="checkbox" id="tl-netpnl" checked style="width:15px;height:15px"> Use net PNL (after commissions)</label>
       </div>
       <div style="margin-top:1.25rem;display:flex;gap:10px;align-items:center">
-        <button class="btn-primary" id="tl-conn-btn" onclick="connectTL()">Connect &amp; sync</button>
+        <button class="btn-primary" id="tl-conn-btn" onclick="connectTL()">Connect & sync</button>
         <button class="nav-btn" onclick="hideTLForm()">Cancel</button>
         <span id="tl-conn-msg" style="font-size:13px"></span>
       </div>
     </div>
+
     <div id="tl-results" style="display:none" class="card">
       <div style="font-size:13.5px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:10px">
         Sync results <span id="tl-counts" style="font-size:12px;color:var(--text-secondary);font-weight:400"></span>
@@ -313,12 +338,13 @@
       <div class="prog-track"><div class="prog-bar" id="prog-bar" style="width:0%"></div></div>
       <div class="sync-log" id="sync-log"></div>
     </div>
+
     <div class="card" style="margin-top:1rem">
       <div style="font-size:13.5px;font-weight:500;margin-bottom:12px">How the sync works</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;font-size:13px;color:var(--text-secondary)">
         <div style="display:flex;gap:10px"><div style="font-size:20px">🔐</div><div><strong style="color:var(--text-primary);display:block;margin-bottom:3px">Authenticate</strong>Logs into TradeLocker's API.</div></div>
-        <div style="display:flex;gap:10px"><div style="font-size:20px">📋</div><div><strong style="color:var(--text-primary);display:block;margin-bottom:3px">Fetch &amp; group</strong>Gets order legs and groups them into complete trades by position ID.</div></div>
-        <div style="display:flex;gap:10px"><div style="font-size:20px">🔄</div><div><strong style="color:var(--text-primary);display:block;margin-bottom:3px">Smart merge</strong>Notes, grades &amp; screenshots never overwritten.</div></div>
+        <div style="display:flex;gap:10px"><div style="font-size:20px">📋</div><div><strong style="color:var(--text-primary);display:block;margin-bottom:3px">Fetch & group</strong>Gets order legs and groups them into complete trades by position ID.</div></div>
+        <div style="display:flex;gap:10px"><div style="font-size:20px">🔄</div><div><strong style="color:var(--text-primary);display:block;margin-bottom:3px">Smart merge</strong>Notes, grades & screenshots never overwritten.</div></div>
         <div style="display:flex;gap:10px"><div style="font-size:20px">✏️</div><div><strong style="color:var(--text-primary);display:block;margin-bottom:3px">You add insight</strong>Auto trades get a <span class="badge badge-tl">TL Auto</span> badge.</div></div>
       </div>
     </div>
@@ -457,6 +483,37 @@ async function tlFetch(path,accNum) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   TL CONFIG (dynamic column mapping)
+   ordersHistory column layout is defined by /trade/config ordersHistoryConfig.columns. [1](https://public-api.tradelocker.com/reference/getordershistory)[2](https://public-api.tradelocker.com/reference/getconfigusingget)[3](https://public-api.tradelocker.com/docs/getting-started)
+═══════════════════════════════════════════════════════════════ */
+const tlConfigCache = {}; // key: accNum -> { cfg, map }
+
+function col(row, map, ...names) {
+  for (const n of names) {
+    const idx = map?.[n];
+    if (idx != null) return row[idx];
+  }
+  return null;
+}
+
+async function tlLoadConfig(accNum) {
+  const k = String(accNum || '');
+  if (tlConfigCache[k]) return tlConfigCache[k];
+
+  const res = await tlFetch('/trade/config', accNum);
+  const cfg = res?.d || res;
+
+  const cols = cfg?.ordersHistoryConfig?.columns || [];
+  const map = {};
+  cols.forEach((c, i) => { if (c?.id) map[c.id] = i; });
+
+  tlConfigCache[k] = { cfg, map };
+  addLog('ok', `Loaded TL config for accNum ${k}: ${cols.length} ordersHistory columns`);
+  addLog('diag', `ordersHistory columns: ${cols.map(c => c.id).join(', ')}`);
+  return tlConfigCache[k];
+}
+
+/* ═══════════════════════════════════════════════════════════════
    GET ACCOUNTS
 ═══════════════════════════════════════════════════════════════ */
 async function tlGetAccounts() {
@@ -503,166 +560,138 @@ async function tlLoadInstruments(accId,accNum) {
 function getAcctLabel(accNum){ return accountAliases[String(accNum)]||String(accNum); }
 
 /* ═══════════════════════════════════════════════════════════════
-
-   ████████╗██╗  ██╗███████╗    ██████╗  ███████╗ █████╗ ██╗
-      ██╔══╝██║  ██║██╔════╝    ██╔══██╗██╔════╝ ██╔══██╗██║
-      ██║   ███████║█████╗      ██████╔╝█████╗   ███████║██║
-      ██║   ██╔══██║██╔══╝      ██╔══██╗██╔══╝   ██╔══██║██║
-      ██║   ██║  ██║███████╗    ██║  ██║███████╗ ██║  ██║███████╗
-      ╚═╝   ╚═╝  ╚═╝╚══════╝    ╚═╝  ╚═╝╚══════╝ ╚═╝  ╚═╝╚══════╝
-
-   The TradeLocker ordersHistory API returns RAW ORDER LEGS,
-   NOT completed trades.  Actual column layout from live data:
-
-   [0]  = Order ID (ticket string, 19 digits)
-   [1]  = Instrument ID (numeric)
-   [2]  = Internal account number
-   [3]  = Lot size (e.g. "3.97")
-   [4]  = Side: "buy" / "sell"
-   [5]  = Order type: "market" / "limit" / "stop"
-   [6]  = Status: "Filled" / "Cancelled" / "false" / null
-   [7]  = Trigger/limit price (for limit orders)
-   [8]  = Fill price (the actual execution price)
-   [9]  = Some secondary price field
-   [10] = 0 or small number
-   [11] = Time-in-force: "IOC" / "GTC"
-   [12] = PNL in $ — null for opening legs, value for closing legs
-   [13] = Open/create timestamp (milliseconds)
-   [14] = Close/expire timestamp (milliseconds)
-   [15] = "false" flag
-   [16] = Parent POSITION ID — links all legs of one trade together
-   [17-21] = nulls / ""
-
-   ALGORITHM:
-   1. Parse every row into a structured leg object
-   2. SKIP rows where status !== "Filled"   (Cancelled, pending, etc.)
-   3. SKIP rows where fill price is 0/null  (rejected orders)
-   4. GROUP legs by parent position ID ([16])
-   5. Sort each group by open timestamp ([13])
-   6. First leg = opening leg (gives direction & entry price)
-   7. Remaining legs = closing legs (give exit price)
-   8. PNL = sum of [12] across ALL closing legs
-   9. If PNL is still null: estimate from price diff × lots
-
+   BUILD TRADES FROM ORDER LEGS (NET PNL FIX + CONFIG MAPPING)
 ═══════════════════════════════════════════════════════════════ */
-
-function processOrderLegs(rawOrders, acctLabel) {
-  /* ── STEP 1: Parse rows into leg objects ── */
+function processOrderLegs(rawOrders, acctLabel, colMap) {
   const legs = [];
+
   for (const row of rawOrders) {
     if (!Array.isArray(row)) continue;
 
-    const orderId   = String(row[0]||'').trim();
-    const instrId   = row[1];
-    const lots      = parseFloat(row[3]) || null;
-    const side      = String(row[4]||'').toLowerCase().trim();   // "buy" / "sell"
-    const orderType = String(row[5]||'').toLowerCase().trim();   // "market" / "limit"
-    const statusRaw = String(row[6]||'').toLowerCase().trim();   // "filled" / "cancelled" / "false"
-    const fillPrice = parseFloat(row[8]) || null;                // actual execution price
-    const pnlRaw    = parseMoney(row[12]);                       // null for openers, $ value for closers
-    const openTs    = parseTS(row[13]);                          // ms timestamp
-    const posId     = String(row[16]||orderId).trim();           // parent position ID
-
-    // CRITICAL: only process filled orders
+    const statusRaw = String(col(row, colMap, 'status') || '').toLowerCase().trim();
     if (statusRaw !== 'filled') continue;
 
-    // Must have a fill price
-    if (!fillPrice || fillPrice <= 0 || fillPrice > 1e9) continue;
+    const orderId = String(col(row, colMap, 'id') || '').trim();
+    const instrId = col(row, colMap, 'tradableInstrumentId', 'instrumentId');
+    const posId   = String(col(row, colMap, 'positionId') || orderId).trim();
 
-    // Must have side
+    const side = String(col(row, colMap, 'side') || '').toLowerCase().trim();
     if (side !== 'buy' && side !== 'sell') continue;
 
-    // Resolve pair from instrument map
+    const qty = parseFloat(col(row, colMap, 'qty', 'quantity', 'filledQty') || '') || null;
+
+    const orderType = String(col(row, colMap, 'type') || '').toLowerCase().trim();
+
+    // executed price: avgPrice is typical for filled orders; fall back to price
+    const avgP = parseFloat(col(row, colMap, 'avgPrice', 'fillPrice') || '') || null;
+    const prc  = parseFloat(col(row, colMap, 'price') || '') || null;
+    const fillPrice = avgP || prc || null;
+    if (!fillPrice || fillPrice <= 0 || fillPrice > 1e9) continue;
+
+    // profit field commonly 'pl'
+    const plGross = parseMoney(col(row, colMap, 'pl', 'profitLoss', 'realizedPl'));
+
+    // costs: commonly 'commission', plus optional swap/fee
+    const commission = parseMoney(col(row, colMap, 'commission', 'commissions'));
+    const swap       = parseMoney(col(row, colMap, 'swap', 'financing'));
+    const fee        = parseMoney(col(row, colMap, 'fee', 'fees'));
+
+    const openTs  = parseTS(col(row, colMap, 'createdDate', 'openDate'));
+    const closeTs = parseTS(col(row, colMap, 'lastModified', 'closeDate', 'expireDate'));
+
     const pair = (instrId != null)
-      ? (tlInstrumentMap[String(instrId)] || (/^\d+$/.test(String(instrId)) ? null : normPair(String(instrId))))
+      ? (tlInstrumentMap[String(instrId)] || normPair(String(instrId)))
       : null;
 
-    legs.push({ orderId, instrId, pair, lots, side, orderType, fillPrice, pnlRaw, openTs, posId });
+    legs.push({
+      orderId, posId, instrId, pair,
+      qty, side, orderType, fillPrice,
+      plGross, commission, swap, fee,
+      openTs, closeTs
+    });
   }
 
   addLog('ok', 'Filled legs: ' + legs.length + ' of ' + rawOrders.length);
 
-  /* ── STEP 2: Group legs by position ID ── */
+  // group by positionId
   const posMap = {};
-  for (const leg of legs) {
-    if (!posMap[leg.posId]) posMap[leg.posId] = [];
-    posMap[leg.posId].push(leg);
-  }
+  for (const leg of legs) (posMap[leg.posId] ||= []).push(leg);
   addLog('ok', 'Unique positions: ' + Object.keys(posMap).length);
 
-  /* ── STEP 3: Build one journal trade per position ── */
+  const vwap = (arr) => {
+    const xs = arr.filter(x => x.fillPrice && x.qty);
+    const q  = xs.reduce((s, x) => s + x.qty, 0);
+    if (!q) return null;
+    return xs.reduce((s, x) => s + x.fillPrice * x.qty, 0) / q;
+  };
+  const sum = (arr, key) => arr.reduce((s, x) => s + (x[key] == null ? 0 : Number(x[key])), 0);
+
   const result = [];
 
   for (const [posId, posLegs] of Object.entries(posMap)) {
-    // Sort by timestamp (oldest first = opener)
     posLegs.sort((a,b) => (a.openTs||'').localeCompare(b.openTs||''));
 
-    const opener  = posLegs[0];
-    const closers = posLegs.slice(1);
-
-    // Resolve pair — use any leg that has one
-    let pair = opener.pair;
+    let pair = posLegs.find(l => l.pair)?.pair || '';
     if (!pair) {
-      for (const l of posLegs) { if (l.pair) { pair = l.pair; break; } }
-    }
-    if (!pair) {
-      addLog('skip', 'Skipping posId '+posId+': unknown instrument ID '+opener.instrId);
+      addLog('skip', 'Skipping posId '+posId+': unknown instrument '+(posLegs[0]?.instrId));
       continue;
     }
 
-    // Direction: opener side
-    const dir = opener.side === 'buy' ? 'long' : 'short';
+    const openerSide = posLegs[0].side;
+    const dir = openerSide === 'buy' ? 'long' : 'short';
 
-    // Entry price: opener's fill price
-    const entry = opener.fillPrice;
+    // classify legs: open = same side as opener, close = opposite side
+    const openLegs  = posLegs.filter(l => l.side === openerSide);
+    const closeLegs = posLegs.filter(l => l.side !== openerSide);
 
-    // Exit price: last closer's fill price
-    let exit = null;
-    if (closers.length > 0) {
-      exit = closers[closers.length-1].fillPrice || null;
+    const entry = vwap(openLegs) ?? posLegs[0].fillPrice;
+    const exit  = vwap(closeLegs) ?? (closeLegs.at(-1)?.fillPrice ?? null);
+
+    // gross P/L is generally attached to close legs; sum it when present
+    const gross = closeLegs.some(l => l.plGross != null)
+      ? Number(sum(closeLegs, 'plGross').toFixed(2))
+      : (posLegs.some(l => l.plGross != null) ? Number(sum(posLegs, 'plGross').toFixed(2)) : null);
+
+    // costs
+    const comm = Number(sum(closeLegs, 'commission').toFixed(2));
+    const swp  = Number(sum(closeLegs, 'swap').toFixed(2));
+    const fees = Number(sum(closeLegs, 'fee').toFixed(2));
+
+    // NET toggle (default ON): net = gross + commissions + swap + fees
+    // Commission values are typically negative, so this correctly reduces PnL.
+    let pnl = gross;
+    if (gross != null && tlCreds?.netPnl !== false) {
+      pnl = Number((gross + comm + swp + fees).toFixed(2));
     }
 
-    // Lot size
-    const size = opener.lots;
-
-    // PNL: sum pnlRaw from ALL closing legs
-    let pnl = null;
-    const pnlVals = closers.map(l=>l.pnlRaw).filter(v=>v!==null);
-    if (pnlVals.length > 0) {
-      pnl = parseFloat(pnlVals.reduce((s,v)=>s+v,0).toFixed(2));
-    }
-    // Fallback: check opener's pnlRaw (some endpoints put it there)
-    if (pnl===null && opener.pnlRaw!==null) pnl = opener.pnlRaw;
-
-    // Commission handling
-    if (tlCreds?.netPnl === false && pnl !== null) {
-      // keep gross pnl as-is
-    }
-
-    // PNL fallback: calculate from price difference
-    if ((pnl===null || pnl===0) && entry && exit!==null && size && size>0) {
+    // fallback estimate if needed (rare)
+    if ((pnl === null || pnl === 0) && entry && exit != null && openLegs[0]?.qty) {
+      const size = openLegs.reduce((s, l) => s + (l.qty || 0), 0);
       const diff = dir==='long' ? (exit-entry) : (entry-exit);
       const isJPY = pair.includes('JPY');
       const isCrypto = /BTC|ETH|ADA|SOL|XRP|LTC/.test(pair);
       const isCFD = /USOIL|UKOIL|XAU|XAG|US30|NAS|SPX|UK100|GER|JP225/.test(pair);
-      if (isCrypto)     pnl = parseFloat((diff*size).toFixed(2));
-      else if (isCFD)   pnl = parseFloat((diff*size*10).toFixed(2));
-      else if (isJPY)   pnl = parseFloat((diff*100000*size/100).toFixed(2));
-      else              pnl = parseFloat((diff*100000*size).toFixed(2));
+
+      let est = 0;
+      if (isCrypto)     est = diff * size;
+      else if (isCFD)   est = diff * size * 10;
+      else if (isJPY)   est = diff * 100000 * size / 100;
+      else              est = diff * 100000 * size;
+
+      pnl = Number(est.toFixed(2));
       addLog('diag', 'Calc PNL for '+pair+': '+diff.toFixed(5)+' × '+size+' lots = $'+pnl);
     }
 
-    // Timestamp: use opener's time
-    const time = opener.openTs || '';
-
-    // Status
-    const isOpen = closers.length === 0;
+    const isOpen = closeLegs.length === 0;
     let status = 'open';
     if (!isOpen) {
-      if (pnl!==null && pnl>0.5)  status='win';
-      else if (pnl!==null && pnl<-0.5) status='loss';
+      if (pnl!=null && pnl>0.5) status='win';
+      else if (pnl!=null && pnl<-0.5) status='loss';
       else status='breakeven';
     }
+
+    const sizeLots = Number(openLegs.reduce((s, l) => s + (l.qty || 0), 0).toFixed(2)) || null;
+    const time = posLegs[0].openTs || '';
 
     result.push({
       id: Date.now() + (Math.random()*999999|0),
@@ -670,7 +699,9 @@ function processOrderLegs(rawOrders, acctLabel) {
       account: acctLabel,
       pair, dir, entry, exit,
       sl: null, tp: null, rr: null,
-      pnl, size, commission: null,
+      pnl,
+      size: sizeLots,
+      commission: (comm || swp || fees) ? Number((comm + swp + fees).toFixed(2)) : null,
       time, status,
       session: '', source: 'tradelocker',
       reason: '', tf: '', tags: '',
@@ -683,26 +714,29 @@ function processOrderLegs(rawOrders, acctLabel) {
   return result;
 }
 
-/* ─── ENRICH WITH SL/TP FROM LIMIT/STOP ORDERS ─────────────── */
-function enrichWithSLTP(journalTrades, rawOrders) {
+/* ═══ SL/TP ENRICH (use config-mapped columns if available) ═══ */
+function enrichWithSLTP(journalTrades, rawOrders, colMap) {
   const sltp = {};
   for (const row of rawOrders) {
     if (!Array.isArray(row)) continue;
-    const posId = String(row[16]||'').trim();
-    if (!posId||posId.length<3) continue;
-    const orderType = String(row[5]||'').toLowerCase();
-    const triggerPrice = parseFloat(row[7])||null;
-    if (!triggerPrice||triggerPrice<=0) continue;
-    if (!sltp[posId]) sltp[posId]={};
-    if (orderType==='limit') sltp[posId].tp = triggerPrice;
-    else if (orderType==='stop'||orderType==='stoplimit') sltp[posId].sl = triggerPrice;
+
+    const posId = String(col(row, colMap, 'positionId') || '').trim();
+    if (!posId) continue;
+
+    const sl = parseFloat(col(row, colMap, 'stopLoss', 'sl') || '') || null;
+    const tp = parseFloat(col(row, colMap, 'takeProfit', 'tp') || '') || null;
+
+    if (!sltp[posId]) sltp[posId] = {};
+    if (sl && sl > 0) sltp[posId].sl = sl;
+    if (tp && tp > 0) sltp[posId].tp = tp;
   }
+
   for (const jt of journalTrades) {
     const s=sltp[jt.tlId];
     if (!s) continue;
-    if (s.sl&&!jt.sl) jt.sl=s.sl;
-    if (s.tp&&!jt.tp) jt.tp=s.tp;
-    if (jt.sl&&jt.tp&&jt.entry) {
+    if (s.sl && !jt.sl) jt.sl=s.sl;
+    if (s.tp && !jt.tp) jt.tp=s.tp;
+    if (jt.sl && jt.tp && jt.entry) {
       const slD=Math.abs(jt.entry-jt.sl), tpD=Math.abs(jt.tp-jt.entry);
       if (slD>0) jt.rr=(tpD/slD).toFixed(2);
     }
@@ -841,6 +875,9 @@ async function runTLSync(){
       addLog('ok','─── Account '+accNum+' → "'+acctLabel+'" ───');
       const base=15+(ai/total)*75;setProgress(base+5);
 
+      // Load config to map ordersHistory columns reliably. [1](https://public-api.tradelocker.com/reference/getordershistory)[2](https://public-api.tradelocker.com/reference/getconfigusingget)[3](https://public-api.tradelocker.com/docs/getting-started)
+      const { map: colMap } = await tlLoadConfig(accNum);
+
       await tlLoadInstruments(accId,accNum);
       setProgress(base+15);
 
@@ -850,19 +887,19 @@ async function runTLSync(){
         addLog('ok','Fetching order history…');
         const res=await tlFetch('/trade/accounts/'+accId+'/ordersHistory',accNum);
         if(res?.d?.ordersHistory)    rawOrders=res.d.ordersHistory;
-        else if(res?.ordersHistory)   rawOrders=res.ordersHistory;
-        else if(Array.isArray(res))   rawOrders=res;
-        else if(res?.data)            rawOrders=res.data;
+        else if(res?.ordersHistory)  rawOrders=res.ordersHistory;
+        else if(Array.isArray(res))  rawOrders=res;
+        else if(res?.data)           rawOrders=res.data;
         addLog('ok','Got '+rawOrders.length+' raw order rows');
-        if(rawOrders.length>0&&Array.isArray(rawOrders[0]))
+        if(rawOrders.length>0 && Array.isArray(rawOrders[0]))
           addLog('diag','Row sample: '+rawOrders[0].map((v,i)=>'['+i+']='+JSON.stringify(v)).join(' | '));
       }catch(e){addLog('err','Order history failed: '+e.message);errors++;}
 
       setProgress(base+30);
 
-      /* ── Build trades from legs ── */
-      const journalTrades=processOrderLegs(rawOrders,acctLabel);
-      enrichWithSLTP(journalTrades,rawOrders);
+      /* ── Build trades from legs (NET PNL) ── */
+      const journalTrades=processOrderLegs(rawOrders,acctLabel,colMap);
+      enrichWithSLTP(journalTrades,rawOrders,colMap);
       addLog('ok','Built '+journalTrades.length+' trades from '+rawOrders.length+' order legs');
       setProgress(base+50);
 
@@ -876,7 +913,7 @@ async function runTLSync(){
             confidence:existing.confidence||7,images:existing.images||[],
             session:existing.session||'',early:existing.early||'no'};
           const ok=await upsertTrade(merged);
-          if(ok){const idx=trades.findIndex(t=>t.tlId===String(jt.tlId));if(idx!==-1)trades[idx]=merged;updated++;}
+          if(ok){const idx=trades.findIndex(t=>String(t.tlId)===String(jt.tlId));if(idx!==-1)trades[idx]=merged;updated++;}
         }else{
           addLog('ok','NEW: '+jt.pair+' '+jt.dir.toUpperCase()+' | Entry:'+jt.entry+(jt.exit?' Exit:'+jt.exit:'')+' PNL:'+(jt.pnl!==null?'$'+jt.pnl:'?')+' ('+jt.status+') ['+acctLabel+']');
           const ok=await upsertTrade(jt);
@@ -1120,7 +1157,7 @@ function openDetail(id){
   [['Date/time',(t.time||'').replace('T',' ')],['Account',t.account||'--'],
    ['Entry',t.entry||'--'],['Exit',t.exit||'--'],['Stop loss',t.sl||'--'],['Take profit',t.tp||'--'],
    ['R:R',t.rr?'1:'+t.rr:'--'],['Size',t.size?t.size+' lots':'--'],
-   ['PNL','<span class="'+pnlCls(t.pnl)+'">'+fmt(t.pnl)+'</span>'],['Commission',t.commission?fmt(t.commission):'--'],
+   ['PNL','<span class="'+pnlCls(t.pnl)+'">'+fmt(t.pnl)+'</span>'],['Commission/Fees',t.commission!=null?fmt(t.commission):'--'],
    ['Status',t.status||'--'],['Grade',t.grade||'--'],['Session',t.session||'--'],
    ['Timeframes',t.tf||'--'],['Closed early',t.early||'no'],['Risk',t.risk?'$'+t.risk:'--'],
   ].forEach(([l,v])=>{html+='<div class="di"><div class="lbl">'+l+'</div><div class="val">'+v+'</div></div>';});
@@ -1276,7 +1313,7 @@ function renderAcctsList(){
       '<div style="text-align:right"><div style="font-size:11px;color:var(--text-tertiary)">Initial capital</div>'+
       '<input type="number" step="0.01" value="'+init+'" onchange="updateInitialBalance(\''+esc(a)+'\',this.value)" style="width:110px;text-align:right;font-size:14px;font-weight:500;background:var(--bg-primary);border:0.5px solid var(--border-light);padding:4px 8px;border-radius:6px;color:var(--text-primary)">'+
       '<div style="margin-top:5px;font-size:12px;color:var(--text-tertiary)">Balance: <span class="'+(cur>=0?'pnl-pos':'pnl-neg')+'" style="font-weight:600">$'+cur.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')+'</span></div></div>'+
-      '<button class="btn-danger" style="flex-shrink:0;margin-left:8px" onclick="deleteAccount(\''+esc(a).replace(/'/g,"\\'")+'\')">Delete</button></div>';
+      '<button class="btn-danger" style="flex-shrink:0;margin-left:8px" onclick="deleteAccount(\''+esc(a).replace(/'/g,\"\\\\'\")+'\')">Delete</button></div>';
   });
   html+='</div>';
   document.getElementById('accts-list').innerHTML=html;
