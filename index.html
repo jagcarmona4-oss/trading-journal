@@ -346,25 +346,16 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
-/* ═══════════════════════════════════════════════════════════════
-   SUPABASE
-═══════════════════════════════════════════════════════════════ */
 const SUPABASE_URL = 'https://lxkqqewbhijidehyvnde.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_b1CQbtRRsaXM8uWQH3tfWw_xPINGdzw';
 const API = SUPABASE_URL + '/rest/v1/trades';
 const HDR = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' };
 
-/* ═══════════════════════════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════════════════════════ */
 let trades = [], tempImages = [], pnlChart = null, editingId = null;
 let currentAccount = 'All', knownAccounts = [], initialBalances = {}, accountAliases = {};
 let tlCreds = null, tlToken = null, tlIsSyncing = false;
 let tlInstrumentMap = {}, tlDiscoveredAccounts = [];
 
-/* ═══════════════════════════════════════════════════════════════
-   LOCAL STORAGE
-═══════════════════════════════════════════════════════════════ */
 function loadLocal() {
   const p = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } };
   tlCreds              = p('tlCreds')              || null;
@@ -377,15 +368,12 @@ function loadLocal() {
 }
 const saveLocal = (k,v) => localStorage.setItem(k, JSON.stringify(v));
 
-/* ═══════════════════════════════════════════════════════════════
-   UTILITIES
-═══════════════════════════════════════════════════════════════ */
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function parseMoney(v) {
   if (v==null) return null;
   let s = String(v).trim();
-  if (!s||s==='--'||s==='null') return null;
+  if (!s||s==='--'||s==='null'||s==='false'||s==='0') return null;
   if (s.startsWith('(')&&s.endsWith(')')) s='-'+s.slice(1,-1);
   s = s.replace(/[$€£¥,%\s,]/g,'');
   const n=parseFloat(s);
@@ -393,14 +381,10 @@ function parseMoney(v) {
 }
 
 function safeJSON(text) {
-  // Prevent precision loss on 15+ digit integers (TL uses them for IDs)
   const safe = text.replace(/:\s*(-?\d{15,})([,\}\]\s])/g,':"$1"$2');
   try { return JSON.parse(safe); } catch(e) { return JSON.parse(text); }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   PAIR NORMALISER
-═══════════════════════════════════════════════════════════════ */
 function normPair(sym) {
   if (!sym) return '';
   let s = String(sym).toUpperCase().trim();
@@ -422,13 +406,10 @@ function normPair(sym) {
   return s;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   TIMESTAMP PARSER
-═══════════════════════════════════════════════════════════════ */
 function parseTS(v) {
   if (!v) return '';
   const s=String(v).trim();
-  if (!s||s==='0'||s==='null') return '';
+  if (!s||s==='0'||s==='null'||s==='false') return '';
   if (/^\d+$/.test(s)) {
     const n=parseInt(s); if (n<=0) return '';
     const d=n>1e12?new Date(n):new Date(n*1000);
@@ -438,9 +419,6 @@ function parseTS(v) {
   return '';
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   TL AUTH + FETCH
-═══════════════════════════════════════════════════════════════ */
 function tlBase() { return (tlCreds?.env==='live')?'https://live.tradelocker.com/backend-api':'https://demo.tradelocker.com/backend-api'; }
 
 async function tlAuth() {
@@ -456,9 +434,6 @@ async function tlFetch(path,accNum) {
   return safeJSON(await r.text());
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   GET ACCOUNTS
-═══════════════════════════════════════════════════════════════ */
 async function tlGetAccounts() {
   const r=await fetch(tlBase()+'/auth/jwt/all-accounts',{headers:{'Authorization':'Bearer '+tlToken}});
   if (!r.ok) throw new Error('Could not fetch accounts ('+r.status+')');
@@ -478,9 +453,6 @@ async function tlGetAccounts() {
   return target;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   LOAD INSTRUMENTS
-═══════════════════════════════════════════════════════════════ */
 async function tlLoadInstruments(accId,accNum) {
   try {
     const res=await tlFetch('/trade/accounts/'+accId+'/instruments',accNum);
@@ -497,53 +469,40 @@ async function tlLoadInstruments(accId,accNum) {
   } catch(e){addLog('skip','Instruments unavailable: '+e.message);}
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   ACCOUNT LABEL
-═══════════════════════════════════════════════════════════════ */
 function getAcctLabel(accNum){ return accountAliases[String(accNum)]||String(accNum); }
 
 /* ═══════════════════════════════════════════════════════════════
-
-   ████████╗██╗  ██╗███████╗    ██████╗  ███████╗ █████╗ ██╗
-      ██╔══╝██║  ██║██╔════╝    ██╔══██╗██╔════╝ ██╔══██╗██║
-      ██║   ███████║█████╗      ██████╔╝█████╗   ███████║██║
-      ██║   ██╔══██║██╔══╝      ██╔══██╗██╔══╝   ██╔══██║██║
-      ██║   ██║  ██║███████╗    ██║  ██║███████╗ ██║  ██║███████╗
-      ╚═╝   ╚═╝  ╚═╝╚══════╝    ╚═╝  ╚═╝╚══════╝ ╚═╝  ╚═╝╚══════╝
-
-   The TradeLocker ordersHistory API returns RAW ORDER LEGS,
-   NOT completed trades.  Actual column layout from live data:
-
-   [0]  = Order ID (ticket string, 19 digits)
+   PROCESS ORDER LEGS  — FIXED VERSION
+   
+   TradeLocker ordersHistory column layout (confirmed for Alpha-LIVE):
+   [0]  = Order ID (ticket, 19-digit string)
    [1]  = Instrument ID (numeric)
    [2]  = Internal account number
-   [3]  = Lot size (e.g. "3.97")
+   [3]  = Lot size
    [4]  = Side: "buy" / "sell"
    [5]  = Order type: "market" / "limit" / "stop"
-   [6]  = Status: "Filled" / "Cancelled" / "false" / null
-   [7]  = Trigger/limit price (for limit orders)
-   [8]  = Fill price (the actual execution price)
-   [9]  = Some secondary price field
-   [10] = 0 or small number
-   [11] = Time-in-force: "IOC" / "GTC"
-   [12] = PNL in $ — null for opening legs, value for closing legs
+   [6]  = Status: "Filled" / "Cancelled" / "false"
+   [7]  = Trigger/limit price (SL/TP level)
+   [8]  = Fill price (actual execution price)
+   [9]  = Secondary price
+   [10] = Small number / 0
+   [11] = Time-in-force
+   [12] = PNL in $ — NULL for opening legs, dollar value for closing legs
    [13] = Open/create timestamp (milliseconds)
    [14] = Close/expire timestamp (milliseconds)
    [15] = "false" flag
-   [16] = Parent POSITION ID — links all legs of one trade together
-   [17-21] = nulls / ""
+   [16] = Parent POSITION ID (links all legs together)
 
-   ALGORITHM:
-   1. Parse every row into a structured leg object
-   2. SKIP rows where status !== "Filled"   (Cancelled, pending, etc.)
-   3. SKIP rows where fill price is 0/null  (rejected orders)
-   4. GROUP legs by parent position ID ([16])
-   5. Sort each group by open timestamp ([13])
-   6. First leg = opening leg (gives direction & entry price)
-   7. Remaining legs = closing legs (give exit price)
-   8. PNL = sum of [12] across ALL closing legs
-   9. If PNL is still null: estimate from price diff × lots
+   KEY INSIGHT:
+   - Opening leg: row[12] is null/0 (no PNL yet — position just opened)
+   - Closing leg: row[12] has a dollar value (PNL realised on close)
+   This is the CORRECT way to tell openers from closers — NOT by timestamp order.
 
+   DIRECTION FIX:
+   - If opener side = "buy"  → trade direction = LONG
+   - If opener side = "sell" → trade direction = SHORT
+   The closing leg will always have the OPPOSITE side (a long closes with a sell,
+   a short closes with a buy). Don't use closer's side for direction.
 ═══════════════════════════════════════════════════════════════ */
 
 function processOrderLegs(rawOrders, acctLabel) {
@@ -552,24 +511,22 @@ function processOrderLegs(rawOrders, acctLabel) {
   for (const row of rawOrders) {
     if (!Array.isArray(row)) continue;
 
-    const orderId   = String(row[0]||'').trim();
-    const instrId   = row[1];
-    const lots      = parseFloat(row[3]) || null;
-    const side      = String(row[4]||'').toLowerCase().trim();   // "buy" / "sell"
-    const orderType = String(row[5]||'').toLowerCase().trim();   // "market" / "limit"
-    const statusRaw = String(row[6]||'').toLowerCase().trim();   // "filled" / "cancelled" / "false"
-    const fillPrice = parseFloat(row[8]) || null;                // actual execution price
-    const pnlRaw    = parseMoney(row[12]);                       // null for openers, $ value for closers
-    const openTs    = parseTS(row[13]);                          // ms timestamp
-    const posId     = String(row[16]||orderId).trim();           // parent position ID
+    const orderId    = String(row[0]||'').trim();
+    const instrId    = row[1];
+    const lots       = parseFloat(row[3]) || null;
+    const side       = String(row[4]||'').toLowerCase().trim();
+    const orderType  = String(row[5]||'').toLowerCase().trim();
+    const statusRaw  = String(row[6]||'').toLowerCase().trim();
+    const trigPrice  = parseFloat(row[7]) || null;  // SL/TP trigger price
+    const fillPrice  = parseFloat(row[8]) || null;  // actual execution price
+    const pnlRaw     = parseMoney(row[12]);          // null = opener, value = closer
+    const openTs     = parseTS(row[13]);             // open timestamp (ms)
+    const closeTs    = parseTS(row[14]);             // close timestamp (ms)
+    const posId      = String(row[16]||orderId).trim();
 
-    // CRITICAL: only process filled orders
+    // Only process filled orders
     if (statusRaw !== 'filled') continue;
-
-    // Must have a fill price
     if (!fillPrice || fillPrice <= 0 || fillPrice > 1e9) continue;
-
-    // Must have side
     if (side !== 'buy' && side !== 'sell') continue;
 
     // Resolve pair from instrument map
@@ -577,12 +534,17 @@ function processOrderLegs(rawOrders, acctLabel) {
       ? (tlInstrumentMap[String(instrId)] || (/^\d+$/.test(String(instrId)) ? null : normPair(String(instrId))))
       : null;
 
-    legs.push({ orderId, instrId, pair, lots, side, orderType, fillPrice, pnlRaw, openTs, posId });
+    // FIX: isCloser = this leg has a realised PNL value (closing the position)
+    // isOpener = no PNL yet (just opened the position)
+    const isCloser = pnlRaw !== null;
+
+    legs.push({ orderId, instrId, pair, lots, side, orderType, trigPrice,
+                fillPrice, pnlRaw, openTs, closeTs, posId, isCloser });
   }
 
   addLog('ok', 'Filled legs: ' + legs.length + ' of ' + rawOrders.length);
 
-  /* ── STEP 2: Group legs by position ID ── */
+  /* ── STEP 2: Group by position ID ── */
   const posMap = {};
   for (const leg of legs) {
     if (!posMap[leg.posId]) posMap[leg.posId] = [];
@@ -590,17 +552,22 @@ function processOrderLegs(rawOrders, acctLabel) {
   }
   addLog('ok', 'Unique positions: ' + Object.keys(posMap).length);
 
-  /* ── STEP 3: Build one journal trade per position ── */
+  /* ── STEP 3: Build journal trades ── */
   const result = [];
 
   for (const [posId, posLegs] of Object.entries(posMap)) {
-    // Sort by timestamp (oldest first = opener)
+    // Sort all legs oldest-first by timestamp
     posLegs.sort((a,b) => (a.openTs||'').localeCompare(b.openTs||''));
 
-    const opener  = posLegs[0];
-    const closers = posLegs.slice(1);
+    // Separate openers (no PNL) from closers (have PNL)
+    const openerLegs = posLegs.filter(l => !l.isCloser);
+    const closerLegs = posLegs.filter(l => l.isCloser);
 
-    // Resolve pair — use any leg that has one
+    // FIX: If ALL legs have PNL (rare edge case), treat first by timestamp as opener
+    const opener  = openerLegs.length > 0 ? openerLegs[0] : posLegs[0];
+    const closers = closerLegs.length > 0 ? closerLegs : posLegs.slice(1);
+
+    // Resolve pair — try all legs
     let pair = opener.pair;
     if (!pair) {
       for (const l of posLegs) { if (l.pair) { pair = l.pair; break; } }
@@ -610,59 +577,57 @@ function processOrderLegs(rawOrders, acctLabel) {
       continue;
     }
 
-    // Direction: opener side
+    // FIX: Direction from OPENER side only
+    // opener buy = long position; opener sell = short position
     const dir = opener.side === 'buy' ? 'long' : 'short';
 
-    // Entry price: opener's fill price
     const entry = opener.fillPrice;
+    const size  = opener.lots;
 
-    // Exit price: last closer's fill price
+    // FIX: Open = no closing legs at all
+    const isOpen = closers.length === 0;
+
+    // Exit price = last closer's fill price
     let exit = null;
-    if (closers.length > 0) {
-      exit = closers[closers.length-1].fillPrice || null;
+    if (!isOpen) {
+      exit = closers[closers.length - 1].fillPrice || null;
     }
 
-    // Lot size
-    const size = opener.lots;
-
-    // PNL: sum pnlRaw from ALL closing legs
+    // FIX: PNL = sum of pnlRaw from closing legs ONLY
     let pnl = null;
-    const pnlVals = closers.map(l=>l.pnlRaw).filter(v=>v!==null);
-    if (pnlVals.length > 0) {
-      pnl = parseFloat(pnlVals.reduce((s,v)=>s+v,0).toFixed(2));
-    }
-    // Fallback: check opener's pnlRaw (some endpoints put it there)
-    if (pnl===null && opener.pnlRaw!==null) pnl = opener.pnlRaw;
-
-    // Commission handling
-    if (tlCreds?.netPnl === false && pnl !== null) {
-      // keep gross pnl as-is
+    if (!isOpen) {
+      const pnlVals = closers.map(l => l.pnlRaw).filter(v => v !== null);
+      if (pnlVals.length > 0) {
+        pnl = parseFloat(pnlVals.reduce((s,v) => s+v, 0).toFixed(2));
+      }
     }
 
-    // PNL fallback: calculate from price difference
-    if ((pnl===null || pnl===0) && entry && exit!==null && size && size>0) {
-      const diff = dir==='long' ? (exit-entry) : (entry-exit);
-      const isJPY = pair.includes('JPY');
+    // PNL fallback (only if API gave us nothing)
+    if (!isOpen && pnl === null && entry && exit !== null && size && size > 0) {
+      const diff = dir === 'long' ? (exit - entry) : (entry - exit);
+      const isJPY    = pair.includes('JPY');
       const isCrypto = /BTC|ETH|ADA|SOL|XRP|LTC/.test(pair);
-      const isCFD = /USOIL|UKOIL|XAU|XAG|US30|NAS|SPX|UK100|GER|JP225/.test(pair);
-      if (isCrypto)     pnl = parseFloat((diff*size).toFixed(2));
-      else if (isCFD)   pnl = parseFloat((diff*size*10).toFixed(2));
-      else if (isJPY)   pnl = parseFloat((diff*100000*size/100).toFixed(2));
-      else              pnl = parseFloat((diff*100000*size).toFixed(2));
-      addLog('diag', 'Calc PNL for '+pair+': '+diff.toFixed(5)+' × '+size+' lots = $'+pnl);
+      const isCFD    = /USOIL|UKOIL|XAU|XAG|US30|NAS|SPX|UK100|GER|JP225/.test(pair);
+      if (isCrypto)    pnl = parseFloat((diff * size).toFixed(2));
+      else if (isCFD)  pnl = parseFloat((diff * size * 10).toFixed(2));
+      else if (isJPY)  pnl = parseFloat((diff * 100000 * size / 100).toFixed(2));
+      else             pnl = parseFloat((diff * 100000 * size).toFixed(2));
+      addLog('diag', 'Calc PNL '+pair+': '+diff.toFixed(5)+' × '+size+' = $'+pnl);
     }
 
-    // Timestamp: use opener's time
     const time = opener.openTs || '';
 
-    // Status
-    const isOpen = closers.length === 0;
     let status = 'open';
     if (!isOpen) {
-      if (pnl!==null && pnl>0.5)  status='win';
-      else if (pnl!==null && pnl<-0.5) status='loss';
-      else status='breakeven';
+      if (pnl !== null && pnl > 0.5)       status = 'win';
+      else if (pnl !== null && pnl < -0.5)  status = 'loss';
+      else                                   status = 'breakeven';
     }
+
+    // Log each new trade with direction for debugging
+    addLog('diag', '['+posId.slice(-6)+'] '+pair+' '+dir.toUpperCase()+
+      ' opener='+opener.side+'('+opener.fillPrice+') closers='+closers.length+
+      ' pnl='+(pnl!==null?'$'+pnl:'null')+' status='+status);
 
     result.push({
       id: Date.now() + (Math.random()*999999|0),
@@ -685,26 +650,45 @@ function processOrderLegs(rawOrders, acctLabel) {
 
 /* ─── ENRICH WITH SL/TP FROM LIMIT/STOP ORDERS ─────────────── */
 function enrichWithSLTP(journalTrades, rawOrders) {
+  // FIX: Also detect SL from opener legs where trigPrice is set
   const sltp = {};
+
   for (const row of rawOrders) {
     if (!Array.isArray(row)) continue;
-    const posId = String(row[16]||'').trim();
+    const posId     = String(row[16]||'').trim();
     if (!posId||posId.length<3) continue;
+    const statusRaw = String(row[6]||'').toLowerCase();
     const orderType = String(row[5]||'').toLowerCase();
-    const triggerPrice = parseFloat(row[7])||null;
-    if (!triggerPrice||triggerPrice<=0) continue;
-    if (!sltp[posId]) sltp[posId]={};
-    if (orderType==='limit') sltp[posId].tp = triggerPrice;
-    else if (orderType==='stop'||orderType==='stoplimit') sltp[posId].sl = triggerPrice;
+    const side      = String(row[4]||'').toLowerCase();
+    const trigPrice = parseFloat(row[7])||null;
+    const fillPrice = parseFloat(row[8])||null;
+
+    if (!sltp[posId]) sltp[posId] = {};
+
+    // Filled market orders with a trigger price → that's the SL
+    if (statusRaw === 'filled' && orderType === 'market' && trigPrice && trigPrice > 0) {
+      // trigPrice on an opener = SL level set at entry
+      if (!sltp[posId].sl) sltp[posId].sl = trigPrice;
+    }
+    // Limit orders = TP
+    if (orderType === 'limit' && trigPrice && trigPrice > 0) {
+      sltp[posId].tp = trigPrice;
+    }
+    // Stop orders = SL
+    if ((orderType === 'stop' || orderType === 'stoplimit') && trigPrice && trigPrice > 0) {
+      sltp[posId].sl = trigPrice;
+    }
   }
+
   for (const jt of journalTrades) {
-    const s=sltp[jt.tlId];
+    const s = sltp[jt.tlId];
     if (!s) continue;
-    if (s.sl&&!jt.sl) jt.sl=s.sl;
-    if (s.tp&&!jt.tp) jt.tp=s.tp;
-    if (jt.sl&&jt.tp&&jt.entry) {
-      const slD=Math.abs(jt.entry-jt.sl), tpD=Math.abs(jt.tp-jt.entry);
-      if (slD>0) jt.rr=(tpD/slD).toFixed(2);
+    if (s.sl && !jt.sl) jt.sl = s.sl;
+    if (s.tp && !jt.tp) jt.tp = s.tp;
+    if (jt.sl && jt.tp && jt.entry) {
+      const slD = Math.abs(jt.entry - jt.sl);
+      const tpD = Math.abs(jt.tp   - jt.entry);
+      if (slD > 0) jt.rr = (tpD / slD).toFixed(2);
     }
   }
 }
@@ -781,9 +765,6 @@ function disconnectTL(){
   renderTLDisconnected();showToast('TradeLocker disconnected');
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   CONNECT
-═══════════════════════════════════════════════════════════════ */
 async function connectTL(){
   const email=document.getElementById('tl-email').value.trim();
   const password=document.getElementById('tl-pass').value;
@@ -808,9 +789,6 @@ async function connectTL(){
 }
 function setConnMsg(msg,isErr){const el=document.getElementById('tl-conn-msg');el.textContent=msg;el.style.color=isErr?'var(--red)':'var(--green)';}
 
-/* ═══════════════════════════════════════════════════════════════
-   SYNC CORE
-═══════════════════════════════════════════════════════════════ */
 async function runTLSync(){
   if(tlIsSyncing){showToast('Sync already running…');return;}
   if(!tlCreds){showToast('Not connected to TradeLocker');return;}
@@ -844,7 +822,6 @@ async function runTLSync(){
       await tlLoadInstruments(accId,accNum);
       setProgress(base+15);
 
-      /* ── Fetch raw order history ── */
       let rawOrders=[];
       try{
         addLog('ok','Fetching order history…');
@@ -860,13 +837,11 @@ async function runTLSync(){
 
       setProgress(base+30);
 
-      /* ── Build trades from legs ── */
       const journalTrades=processOrderLegs(rawOrders,acctLabel);
       enrichWithSLTP(journalTrades,rawOrders);
       addLog('ok','Built '+journalTrades.length+' trades from '+rawOrders.length+' order legs');
       setProgress(base+50);
 
-      /* ── Merge into DB ── */
       for(const jt of journalTrades){
         const existing=trades.find(t=>t.tlId&&String(t.tlId)===String(jt.tlId));
         if(existing){
@@ -910,9 +885,6 @@ async function runTLSync(){
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   SUPABASE
-═══════════════════════════════════════════════════════════════ */
 function setSyncDot(s,l){document.getElementById('sync-dot').className='sync-dot '+s;document.getElementById('sync-label').textContent=l;}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
 async function upsertTrade(t){
@@ -941,9 +913,6 @@ async function deleteAllForAccount(accName){
   trades=trades.filter(t=>t.account!==accName);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   ACCOUNTS
-═══════════════════════════════════════════════════════════════ */
 function getSingleBalance(acc){
   const pnl=trades.filter(t=>t.account===acc&&t.status!=='open').reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
   return (initialBalances[acc]||0)+pnl;
@@ -978,9 +947,6 @@ function setCurrentAccount(val){
 }
 function getFiltered(){return currentAccount==='All'?trades:trades.filter(t=>t.account===currentAccount);}
 
-/* ═══════════════════════════════════════════════════════════════
-   DRAWDOWN BANNER
-═══════════════════════════════════════════════════════════════ */
 function renderDDBanner(){
   const b=document.getElementById('dd-banner');if(!b)return;
   if(currentAccount==='All'||!tlCreds){b.innerHTML='';return;}
@@ -993,9 +959,6 @@ function renderDDBanner(){
   else b.innerHTML='';
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   PAGE NAV
-═══════════════════════════════════════════════════════════════ */
 function showPage(p){
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
@@ -1009,9 +972,6 @@ function showPage(p){
   if(p==='add') populateAccountDatalist();
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   FORMATTERS
-═══════════════════════════════════════════════════════════════ */
 function fmt(n){
   if(n===null||n===undefined||isNaN(Number(n))) return '--';
   const v=Number(n);
@@ -1021,9 +981,6 @@ function fmtPct(n){return (n*100).toFixed(1)+'%';}
 function dateStr(t){return t?t.slice(0,10):'--';}
 function pnlCls(v){return v>0?'pnl-pos':v<0?'pnl-neg':'';}
 
-/* ═══════════════════════════════════════════════════════════════
-   DASHBOARD
-═══════════════════════════════════════════════════════════════ */
 function renderDashboard(){
   renderDDBanner();
   const f=getFiltered(),c=f.filter(t=>t.status!=='open');
@@ -1067,9 +1024,6 @@ function renderTopPairs(id){
   }).join(''):'<div style="font-size:13px;color:var(--text-tertiary)">Close some trades first</div>';
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   TRADE LOG
-═══════════════════════════════════════════════════════════════ */
 function populateFilterPairs(){
   const sel=document.getElementById('f-pair');if(!sel)return;
   const cur=sel.value;
@@ -1108,9 +1062,6 @@ async function deleteTrade(id){
   if(ok){trades=trades.filter(t=>t.id!==id);extractAndSaveAccounts();renderLog();renderDashboard();renderAnalytics();}
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   DETAIL MODAL
-═══════════════════════════════════════════════════════════════ */
 function openDetail(id){
   const t=trades.find(x=>x.id==id);if(!t)return;
   let html='<h2>'+(t.pair||'--')+' — '+(t.dir||'').toUpperCase()+
@@ -1145,9 +1096,6 @@ function openDetail(id){
 }
 function openLightbox(src){document.getElementById('lb-img').src=src;document.getElementById('lightbox').style.display='flex';}
 
-/* ═══════════════════════════════════════════════════════════════
-   ANALYTICS
-═══════════════════════════════════════════════════════════════ */
 function renderAnalytics(){
   const f=getFiltered(),c=f.filter(t=>t.status!=='open'),w=c.filter(t=>t.status==='win');
   const tp=c.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
@@ -1191,9 +1139,6 @@ function renderPnlChart(closed){
     options:{plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10.5}},grid:{display:false}},y:{ticks:{font:{size:10.5},callback:v=>'$'+v},grid:{color:'rgba(128,128,128,0.08)'}}}}});
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   FORM
-═══════════════════════════════════════════════════════════════ */
 document.getElementById('femo').addEventListener('input',e=>document.getElementById('emo-out').textContent=e.target.value);
 document.getElementById('fcnf').addEventListener('input',e=>document.getElementById('cnf-out').textContent=e.target.value);
 function handleImages(e){
@@ -1261,9 +1206,6 @@ function clearForm(){
   tempImages=[];document.getElementById('img-preview').innerHTML='';
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   ACCOUNTS MODAL
-═══════════════════════════════════════════════════════════════ */
 function showBalanceModal(){renderAcctsList();document.getElementById('accts-modal').style.display='flex';}
 function renderAcctsList(){
   if(!knownAccounts.length){document.getElementById('accts-list').innerHTML='<div class="empty-state"><b>No accounts yet</b></div>';return;}
@@ -1306,9 +1248,6 @@ function addAccount(){
   extractAndSaveAccounts();renderAcctsList();showToast('✅ Account "'+clean+'" created');
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════════════════ */
 async function init(){
   loadLocal();
   await fetchTrades();
