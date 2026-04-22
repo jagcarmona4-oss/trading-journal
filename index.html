@@ -373,11 +373,13 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;
 function parseMoney(v) {
   if (v==null) return null;
   let s = String(v).trim();
-  if (!s||s==='--'||s==='null'||s==='false'||s==='0') return null;
+  if (!s||s===''||s==='--'||s==='null'||s==='false'||s==='0'||s==='0.0'||s==='0.00') return null;
   if (s.startsWith('(')&&s.endsWith(')')) s='-'+s.slice(1,-1);
   s = s.replace(/[$€£¥,%\s,]/g,'');
   const n=parseFloat(s);
-  return isNaN(n) ? null : parseFloat(n.toFixed(2));
+  // Treat near-zero as null (swap/interest noise on opening legs)
+  if (isNaN(n) || (n > -0.001 && n < 0.001)) return null;
+  return parseFloat(n.toFixed(2));
 }
 
 function safeJSON(text) {
@@ -472,9 +474,9 @@ async function tlLoadInstruments(accId,accNum) {
 function getAcctLabel(accNum){ return accountAliases[String(accNum)]||String(accNum); }
 
 /* ═══════════════════════════════════════════════════════════════
-   PROCESS ORDER LEGS  — FIXED VERSION
-   
-   TradeLocker ordersHistory column layout (confirmed for Alpha-LIVE):
+   PROCESS ORDER LEGS  — v3 SMART MATCHING
+
+   TradeLocker ordersHistory column layout (Alpha-LIVE confirmed):
    [0]  = Order ID (ticket, 19-digit string)
    [1]  = Instrument ID (numeric)
    [2]  = Internal account number
@@ -482,156 +484,177 @@ function getAcctLabel(accNum){ return accountAliases[String(accNum)]||String(acc
    [4]  = Side: "buy" / "sell"
    [5]  = Order type: "market" / "limit" / "stop"
    [6]  = Status: "Filled" / "Cancelled" / "false"
-   [7]  = Trigger/limit price (SL/TP level)
+   [7]  = Trigger price (SL/TP level — only meaningful on stop/limit orders)
    [8]  = Fill price (actual execution price)
-   [9]  = Secondary price
-   [10] = Small number / 0
-   [11] = Time-in-force
-   [12] = PNL in $ — NULL for opening legs, dollar value for closing legs
-   [13] = Open/create timestamp (milliseconds)
-   [14] = Close/expire timestamp (milliseconds)
-   [15] = "false" flag
-   [16] = Parent POSITION ID (links all legs together)
+   [12] = PNL in $ — null/0 for opening legs, dollar value for closing legs
+   [13] = Timestamp (milliseconds)
+   [14] = Secondary timestamp
+   [16] = Position ID — may equal row[0] on some brokers (not reliable for grouping)
 
-   KEY INSIGHT:
-   - Opening leg: row[12] is null/0 (no PNL yet — position just opened)
-   - Closing leg: row[12] has a dollar value (PNL realised on close)
-   This is the CORRECT way to tell openers from closers — NOT by timestamp order.
+   ROOT CAUSE OF PRIOR BUGS:
+   On Alpha-LIVE, row[16] equals row[0] — each order leg has its own "position ID".
+   This means grouping by row[16] puts each leg in isolation.
+   Closing legs (which have pnlRaw set) end up as single-leg "positions".
+   The closing leg's side is the OPPOSITE of the trade direction
+   (a short position closes with a BUY) → every direction was inverted.
 
-   DIRECTION FIX:
-   - If opener side = "buy"  → trade direction = LONG
-   - If opener side = "sell" → trade direction = SHORT
-   The closing leg will always have the OPPOSITE side (a long closes with a sell,
-   a short closes with a buy). Don't use closer's side for direction.
+   SOLUTION — Smart Pair Matching:
+   1. Separate all filled orders into openers (pnlRaw=null) and closers (pnlRaw≠null)
+   2. For each closer, find its matching opener:
+      - Same instrument ID
+      - Opposite side (BUY closes a SELL, SELL closes a BUY)
+      - Same lot size (handles multiple open positions of same pair)
+      - Opener timestamp < Closer timestamp
+      - Not already matched to another closer
+   3. Unmatched openers = still-open positions
+   4. Use pnlRaw from closer (not fallback calculation) = correct USD PNL from broker
+
+   CFD MULTIPLIER CORRECTIONS (for fallback only):
+   - USOIL/UKOIL:    1 lot = 1000 barrels  → ×1000
+   - XAU/USD:        1 lot = 100 oz        → ×100
+   - SPX500/US30/NAS100/UK100/GER40: 1 lot = 100 index pts → ×100
 ═══════════════════════════════════════════════════════════════ */
 
 function processOrderLegs(rawOrders, acctLabel) {
-  /* ── STEP 1: Parse rows into leg objects ── */
+  /* ── STEP 1: Parse all filled orders ── */
   const legs = [];
   for (const row of rawOrders) {
     if (!Array.isArray(row)) continue;
 
-    const orderId    = String(row[0]||'').trim();
-    const instrId    = row[1];
-    const lots       = parseFloat(row[3]) || null;
-    const side       = String(row[4]||'').toLowerCase().trim();
-    const orderType  = String(row[5]||'').toLowerCase().trim();
-    const statusRaw  = String(row[6]||'').toLowerCase().trim();
-    const trigPrice  = parseFloat(row[7]) || null;  // SL/TP trigger price
-    const fillPrice  = parseFloat(row[8]) || null;  // actual execution price
-    const pnlRaw     = parseMoney(row[12]);          // null = opener, value = closer
-    const openTs     = parseTS(row[13]);             // open timestamp (ms)
-    const closeTs    = parseTS(row[14]);             // close timestamp (ms)
-    const posId      = String(row[16]||orderId).trim();
+    const orderId   = String(row[0]||'').trim();
+    const instrId   = String(row[1]||'').trim();
+    const lots      = parseFloat(row[3]) || null;
+    const side      = String(row[4]||'').toLowerCase().trim();
+    const orderType = String(row[5]||'').toLowerCase().trim();
+    const statusRaw = String(row[6]||'').toLowerCase().trim();
+    const trigPrice = parseFloat(row[7]) || null;
+    const fillPrice = parseFloat(row[8]) || null;
+    const pnlRaw    = parseMoney(row[12]);
+    const ts        = parseTS(row[13]);
 
-    // Only process filled orders
     if (statusRaw !== 'filled') continue;
     if (!fillPrice || fillPrice <= 0 || fillPrice > 1e9) continue;
     if (side !== 'buy' && side !== 'sell') continue;
 
-    // Resolve pair from instrument map
-    const pair = (instrId != null)
-      ? (tlInstrumentMap[String(instrId)] || (/^\d+$/.test(String(instrId)) ? null : normPair(String(instrId))))
+    const pair = instrId
+      ? (tlInstrumentMap[instrId] || (/^\d+$/.test(instrId) ? null : normPair(instrId)))
       : null;
 
-    // FIX: isCloser = this leg has a realised PNL value (closing the position)
-    // isOpener = no PNL yet (just opened the position)
+    // isCloser: this leg realised a PNL (closing leg)
+    // isOpener: no PNL yet (opening leg)
     const isCloser = pnlRaw !== null;
 
-    legs.push({ orderId, instrId, pair, lots, side, orderType, trigPrice,
-                fillPrice, pnlRaw, openTs, closeTs, posId, isCloser });
+    legs.push({ orderId, instrId, pair, lots, side, orderType,
+                trigPrice, fillPrice, pnlRaw, ts, isCloser });
   }
 
   addLog('ok', 'Filled legs: ' + legs.length + ' of ' + rawOrders.length);
 
-  /* ── STEP 2: Group by position ID ── */
-  const posMap = {};
-  for (const leg of legs) {
-    if (!posMap[leg.posId]) posMap[leg.posId] = [];
-    posMap[leg.posId].push(leg);
-  }
-  addLog('ok', 'Unique positions: ' + Object.keys(posMap).length);
+  // Sort all legs oldest-first
+  legs.sort((a,b) => (a.ts||'').localeCompare(b.ts||''));
 
-  /* ── STEP 3: Build journal trades ── */
-  const result = [];
+  /* ── STEP 2: Separate openers and closers ── */
+  const openers = legs.filter(l => !l.isCloser);
+  const closers = legs.filter(l =>  l.isCloser);
 
-  for (const [posId, posLegs] of Object.entries(posMap)) {
-    // Sort all legs oldest-first by timestamp
-    posLegs.sort((a,b) => (a.openTs||'').localeCompare(b.openTs||''));
+  addLog('ok', 'Openers: ' + openers.length + ' | Closers: ' + closers.length);
 
-    // Separate openers (no PNL) from closers (have PNL)
-    const openerLegs = posLegs.filter(l => !l.isCloser);
-    const closerLegs = posLegs.filter(l => l.isCloser);
+  /* ── STEP 3: Smart pair matching ── */
+  // Each closer finds its best matching opener:
+  // same instrId + opposite side + same lots + opener.ts < closer.ts
+  const matchedOpenerIds = new Set();
+  const pairs = []; // [{opener, closer}]
 
-    // FIX: If ALL legs have PNL (rare edge case), treat first by timestamp as opener
-    const opener  = openerLegs.length > 0 ? openerLegs[0] : posLegs[0];
-    const closers = closerLegs.length > 0 ? closerLegs : posLegs.slice(1);
+  for (const closer of closers) {
+    const oppSide = closer.side === 'buy' ? 'sell' : 'buy';
 
-    // Resolve pair — try all legs
-    let pair = opener.pair;
-    if (!pair) {
-      for (const l of posLegs) { if (l.pair) { pair = l.pair; break; } }
-    }
-    if (!pair) {
-      addLog('skip', 'Skipping posId '+posId+': unknown instrument ID '+opener.instrId);
+    // Find all candidate openers: same instrId, opposite side, before this closer, not yet matched
+    const candidates = openers.filter(o =>
+      o.instrId === closer.instrId &&
+      o.side === oppSide &&
+      (o.ts||'') < (closer.ts||'') &&
+      !matchedOpenerIds.has(o.orderId)
+    );
+
+    if (candidates.length === 0) {
+      // No opener found — orphaned closer, create trade from closer data only
+      // Direction inverted from closer side (closer BUY = was a SHORT trade)
+      addLog('skip', 'Orphaned closer: '+closer.orderId+' '+closer.pair+' '+closer.side);
+      const dir = closer.side === 'buy' ? 'short' : 'long';
+      pairs.push({ opener: null, closer, dir });
       continue;
     }
 
-    // FIX: Direction from OPENER side only
-    // opener buy = long position; opener sell = short position
-    const dir = opener.side === 'buy' ? 'long' : 'short';
+    // Prefer opener with exact same lots (most precise match)
+    let best = candidates.find(o => o.lots === closer.lots);
+    // If no exact lots match, take the most recent candidate (LIFO)
+    if (!best) best = candidates[candidates.length - 1];
 
-    const entry = opener.fillPrice;
-    const size  = opener.lots;
+    matchedOpenerIds.add(best.orderId);
+    pairs.push({ opener: best, closer, dir: best.side === 'buy' ? 'long' : 'short' });
+  }
 
-    // FIX: Open = no closing legs at all
-    const isOpen = closers.length === 0;
-
-    // Exit price = last closer's fill price
-    let exit = null;
-    if (!isOpen) {
-      exit = closers[closers.length - 1].fillPrice || null;
+  // Remaining unmatched openers = open positions
+  for (const opener of openers) {
+    if (!matchedOpenerIds.has(opener.orderId)) {
+      pairs.push({ opener, closer: null, dir: opener.side === 'buy' ? 'long' : 'short' });
     }
+  }
 
-    // FIX: PNL = sum of pnlRaw from closing legs ONLY
-    let pnl = null;
-    if (!isOpen) {
-      const pnlVals = closers.map(l => l.pnlRaw).filter(v => v !== null);
-      if (pnlVals.length > 0) {
-        pnl = parseFloat(pnlVals.reduce((s,v) => s+v, 0).toFixed(2));
-      }
-    }
+  addLog('ok', 'Matched pairs: ' + pairs.filter(p=>p.opener&&p.closer).length +
+    ' | Open: ' + pairs.filter(p=>p.opener&&!p.closer).length +
+    ' | Orphaned: ' + pairs.filter(p=>!p.opener).length);
 
-    // PNL fallback (only if API gave us nothing)
+  /* ── STEP 4: Build journal trades ── */
+  const result = [];
+
+  for (const { opener, closer, dir } of pairs) {
+    const refLeg = opener || closer;
+
+    let pair = refLeg.pair;
+    if (!pair && opener) pair = opener.pair;
+    if (!pair && closer) pair = closer.pair;
+    if (!pair) { addLog('skip', 'No pair for trade'); continue; }
+
+    const entry  = opener ? opener.fillPrice : null;
+    const exit   = closer ? closer.fillPrice : null;
+    const size   = opener ? opener.lots : (closer ? closer.lots : null);
+    const time   = opener ? opener.ts : (closer ? closer.ts : '');
+    const isOpen = !closer;
+
+    // PNL: use broker's value directly (already in USD)
+    let pnl = closer ? closer.pnlRaw : null;
+
+    // Fallback PNL calculation (only when API gives nothing)
     if (!isOpen && pnl === null && entry && exit !== null && size && size > 0) {
       const diff = dir === 'long' ? (exit - entry) : (entry - exit);
       const isJPY    = pair.includes('JPY');
       const isCrypto = /BTC|ETH|ADA|SOL|XRP|LTC/.test(pair);
-      const isCFD    = /USOIL|UKOIL|XAU|XAG|US30|NAS|SPX|UK100|GER|JP225/.test(pair);
-      if (isCrypto)    pnl = parseFloat((diff * size).toFixed(2));
-      else if (isCFD)  pnl = parseFloat((diff * size * 10).toFixed(2));
-      else if (isJPY)  pnl = parseFloat((diff * 100000 * size / 100).toFixed(2));
-      else             pnl = parseFloat((diff * 100000 * size).toFixed(2));
-      addLog('diag', 'Calc PNL '+pair+': '+diff.toFixed(5)+' × '+size+' = $'+pnl);
+      const isOil    = /USOIL|UKOIL|OIL|BRENT|WTI/.test(pair);
+      const isGold   = /XAU|XAG|GOLD|SILVER/.test(pair);
+      const isIndex  = /SPX|US30|NAS|UK100|GER|JP225|AUS200/.test(pair);
+      if (isCrypto)       pnl = parseFloat((diff * size).toFixed(2));
+      else if (isOil)     pnl = parseFloat((diff * size * 1000).toFixed(2));
+      else if (isGold)    pnl = parseFloat((diff * size * 100).toFixed(2));
+      else if (isIndex)   pnl = parseFloat((diff * size * 100).toFixed(2));
+      else if (isJPY)     pnl = parseFloat((diff * 100000 * size / 100).toFixed(2));
+      else                pnl = parseFloat((diff * 100000 * size).toFixed(2));
+      addLog('diag', 'Fallback PNL '+pair+' '+dir+': '+diff.toFixed(5)+' × '+size+' = $'+pnl);
     }
-
-    const time = opener.openTs || '';
 
     let status = 'open';
     if (!isOpen) {
-      if (pnl !== null && pnl > 0.5)       status = 'win';
-      else if (pnl !== null && pnl < -0.5)  status = 'loss';
-      else                                   status = 'breakeven';
+      if      (pnl !== null && pnl >  0.5) status = 'win';
+      else if (pnl !== null && pnl < -0.5) status = 'loss';
+      else                                  status = 'breakeven';
     }
 
-    // Log each new trade with direction for debugging
-    addLog('diag', '['+posId.slice(-6)+'] '+pair+' '+dir.toUpperCase()+
-      ' opener='+opener.side+'('+opener.fillPrice+') closers='+closers.length+
-      ' pnl='+(pnl!==null?'$'+pnl:'null')+' status='+status);
+    // Use orderId of closer (or opener) as unique trade ID for deduplication
+    const tlId = closer ? closer.orderId : (opener ? opener.orderId : String(Date.now()));
 
     result.push({
-      id: Date.now() + (Math.random()*999999|0),
-      tlId: posId,
+      id:    Date.now() + (Math.random()*999999|0),
+      tlId,
       account: acctLabel,
       pair, dir, entry, exit,
       sl: null, tp: null, rr: null,
@@ -648,43 +671,62 @@ function processOrderLegs(rawOrders, acctLabel) {
   return result;
 }
 
-/* ─── ENRICH WITH SL/TP FROM LIMIT/STOP ORDERS ─────────────── */
+/* ─── ENRICH WITH SL/TP ─────────────────────────────────────── */
+// SL/TP come from stop/limit pending orders associated with a position.
+// We identify them by: same instrId, trigPrice looks like a real price (not lots),
+// and orderType is 'stop' (=SL) or 'limit' (=TP).
+// We index by the closer's orderId (tlId) via instrId+side proximity.
 function enrichWithSLTP(journalTrades, rawOrders) {
-  // FIX: Also detect SL from opener legs where trigPrice is set
-  const sltp = {};
+  // Build a map: instrId+side → [{trigPrice, orderType, ts}]
+  // for cancelled/pending stop and limit orders
+  const pendingMap = {}; // key: instrId → [{type:'sl'/'tp', price, ts}]
 
   for (const row of rawOrders) {
     if (!Array.isArray(row)) continue;
-    const posId     = String(row[16]||'').trim();
-    if (!posId||posId.length<3) continue;
-    const statusRaw = String(row[6]||'').toLowerCase();
-    const orderType = String(row[5]||'').toLowerCase();
-    const side      = String(row[4]||'').toLowerCase();
-    const trigPrice = parseFloat(row[7])||null;
-    const fillPrice = parseFloat(row[8])||null;
+    const instrId   = String(row[1]||'').trim();
+    const orderType = String(row[5]||'').toLowerCase().trim();
+    const statusRaw = String(row[6]||'').toLowerCase().trim();
+    const trigPrice = parseFloat(row[7]) || null;
+    const ts        = parseTS(row[13]);
 
-    if (!sltp[posId]) sltp[posId] = {};
+    if (!trigPrice || trigPrice <= 0 || trigPrice > 1e9) continue;
+    // Only cancelled/pending stop+limit orders carry SL/TP info
+    if (statusRaw === 'filled') continue;
 
-    // Filled market orders with a trigger price → that's the SL
-    if (statusRaw === 'filled' && orderType === 'market' && trigPrice && trigPrice > 0) {
-      // trigPrice on an opener = SL level set at entry
-      if (!sltp[posId].sl) sltp[posId].sl = trigPrice;
-    }
-    // Limit orders = TP
-    if (orderType === 'limit' && trigPrice && trigPrice > 0) {
-      sltp[posId].tp = trigPrice;
-    }
-    // Stop orders = SL
-    if ((orderType === 'stop' || orderType === 'stoplimit') && trigPrice && trigPrice > 0) {
-      sltp[posId].sl = trigPrice;
+    if (!pendingMap[instrId]) pendingMap[instrId] = [];
+    if (orderType === 'stop' || orderType === 'stoplimit') {
+      pendingMap[instrId].push({ type: 'sl', price: trigPrice, ts });
+    } else if (orderType === 'limit') {
+      pendingMap[instrId].push({ type: 'tp', price: trigPrice, ts });
     }
   }
 
   for (const jt of journalTrades) {
-    const s = sltp[jt.tlId];
-    if (!s) continue;
-    if (s.sl && !jt.sl) jt.sl = s.sl;
-    if (s.tp && !jt.tp) jt.tp = s.tp;
+    if (!jt.entry || !jt.time) continue;
+    const instrId = Object.keys(tlInstrumentMap).find(k => tlInstrumentMap[k] === jt.pair);
+    if (!instrId) continue;
+
+    const candidates = (pendingMap[instrId] || []).filter(c => {
+      // The SL/TP order should be timestamped near or after trade entry
+      return (!c.ts || c.ts >= jt.time);
+    });
+
+    for (const c of candidates) {
+      // Validate: SL should be on the loss side of entry
+      if (c.type === 'sl' && !jt.sl) {
+        const slValid = jt.dir === 'long'
+          ? c.price < jt.entry   // SL below entry for longs
+          : c.price > jt.entry;  // SL above entry for shorts
+        if (slValid) jt.sl = c.price;
+      }
+      if (c.type === 'tp' && !jt.tp) {
+        const tpValid = jt.dir === 'long'
+          ? c.price > jt.entry   // TP above entry for longs
+          : c.price < jt.entry;  // TP below entry for shorts
+        if (tpValid) jt.tp = c.price;
+      }
+    }
+
     if (jt.sl && jt.tp && jt.entry) {
       const slD = Math.abs(jt.entry - jt.sl);
       const tpD = Math.abs(jt.tp   - jt.entry);
