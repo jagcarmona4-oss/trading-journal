@@ -142,11 +142,7 @@ body {
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
-.tbl tbody tr {
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: background 0.1s;
-}
+.tbl tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
 .tbl tbody tr:hover { background: var(--bg3); }
 .tbl tbody tr:last-child { border-bottom: none; }
 .tbl td { padding: 10px 12px; white-space: nowrap; }
@@ -156,7 +152,8 @@ body {
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 10.5px; font-weight: 500;
-  padding: 2px 7px; border-radius: 4px;
+  padding: 2px 7px;
+  border-radius: 4px;
   font-family: var(--mono); letter-spacing: 0.3px;
 }
 .badge-long  { background: rgba(34,200,122,0.15); color: var(--green); }
@@ -197,8 +194,7 @@ body {
   font-size: 12.5px; cursor: pointer;
   border: 1px solid var(--border2);
   color: var(--text2); background: transparent;
-  font-family: var(--sans);
-  transition: all 0.12s;
+  font-family: var(--sans); transition: all 0.12s;
 }
 .pill:hover { background: var(--bg3); color: var(--text); }
 .pill.active { background: var(--green); color: #000; border-color: var(--green); font-weight: 500; }
@@ -212,15 +208,10 @@ body {
 .fg { display: flex; flex-direction: column; gap: 5px; }
 .fg label { font-size: 11.5px; color: var(--text2); }
 .fg input, .fg select, .fg textarea {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 13.5px;
-  padding: 8px 11px;
-  outline: none;
-  transition: border-color 0.12s;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--text);
+  font-family: var(--sans); font-size: 13.5px;
+  padding: 8px 11px; outline: none; transition: border-color 0.12s;
 }
 .fg input:focus, .fg select:focus, .fg textarea:focus { border-color: var(--border2); }
 .fg textarea { min-height: 70px; resize: vertical; }
@@ -229,16 +220,13 @@ body {
 .section-title {
   font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px;
   color: var(--text3); font-family: var(--mono);
-  padding: 16px 0 8px;
-  border-top: 1px solid var(--border);
-  margin-top: 12px;
+  padding: 16px 0 8px; border-top: 1px solid var(--border); margin-top: 12px;
 }
 .section-title:first-child { border-top: none; padding-top: 0; margin-top: 0; }
 
 /* ── FILTERS ── */
 .filter-bar {
-  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
-  margin-bottom: 16px;
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px;
 }
 .filter-bar select {
   background: var(--bg2); border: 1px solid var(--border);
@@ -249,24 +237,16 @@ body {
 
 /* ── MODAL ── */
 .modal-bg {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.7);
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
   display: flex; align-items: flex-start; justify-content: center;
-  z-index: 200; padding: 40px 20px; overflow-y: auto;
-  backdrop-filter: blur(4px);
+  z-index: 200; padding: 40px 20px; overflow-y: auto; backdrop-filter: blur(4px);
 }
 .modal-box {
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  border-radius: 16px;
-  padding: 24px;
-  width: 100%; max-width: 680px;
-  margin: auto;
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 16px; padding: 24px;
+  width: 100%; max-width: 680px; margin: auto;
 }
-.modal-header {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  margin-bottom: 20px;
-}
+.modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
 .modal-title { font-size: 16px; font-weight: 600; }
 .close-btn { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 20px; line-height: 1; padding: 0 2px; }
 .close-btn:hover { color: var(--text); }
@@ -282,34 +262,21 @@ body {
 .tl-connect-banner {
   background: linear-gradient(135deg, rgba(34,200,122,0.08) 0%, rgba(154,110,240,0.05) 100%);
   border: 1px solid rgba(34,200,122,0.2);
-  border-radius: var(--r2);
-  padding: 28px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  border-radius: var(--r2); padding: 28px; margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
 }
 .tl-connected-header {
   display: flex; align-items: center; gap: 10px;
   background: var(--bg2); border: 1px solid rgba(34,200,122,0.2);
-  border-radius: var(--r2); padding: 14px 18px;
-  margin-bottom: 16px;
+  border-radius: var(--r2); padding: 14px 18px; margin-bottom: 16px;
 }
 .tl-pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; animation: tl-p 2s infinite; }
 @keyframes tl-p { 0%,100%{box-shadow:0 0 0 0 rgba(34,200,122,0.4)}50%{box-shadow:0 0 0 5px rgba(34,200,122,0)} }
 
 .sync-log-wrap {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 12px 14px;
-  max-height: 400px;
-  overflow-y: auto;
-  font-family: var(--mono);
-  font-size: 11.5px;
-  line-height: 1.8;
-  margin-top: 10px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 12px 14px; max-height: 400px; overflow-y: auto;
+  font-family: var(--mono); font-size: 11.5px; line-height: 1.8; margin-top: 10px;
 }
 .sl-ok   { color: var(--green); }
 .sl-err  { color: var(--red); }
@@ -330,22 +297,17 @@ body {
 
 /* ── UPLOAD ── */
 .upload-zone {
-  border: 1px dashed var(--border2);
-  border-radius: var(--r);
-  padding: 16px; text-align: center;
-  font-size: 13px; color: var(--text3);
-  cursor: pointer;
-  transition: all 0.12s;
+  border: 1px dashed var(--border2); border-radius: var(--r);
+  padding: 16px; text-align: center; font-size: 13px; color: var(--text3);
+  cursor: pointer; transition: all 0.12s;
 }
 .upload-zone:hover { background: var(--bg3); border-color: var(--green); color: var(--text2); }
 .img-thumb { width: 76px; height: 56px; object-fit: cover; border-radius: var(--r); border: 1px solid var(--border); cursor: pointer; }
 
 /* ── LIGHTBOX ── */
 .lightbox {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.92);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 9999; cursor: pointer;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+  display: flex; align-items: center; justify-content: center; z-index: 9999; cursor: pointer;
 }
 .lightbox img { max-width: 90vw; max-height: 88vh; border-radius: var(--r2); }
 
@@ -362,20 +324,14 @@ body {
 
 /* ── LOADING ── */
 .loading-overlay {
-  position: fixed; inset: 0;
-  background: var(--bg);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  z-index: 99999; gap: 14px;
+  position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; z-index: 99999; gap: 14px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .spinner { width: 28px; height: 28px; border: 2px solid var(--border2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
 
 /* ── DD BANNER ── */
-.dd-banner {
-  padding: 11px 16px; border-radius: var(--r); margin-bottom: 16px;
-  font-size: 13px; display: flex; align-items: center; gap: 8px;
-}
+.dd-banner { padding: 11px 16px; border-radius: var(--r); margin-bottom: 16px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
 .dd-warn { background: var(--red-dim); border: 1px solid rgba(240,74,90,0.25); color: #f88; }
 .dd-caution { background: var(--amber-dim); border: 1px solid rgba(240,160,34,0.25); color: var(--amber); }
 .dd-ok-banner { background: var(--green-dim); border: 1px solid rgba(34,200,122,0.2); color: var(--green); }
@@ -413,7 +369,6 @@ body {
 </div>
 
 <div class="shell">
-  <!-- SIDEBAR -->
   <nav class="sidebar">
     <div class="logo">
       <div class="logo-mark">v2.0</div>
@@ -455,10 +410,8 @@ body {
     </div>
   </nav>
 
-  <!-- MAIN -->
   <main class="main">
 
-    <!-- ══ DASHBOARD ══ -->
     <div id="page-dashboard" class="page active">
       <div class="page-header">
         <div>
@@ -481,7 +434,6 @@ body {
       </div>
     </div>
 
-    <!-- ══ TRADE LOG ══ -->
     <div id="page-log" class="page">
       <div class="page-header">
         <div><div class="page-title">Trade Log</div></div>
@@ -500,7 +452,7 @@ body {
             <thead><tr>
               <th>Date</th><th>Pair</th><th>Account</th><th>Dir</th>
               <th>Entry</th><th>Exit</th><th>SL / TP</th><th>Size</th>
-              <th>PNL</th><th>Status</th><th></th>
+              <th>Net PNL</th><th>Status</th><th></th>
             </tr></thead>
             <tbody id="log-list"></tbody>
           </table>
@@ -508,7 +460,6 @@ body {
       </div>
     </div>
 
-    <!-- ══ ANALYTICS ══ -->
     <div id="page-analytics" class="page">
       <div class="page-header">
         <div><div class="page-title">Analytics</div></div>
@@ -526,12 +477,11 @@ body {
         </div>
       </div>
       <div class="card">
-        <div style="font-size:13px;font-weight:600;margin-bottom:14px;color:var(--text2)">Cumulative PNL</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:14px;color:var(--text2)">Cumulative Net PNL</div>
         <canvas id="pnl-chart" height="90"></canvas>
       </div>
     </div>
 
-    <!-- ══ NEW TRADE ══ -->
     <div id="page-add" class="page">
       <div class="page-header">
         <div><div class="page-title" id="add-page-title">New Trade</div></div>
@@ -564,9 +514,10 @@ body {
         </div>
 
         <div class="section-title">Trade Outcome</div>
-        <div class="form-grid c3">
+        <div class="form-grid c4">
           <div class="fg"><label>Exit price</label><input id="fex" type="number" step="any"></div>
-          <div class="fg"><label>PNL ($)</label><input id="fpn" type="number" step="any"></div>
+          <div class="fg"><label>Gross PNL ($)</label><input id="fpn" type="number" step="any"></div>
+          <div class="fg"><label>Commission ($)</label><input id="fcom" type="number" step="any" placeholder="-7.00"></div>
           <div class="fg"><label>Status</label><select id="fst"><option value="open">Open</option><option value="win">Win</option><option value="loss">Loss</option><option value="breakeven">Breakeven</option></select></div>
         </div>
         <div class="form-grid c2" style="margin-top:13px">
@@ -606,13 +557,11 @@ body {
       </div>
     </div>
 
-    <!-- ══ TL SYNC ══ -->
     <div id="page-tl-sync" class="page">
       <div class="page-header">
         <div><div class="page-title">TradeLocker Sync</div><div class="page-sub">Auto-import closed trades from your funded account</div></div>
       </div>
 
-      <!-- Connected header -->
       <div id="tl-connected-header" style="display:none" class="tl-connected-header">
         <div class="tl-pulse"></div>
         <span style="font-weight:600;font-size:14px">Connected to TradeLocker</span>
@@ -626,14 +575,12 @@ body {
         </div>
       </div>
 
-      <!-- Alias panel -->
       <div id="tl-aliases-card" style="display:none" class="card" style="margin-bottom:16px">
         <div style="font-size:13px;font-weight:600;margin-bottom:4px">Account Nicknames</div>
         <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Set friendly labels for each discovered account ID.</div>
         <div id="aliases-list"></div>
       </div>
 
-      <!-- Connect prompt -->
       <div id="tl-connect-banner" class="tl-connect-banner">
         <div>
           <div style="font-size:16px;font-weight:600;margin-bottom:6px;color:var(--green)">Connect TradeLocker</div>
@@ -642,7 +589,6 @@ body {
         <button class="btn btn-primary" onclick="showTLForm()">Connect account →</button>
       </div>
 
-      <!-- Form -->
       <div id="tl-form-card" style="display:none" class="card">
         <div style="background:var(--bg3);border-radius:var(--r);padding:10px 13px;font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6">
           🔒 Credentials are saved in your browser's localStorage only. They are sent exclusively to TradeLocker's servers when syncing.
@@ -677,7 +623,6 @@ body {
         </div>
       </div>
 
-      <!-- Sync results -->
       <div id="tl-results-card" style="display:none" class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div style="font-size:13px;font-weight:600">Sync Results</div>
@@ -687,7 +632,6 @@ body {
         <div class="sync-log-wrap" id="sync-log"></div>
       </div>
 
-      <!-- How it works -->
       <div class="card" style="margin-top:16px">
         <div style="font-size:13px;font-weight:600;margin-bottom:14px;color:var(--text2)">How the sync works</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;font-size:13px;color:var(--text2)">
@@ -702,12 +646,10 @@ body {
   </main>
 </div>
 
-<!-- DETAIL MODAL -->
 <div id="detail-modal" style="display:none" class="modal-bg" onclick="if(event.target===this)this.style.display='none'">
   <div class="modal-box" id="detail-box"></div>
 </div>
 
-<!-- ACCOUNTS MODAL -->
 <div id="accts-modal" style="display:none" class="modal-bg" onclick="if(event.target.id==='accts-modal')this.style.display='none'">
   <div class="modal-box" onclick="event.stopPropagation()" style="max-width:540px">
     <div class="modal-header">
@@ -723,7 +665,6 @@ body {
   </div>
 </div>
 
-<!-- LIGHTBOX -->
 <div id="lightbox" style="display:none" class="lightbox" onclick="this.style.display='none'">
   <img id="lb-img" src="" alt="">
 </div>
@@ -743,7 +684,6 @@ const HDR = {
   'Authorization': 'Bearer ' + SUPABASE_KEY,
   'Content-Type': 'application/json'
 };
-
 /* ═══════════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════════ */
@@ -829,7 +769,7 @@ function parseTS(v) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   PNL CALCULATION — used when broker PNL not available
+   PNL CALCULATION
 ═══════════════════════════════════════════════════════ */
 function calcPNL(pair, dir, entry, exit, size) {
   if (!pair || !entry || exit == null || !size || size <= 0) return null;
@@ -886,8 +826,7 @@ async function tlGetAccounts() {
   const all = (await r.json()).accounts || [];
   if (!all.length) throw new Error('No accounts found.');
   addLog('ok', 'Found ' + all.length + ' account(s)');
-  all.forEach(a => addLog('diag', JSON.stringify(a)));
-
+  
   const fl = (tlCreds.acctFilter || '').split(',').map(s => s.trim()).filter(Boolean);
   let target = all;
   if (fl.length) {
@@ -929,169 +868,90 @@ function getAcctLabel(accNum) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   ★ CORE FIX: PROCESS ORDER LEGS
-
-   ROOT CAUSE ANALYSIS
-   ───────────────────
-   TradeLocker ordersHistory column layout (confirmed Alpha-LIVE):
-     [0]  = Order ID (ticket)
-     [1]  = Instrument ID (numeric string)
-     [2]  = Internal account number
-     [3]  = Lot size
-     [4]  = Side: "buy" / "sell"
-     [5]  = Order type: "market" / "limit" / "stop"
-     [6]  = Status: "Filled" / "Cancelled"
-     [7]  = NOTE: On market orders this equals lots (NOT a price!) 
-            On stop/limit orders this is the trigger price
-     [8]  = Fill price (actual execution price) ← USE THIS for entry/exit
-     [12] = PNL — ALWAYS NULL on this broker. Do not use.
-     [13] = Timestamp (milliseconds) ← USE THIS for time
-     [16] = Position Group ID ← KEY: group by THIS to pair open+close legs
-            This is DIFFERENT from [0] (order ID) and IS the shared key
-            between the opening leg and its corresponding closing leg(s)
-
-   SOLUTION
-   ────────
-   1. Filter to "Filled" orders only
-   2. Group all legs by row[16] (position group ID)
-   3. Within each group, sort by timestamp ascending
-   4. First leg = opener (direction determined by its side)
-   5. Last leg = closer (if there are 2+ legs in the group)
-   6. If only 1 leg = still open position
-   7. Calculate PNL from prices + size (since [12] is always null)
-
-   DIRECTION
-   ─────────
-   Direction comes from the OPENER's side:
-     opener side = "buy"  → LONG trade
-     opener side = "sell" → SHORT trade
-
-   The CLOSER has the opposite side (always), which is why
-   the previous version (which used closer side for direction)
-   was inverting every trade.
+   PROCESS ORDER LEGS (With Commission Integration)
 ═══════════════════════════════════════════════════════ */
 function processOrderLegs(rawOrders, acctLabel) {
-  /* ══════════════════════════════════════════════════════════════
-     HOW TRADELOCKER ORDERSHISTORY WORKS (Alpha-LIVE confirmed)
-     ──────────────────────────────────────────────────────────────
-     Each position generates exactly 2 filled market orders:
-       • Opener leg: the BUY or SELL that opened the position
-       • Closer leg: the opposite side that closed it
-
-     Both legs share the SAME posGroupId (row[16]).
-     The API returns rows newest-first (closer before opener).
-
-     CRITICAL: row[12] = null on EVERY row for this broker.
-               row[7]  = lot size on market orders (NOT a price).
-
-     IDENTIFICATION STRATEGY:
-     Within each posGroupId group, sort by raw ms timestamp ASC.
-     The leg with the SMALLER timestamp = opener.
-     The leg with the LARGER  timestamp = closer.
-     A group with only 1 leg = still-open position.
-
-     DIRECTION: comes from opener.side
-       opener "buy"  → LONG trade  (closer will be "sell")
-       opener "sell" → SHORT trade (closer will be "buy")
-  ══════════════════════════════════════════════════════════════ */
-
-  // Step 1: Parse all filled orders, keep raw ms timestamp for sorting
   const filled = [];
   for (const row of rawOrders) {
     if (!Array.isArray(row)) continue;
-
     const orderId    = String(row[0] || '').trim();
     const instrId    = String(row[1] || '').trim();
     const lots       = parseFloat(row[3]) || null;
     const side       = String(row[4] || '').toLowerCase().trim();
     const orderType  = String(row[5] || '').toLowerCase().trim();
     const status     = String(row[6] || '').toLowerCase().trim();
-    // row[7] on market orders = lots (NOT a price) — ignore for entry/exit
-    // row[8] = actual fill price — USE THIS
     const fillPrice  = parseFloat(row[8]) || null;
-    // row[12] = always null on Alpha — do not use
-    const tsRaw      = row[13];                          // keep as number for numeric sort
+    const tsRaw      = row[13];
     const tsMs       = typeof tsRaw === 'string' ? parseInt(tsRaw) : (tsRaw || 0);
-    const tsISO      = parseTS(tsRaw);                   // ISO string for storage
-    const posGroupId = String(row[16] || '').trim();     // ← shared key between open+close legs
+    const tsISO      = parseTS(tsRaw);
+    const posGroupId = String(row[16] || '').trim();
 
     if (status !== 'filled') continue;
     if (!fillPrice || fillPrice <= 0 || fillPrice > 1e9) continue;
     if (side !== 'buy' && side !== 'sell') continue;
-    // posGroupId must be a real 19-digit order ID, not '0', 'false', or empty
     if (!posGroupId || posGroupId === '0' || posGroupId === 'false') continue;
-
-    const pair = instrId
-      ? (tlInstrumentMap[instrId] || (/^\d+$/.test(instrId) ? null : normPair(instrId)))
-      : null;
-
-    filled.push({ orderId, instrId, posGroupId, pair, lots, side, orderType, fillPrice, tsMs, tsISO });
+    const pair = instrId ? (tlInstrumentMap[instrId] || (/^\d+$/.test(instrId) ? null : normPair(instrId))) : null;
+    filled.push({ orderId, instrId, posGroupId, pair, lots, side, orderType, fillPrice, tsMs, tsISO, rawRow: row });
   }
 
-  addLog('ok', 'Filled legs: ' + filled.length + ' of ' + rawOrders.length);
-
-  // Step 2: Group by posGroupId
   const groups = {};
   for (const leg of filled) {
     if (!groups[leg.posGroupId]) groups[leg.posGroupId] = [];
     groups[leg.posGroupId].push(leg);
   }
 
-  const groupList = Object.entries(groups);
-  addLog('ok', 'Position groups: ' + groupList.length);
-
-  // Diagnostic: dump all groups so we can verify
-  for (const [pgId, legs] of groupList) {
-    addLog('diag', 'Group ' + pgId.slice(-8) + ': ' + legs.length + ' legs → ' +
-      legs.map(l => l.side + '@' + l.fillPrice + ' ts=' + l.tsMs).join(' | '));
-  }
-
-  // Step 3: Build journal trades
   const result = [];
-
-  for (const [posGroupId, legs] of groupList) {
-    // Sort by raw millisecond timestamp ASCENDING (oldest = opener)
+  for (const [posGroupId, legs] of Object.entries(groups)) {
     legs.sort((a, b) => a.tsMs - b.tsMs);
-
     const opener  = legs[0];
     const closer  = legs.length > 1 ? legs[legs.length - 1] : null;
     const isOpen  = !closer;
 
-    // Direction from opener's side (not closer's — closer is always opposite)
     const dir = opener.side === 'buy' ? 'long' : 'short';
 
     let pair = opener.pair;
     if (!pair && closer) pair = closer.pair;
-    if (!pair) {
-      addLog('skip', 'No pair for group ' + posGroupId.slice(-8) + ' instrId=' + opener.instrId);
-      continue;
-    }
+    if (!pair) continue;
 
-    const entry = opener.fillPrice;   // opener fill = entry price
-    const exit  = closer ? closer.fillPrice : null;  // closer fill = exit price
+    const entry = opener.fillPrice;
+    const exit  = closer ? closer.fillPrice : null;
     const size  = opener.lots;
     const time  = opener.tsISO;
 
-    // Validate: for a LONG, exit should be above entry for a win (just a sanity log)
-    if (!isOpen && exit !== null) {
-      const expectedWin = dir === 'long' ? exit > entry : exit < entry;
-      addLog('diag', pair + ' ' + dir.toUpperCase() +
-        ' open@' + entry + ' close@' + exit +
-        (expectedWin ? ' → profit direction ✓' : ' → loss direction'));
-    }
-
-    // Always calculate PNL from prices (row[12] is null on this broker)
     const pnl = isOpen ? null : calcPNL(pair, dir, entry, exit, size);
+
+    // COMMISSION EXTRACTION / CALCULATION
+    let commission = 0;
+    
+    // Attempt to parse out commission from undocumented columns in ordersHistory 
+    // (TL frequently places it in col 9, 10 or 11 as a negative value)
+    const legComm = legs.reduce((sum, leg) => {
+       const c1 = parseFloat(leg.rawRow[9]) || 0;
+       const c2 = parseFloat(leg.rawRow[10]) || 0;
+       const c3 = parseFloat(leg.rawRow[11]) || 0;
+       let totalFees = 0;
+       if (c1 < 0) totalFees += c1;
+       if (c2 < 0) totalFees += c2;
+       if (c3 < 0) totalFees += c3;
+       return sum + totalFees;
+    }, 0);
+
+    if (legComm < 0) {
+        commission = parseFloat(legComm.toFixed(2));
+    } else if (size > 0 && !isOpen) {
+        // Fallback calculation: Prop Firms usually charge $7/lot for FX and $8/lot for indices
+        const isIndex = /SPX|US30|NAS|UK100|GER|JP225|AUS200/.test(pair);
+        commission = isIndex ? -(size * 8) : -(size * 7);
+        commission = parseFloat(commission.toFixed(2));
+    }
 
     let status = 'open';
     if (!isOpen) {
-      if      (pnl !== null && pnl >  0.5) status = 'win';
-      else if (pnl !== null && pnl < -0.5) status = 'loss';
-      else                                  status = 'breakeven';
-    }
-
-    if (legs.length > 2) {
-      addLog('info', 'Multi-leg (' + legs.length + '): ' + pair + ' — using first opener, last closer');
+      // For status, we can base it on Net PNL 
+      const netPnl = (pnl || 0) + commission;
+      if      (netPnl >  0.5) status = 'win';
+      else if (netPnl < -0.5) status = 'loss';
+      else                    status = 'breakeven';
     }
 
     result.push({
@@ -1100,7 +960,7 @@ function processOrderLegs(rawOrders, acctLabel) {
       account:     acctLabel,
       pair, dir, entry, exit,
       sl: null, tp: null, rr: null,
-      pnl, size,
+      pnl, commission, size,
       time, status,
       session: '', source: 'tradelocker',
       reason: '', tf: '', tags: '',
@@ -1113,31 +973,18 @@ function processOrderLegs(rawOrders, acctLabel) {
   return result;
 }
 
-/* ═══════════════════════════════════════════════════════
-   ENRICH WITH SL/TP FROM PENDING/CANCELLED ORDERS
-═══════════════════════════════════════════════════════ */
 function enrichWithSLTP(journalTrades, rawOrders) {
-  // Build map: instrId → [{type:'sl'/'tp', price, ts}]
   const pendingMap = {};
-
   for (const row of rawOrders) {
     if (!Array.isArray(row)) continue;
     const instrId   = String(row[1] || '').trim();
     const orderType = String(row[5] || '').toLowerCase().trim();
     const status    = String(row[6] || '').toLowerCase().trim();
     const ts        = parseTS(row[13]);
-
-    if (status === 'filled') continue; // filled orders are trades, not SL/TP
-
-    // row[7] is trigger price for stop/limit orders
+    if (status === 'filled') continue;
     const trigPrice = parseFloat(row[7]) || null;
     if (!trigPrice || trigPrice <= 0 || trigPrice > 1e9) continue;
-
-    // Sanity check: trigger price should look like a real price, not lots
-    // Lots are usually < 100, real prices for FX/metals/indices are > 0.5
-    // This check filters out market orders where row[7] = lots value
     if (trigPrice < 0.0001) continue;
-
     if (!pendingMap[instrId]) pendingMap[instrId] = [];
 
     if (orderType === 'stop' || orderType === 'stoplimit') {
@@ -1151,11 +998,7 @@ function enrichWithSLTP(journalTrades, rawOrders) {
     if (!jt.entry || !jt.time) continue;
     const instrId = Object.keys(tlInstrumentMap).find(k => tlInstrumentMap[k] === jt.pair);
     if (!instrId) continue;
-
-    const candidates = (pendingMap[instrId] || []).filter(c =>
-      (!c.ts || c.ts >= jt.time)
-    );
-
+    const candidates = (pendingMap[instrId] || []).filter(c => (!c.ts || c.ts >= jt.time));
     for (const c of candidates) {
       if (c.type === 'sl' && !jt.sl) {
         const valid = jt.dir === 'long' ? c.price < jt.entry : c.price > jt.entry;
@@ -1249,7 +1092,8 @@ function hideTLForm() {
 }
 function disconnectTL() {
   if (!confirm('Disconnect TradeLocker? Your existing imported trades remain.')) return;
-  tlCreds = null; tlToken = null; tlDiscoveredAccounts = []; tlInstrumentMap = {};
+  tlCreds = null; tlToken = null;
+  tlDiscoveredAccounts = []; tlInstrumentMap = {};
   ['tlCreds','tlLastSync','tlInstrumentMap','tlDiscoveredAccounts'].forEach(k => localStorage.removeItem(k));
   renderTLDisconnected();
   showToast('TradeLocker disconnected');
@@ -1281,7 +1125,8 @@ async function connectTL() {
   } catch(e) {
     setConnMsg('✗ ' + e.message, true);
   } finally {
-    btn.disabled = false; btn.textContent = 'Connect & sync';
+    btn.disabled = false;
+    btn.textContent = 'Connect & sync';
   }
 }
 function setConnMsg(msg, isErr) {
@@ -1297,14 +1142,12 @@ async function runTLSync() {
   if (tlIsSyncing) { showToast('Sync already running…'); return; }
   if (!tlCreds)    { showToast('Not connected to TradeLocker'); return; }
   tlIsSyncing = true;
-
   document.getElementById('tl-results-card').style.display = 'block';
   document.getElementById('sync-log').innerHTML = '';
   document.getElementById('tl-counts').textContent = '';
   setProgress(0);
 
   let imported = 0, updated = 0, errors = 0;
-
   try {
     addLog('ok', 'Authenticating…');
     setProgress(5);
@@ -1324,10 +1167,8 @@ async function runTLSync() {
       const accNum  = String(acct.accNum || acct.id);
       const acctLabel = getAcctLabel(accNum);
       const base    = 15 + (ai / total) * 75;
-
       addLog('ok', '─── Account ' + accNum + ' → "' + acctLabel + '" ───');
       setProgress(base + 5);
-
       await tlLoadInstruments(accId, accNum);
       setProgress(base + 15);
 
@@ -1340,11 +1181,6 @@ async function runTLSync() {
         else if (Array.isArray(res))    rawOrders = res;
         else if (res?.data)             rawOrders = res.data;
         addLog('ok', 'Got ' + rawOrders.length + ' raw order rows');
-
-        // Diagnostic: show first row
-        if (rawOrders.length > 0 && Array.isArray(rawOrders[0])) {
-          addLog('diag', 'First row: ' + rawOrders[0].map((v, i) => '[' + i + ']=' + JSON.stringify(v)).join(' '));
-        }
       } catch(e) {
         addLog('err', 'Order history failed: ' + e.message);
         errors++;
@@ -1356,14 +1192,13 @@ async function runTLSync() {
       enrichWithSLTP(journalTrades, rawOrders);
       addLog('ok', 'Built ' + journalTrades.length + ' trades from ' + rawOrders.length + ' legs');
       setProgress(base + 50);
-
       for (const jt of journalTrades) {
         const existing = trades.find(t => t.tlId && String(t.tlId) === String(jt.tlId));
         if (existing) {
-          // Merge: preserve user-added notes, grade, images, etc.
           const merged = {
             ...jt,
             id:          existing.id,
+            commission:  jt.commission !== 0 ? jt.commission : (existing.commission || 0), // Favor new fees
             reason:      existing.reason      || '',
             well:        existing.well        || '',
             improve:     existing.improve     || '',
@@ -1380,13 +1215,6 @@ async function runTLSync() {
           const ok = await upsertTrade(merged);
           if (ok) { const idx = trades.findIndex(t => t.tlId === String(jt.tlId)); if (idx !== -1) trades[idx] = merged; updated++; }
         } else {
-          addLog('ok', 'NEW: ' + jt.pair + ' ' + jt.dir.toUpperCase() +
-            ' | Entry:' + jt.entry +
-            (jt.exit ? ' Exit:' + jt.exit : '') +
-            ' PNL:' + (jt.pnl !== null ? '$' + jt.pnl : '?') +
-            ' (' + jt.status + ')' +
-            (jt.sl ? ' SL:' + jt.sl : '') +
-            (jt.tp ? ' TP:' + jt.tp : ''));
           const ok = await upsertTrade(jt);
           if (ok) { trades.unshift(jt); imported++; }
           else    { addLog('err', 'Save failed: ' + jt.pair + ' posId=' + jt.tlId); errors++; }
@@ -1408,12 +1236,10 @@ async function runTLSync() {
     const lsEl = document.getElementById('tl-last-sync-label');
     if (lsEl) lsEl.textContent = 'Last sync: ' + new Date(now).toLocaleString();
     setProgress(100);
-
     const summary = imported + ' new · ' + updated + ' updated' + (errors ? ' · ' + errors + ' errors' : '');
     document.getElementById('tl-counts').textContent = summary;
     addLog('ok', '✅ Sync complete — ' + summary);
     showToast('✅ Synced! ' + imported + ' new, ' + updated + ' updated');
-
   } catch(e) {
     addLog('err', 'Sync failed: ' + e.message);
     console.error('TL sync error:', e);
@@ -1490,10 +1316,10 @@ async function deleteAllForAccount(accName) {
    ACCOUNTS
 ═══════════════════════════════════════════════════════ */
 function getSingleBalance(acc) {
-  const pnl = trades
+  const netPnl = trades
     .filter(t => t.account === acc && t.status !== 'open')
-    .reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0);
-  return (initialBalances[acc] || 0) + pnl;
+    .reduce((s, t) => s + (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0), 0);
+  return (initialBalances[acc] || 0) + netPnl;
 }
 function getBalance(a) {
   return a === 'All'
@@ -1525,15 +1351,13 @@ function renderAccountPills() {
   });
 }
 function populateAccountDatalist() {
-  document.getElementById('accts-dl').innerHTML =
-    knownAccounts.map(a => '<option value="' + a + '">').join('');
+  document.getElementById('accts-dl').innerHTML = knownAccounts.map(a => '<option value="' + a + '">').join('');
 }
 function populateLogAccountFilter() {
   const sel = document.getElementById('f-acct-log');
   if (!sel) return;
   const cur = sel.value;
-  sel.innerHTML = '<option value="">All accounts</option>' +
-    knownAccounts.map(a => '<option value="' + a + '">' + a + '</option>').join('');
+  sel.innerHTML = '<option value="">All accounts</option>' + knownAccounts.map(a => '<option value="' + a + '">' + a + '</option>').join('');
   sel.value = cur;
 }
 function setCurrentAccount(val) {
@@ -1562,8 +1386,8 @@ function renderDDBanner() {
   const ddPct = ((init - cur) / init) * 100;
   if      (ddPct >= ddL)        b.innerHTML = '<div class="dd-banner dd-warn">⚠️ <strong>DRAWDOWN LIMIT BREACHED</strong> — ' + ddPct.toFixed(2) + '% of ' + ddL + '% limit. Stop trading.</div>';
   else if (ddPct >= ddL * 0.7)  b.innerHTML = '<div class="dd-banner dd-caution">⚠️ Drawdown warning: ' + ddPct.toFixed(2) + '% of ' + ddL + '% limit.</div>';
-  else if (ddPct > 0)            b.innerHTML = '<div class="dd-banner dd-ok-banner">🟢 Drawdown: ' + ddPct.toFixed(2) + '% / ' + ddL + '%. On track.</div>';
-  else                           b.innerHTML = '';
+  else if (ddPct > 0)           b.innerHTML = '<div class="dd-banner dd-ok-banner">🟢 Drawdown: ' + ddPct.toFixed(2) + '% / ' + ddL + '%. On track.</div>';
+  else                          b.innerHTML = '';
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1577,7 +1401,6 @@ function showPage(p) {
   const navItems = document.querySelectorAll('.nav-item');
   if (p === 'tl-sync') document.getElementById('tl-nav-btn').classList.add('active');
   else if (navMap[p] !== undefined) navItems[navMap[p]].classList.add('active');
-
   if (p === 'tl-sync')    { if (tlCreds) renderTLConnected(); else renderTLDisconnected(); }
   if (p === 'dashboard')  renderDashboard();
   if (p === 'log')        { populateFilterPairs(); renderLog(); }
@@ -1609,30 +1432,45 @@ function renderDashboard() {
   const c = f.filter(t => t.status !== 'open');
   const w = c.filter(t => t.status === 'win');
   const l = c.filter(t => t.status === 'loss');
+  
+  // NET PNL CALCULATIONS
   const tp = c.reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0);
+  const tc = c.reduce((s, t) => s + (parseFloat(t.commission) || 0), 0);
+  const net = tp + tc;
+
   const wr = c.length ? w.length / c.length : 0;
-  const aw = w.length ? w.reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0) / w.length : 0;
-  const al = l.length ? l.reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0) / l.length : 0;
+  const aw = w.length ? w.reduce((s, t) => s + ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0)), 0) / w.length : 0;
+  const al = l.length ? l.reduce((s, t) => s + ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0)), 0) / l.length : 0;
   const pf = al < 0 ? (aw / Math.abs(al)).toFixed(2) : '∞';
   const cb = getBalance(currentAccount);
 
+  // HIGH WATER MARK CALCULATION
+  let hwm = initialBalances[currentAccount] || (currentAccount === 'All' ? knownAccounts.reduce((s, x) => s + (initialBalances[x]||0), 0) : 0);
+  let runningBal = hwm;
+  const sortedClosed = [...c].sort((a, b) => (a.time||'').localeCompare(b.time||''));
+  sortedClosed.forEach(t => {
+      runningBal += (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0);
+      if (runningBal > hwm) hwm = runningBal;
+  });
+
   document.getElementById('dash-stats').innerHTML =
-    sc('Balance', '$' + cb.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','), cb >= 0 ? 'pos' : 'neg', knownAccounts.length > 1 ? 'Combined' : '') +
-    sc('Total PNL', fmt(tp), tp >= 0 ? 'pos' : 'neg', c.length + ' closed trades') +
+    sc('Balance', '$' + cb.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','), cb >= 0 ? 'pos' : 'neg', 'HWM: $' + hwm.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')) +
+    sc('Net PNL', fmt(net), net >= 0 ? 'pos' : 'neg', 'Gross: ' + fmt(tp) + ' | Fees: ' + fmt(tc)) +
     sc('Win Rate', fmtPct(wr), '', w.length + 'W / ' + l.length + 'L') +
     sc('Profit Factor', pf) +
     sc('Avg Win', aw ? fmt(aw) : '--', 'pos') +
     sc('Avg Loss', al ? fmt(al) : '--', 'neg') +
     sc('Total Trades', f.length, '', c.length + ' closed · ' + f.filter(t=>t.status==='open').length + ' open');
 
-  document.getElementById('recent-list').innerHTML = f.slice(0, 6).map(t =>
-    '<div onclick="openDetail(' + t.id + ')" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px">' +
+  document.getElementById('recent-list').innerHTML = f.slice(0, 6).map(t => {
+    const tNet = (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0);
+    return '<div onclick="openDetail(' + t.id + ')" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px">' +
     '<span style="font-weight:600;min-width:70px">' + (t.pair || '--') + '</span>' +
     '<span class="badge badge-' + t.dir + '">' + t.dir + '</span>' +
     (t.source === 'tradelocker' ? '<span class="badge badge-tl">TL</span>' : '') +
-    '<span class="' + pnlCls(t.pnl) + '" style="margin-left:auto;font-family:var(--mono);font-size:12.5px">' + fmt(t.pnl) + '</span>' +
-    '<span style="font-size:11px;color:var(--text3);min-width:72px;text-align:right">' + dateStr(t.time) + '</span></div>'
-  ).join('') || '<div class="empty"><b>No trades yet</b></div>';
+    '<span class="' + pnlCls(tNet) + '" style="margin-left:auto;font-family:var(--mono);font-size:12.5px">' + fmt(tNet) + '</span>' +
+    '<span style="font-size:11px;color:var(--text3);min-width:72px;text-align:right">' + dateStr(t.time) + '</span></div>';
+  }).join('') || '<div class="empty"><b>No trades yet</b></div>';
 
   renderTopPairs('top-pairs');
 }
@@ -1650,7 +1488,7 @@ function renderTopPairs(elId) {
     if (!pm[p]) pm[p] = { wins: 0, total: 0, pnl: 0 };
     pm[p].total++;
     if (t.status === 'win') pm[p].wins++;
-    pm[p].pnl += (parseFloat(t.pnl) || 0);
+    pm[p].pnl += ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0));
   });
   const pairs = Object.entries(pm).sort((a, b) => (b[1].wins / b[1].total) - (a[1].wins / a[1].total)).slice(0, 7);
   document.getElementById(elId).innerHTML = pairs.length ? pairs.map(([pair, d]) => {
@@ -1689,9 +1527,9 @@ function renderLog() {
     (!fa   || t.account === fa) &&
     (!fsrc || (fsrc === 'auto' ? t.source === 'tradelocker' : t.source !== 'tradelocker'))
   );
-
-  document.getElementById('log-list').innerHTML = list.length ? list.map(t =>
-    '<tr onclick="openDetail(' + t.id + ')">' +
+  document.getElementById('log-list').innerHTML = list.length ? list.map(t => {
+    const net = (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0);
+    return '<tr onclick="openDetail(' + t.id + ')">' +
     '<td class="mono" style="color:var(--text2)">' + dateStr(t.time) + '</td>' +
     '<td style="font-weight:600">' + (t.pair || '--') + '</td>' +
     '<td style="color:var(--text3);font-size:12px">' + (t.account || '--') + '</td>' +
@@ -1700,7 +1538,7 @@ function renderLog() {
     '<td class="mono" style="color:var(--text2)">' + (t.exit || '--') + '</td>' +
     '<td class="mono" style="color:var(--text3);font-size:11.5px">' + (t.sl || '--') + ' / ' + (t.tp || '--') + '</td>' +
     '<td class="mono" style="color:var(--text2)">' + (t.size ? t.size + 'L' : '--') + '</td>' +
-    '<td class="mono ' + pnlCls(t.pnl) + '">' + fmt(t.pnl) + '</td>' +
+    '<td class="mono ' + pnlCls(net) + '">' + fmt(net) + '</td>' +
     '<td style="display:flex;align-items:center;gap:4px;padding-top:10px">' +
       '<span class="badge badge-' + (t.status === 'breakeven' ? 'be' : t.status) + '">' + t.status + '</span>' +
       (t.source === 'tradelocker' ? '<span class="badge badge-tl">TL</span>' : '') +
@@ -1708,8 +1546,8 @@ function renderLog() {
     '<td onclick="event.stopPropagation()" style="display:flex;gap:5px;padding-top:6px">' +
       '<button class="btn btn-edit" style="padding:4px 9px;font-size:11px" onclick="editTrade(' + t.id + ')">Edit</button>' +
       '<button class="btn btn-danger" style="padding:4px 9px;font-size:11px" onclick="deleteTrade(' + t.id + ')">Del</button>' +
-    '</td></tr>'
-  ).join('') : '<tr><td colspan="11"><div class="empty"><b>No trades found</b><p style="margin-top:6px">Add a trade or adjust filters</p></div></td></tr>';
+    '</td></tr>';
+  }).join('') : '<tr><td colspan="11"><div class="empty"><b>No trades found</b><p style="margin-top:6px">Add a trade or adjust filters</p></div></td></tr>';
 }
 
 async function deleteTrade(id) {
@@ -1725,12 +1563,13 @@ function openDetail(id) {
   const t = trades.find(x => x.id == id);
   if (!t) return;
 
+  const netPnl = (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0);
+
   let html = '<div class="modal-header">' +
     '<div><div class="modal-title">' + (t.pair || '--') + ' — ' + (t.dir || '').toUpperCase() +
     (t.source === 'tradelocker' ? ' <span class="badge badge-tl" style="vertical-align:middle">TL Auto</span>' : '') +
     '</div><div style="font-size:12px;color:var(--text3);margin-top:3px">' + (t.account || '') + ' · ' + dateStr(t.time) + '</div></div>' +
     '<button class="close-btn" onclick="document.getElementById(\'detail-modal\').style.display=\'none\'">✕</button></div>';
-
   html += '<div class="detail-grid">';
   [
     ['Entry',        t.entry || '--'],
@@ -1739,7 +1578,9 @@ function openDetail(id) {
     ['Take profit',  t.tp    || '--'],
     ['R:R',          t.rr ? '1:' + t.rr : '--'],
     ['Size',         t.size ? t.size + ' lots' : '--'],
-    ['PNL',          '<span class="' + pnlCls(t.pnl) + '" style="font-size:15px">' + fmt(t.pnl) + '</span>'],
+    ['Gross PNL',    t.pnl ? fmt(t.pnl) : '--'],
+    ['Commissions',  t.commission ? fmt(t.commission) : '--'],
+    ['Net PNL',      '<span class="' + pnlCls(netPnl) + '" style="font-size:15px;font-weight:600">' + fmt(netPnl) + '</span>'],
     ['Status',       t.status || '--'],
     ['Session',      t.session || '--'],
     ['Grade',        t.grade  || '--'],
@@ -1761,11 +1602,9 @@ function openDetail(id) {
   html += '<div style="display:flex;gap:20px;font-size:13px;margin-bottom:12px">' +
     '<span>😌 Emotion: <strong>' + (t.emotion || '--') + '/10</strong></span>' +
     '<span>🎯 Confidence: <strong>' + (t.confidence || '--') + '/10</strong></span></div>';
-
   if (t.tags) html += '<div style="margin-bottom:12px">' + t.tags.split(',').map(g =>
     '<span style="display:inline-block;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:2px 9px;font-size:11.5px;color:var(--text2);margin:2px">' + g.trim() + '</span>'
   ).join('') + '</div>';
-
   if (t.images && t.images.length) {
     html += '<div style="margin-bottom:14px"><div style="font-size:10.5px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Screenshots (' + t.images.length + ')</div>' +
       '<div style="display:flex;flex-wrap:wrap;gap:8px">' +
@@ -1776,7 +1615,6 @@ function openDetail(id) {
   html += '<div style="display:flex;gap:8px">' +
     '<button class="btn btn-edit btn-sm" onclick="document.getElementById(\'detail-modal\').style.display=\'none\';editTrade(' + t.id + ')">Edit trade</button>' +
     '<button class="btn btn-danger btn-sm" onclick="document.getElementById(\'detail-modal\').style.display=\'none\';deleteTrade(' + t.id + ')">Delete</button></div>';
-
   document.getElementById('detail-box').innerHTML = html;
   document.getElementById('detail-modal').style.display = 'flex';
 }
@@ -1794,10 +1632,14 @@ function renderAnalytics() {
   const c = f.filter(t => t.status !== 'open');
   const w = c.filter(t => t.status === 'win');
   const l = c.filter(t => t.status === 'loss');
+  
   const tp = c.reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0);
+  const tc = c.reduce((s, t) => s + (parseFloat(t.commission) || 0), 0);
+  const net = tp + tc;
+
   const wr = c.length ? w.length / c.length : 0;
-  const aw = w.length ? w.reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0) / w.length : 0;
-  const al = l.length ? Math.abs(l.reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0) / l.length) : 0;
+  const aw = w.length ? w.reduce((s, t) => s + ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0)), 0) / w.length : 0;
+  const al = l.length ? Math.abs(l.reduce((s, t) => s + ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0)), 0) / l.length) : 0;
   const pf = al > 0 ? (aw / al).toFixed(2) : '∞';
   const rrArr = c.filter(t => t.rr);
   const avgRR = rrArr.length ? rrArr.reduce((s, t) => s + parseFloat(t.rr), 0) / rrArr.length : 0;
@@ -1807,13 +1649,13 @@ function renderAnalytics() {
 
   document.getElementById('ana-stats').innerHTML =
     sc('Balance', '$' + cb.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','), cb >= 0 ? 'pos' : 'neg') +
-    sc('Total PNL', fmt(tp), tp >= 0 ? 'pos' : 'neg') +
+    sc('Net PNL', fmt(net), net >= 0 ? 'pos' : 'neg') +
     sc('Win Rate', c.length ? fmtPct(wr) : '--') +
     sc('Profit Factor', pf) +
     sc('Avg R:R', avgRR ? '1:' + avgRR.toFixed(2) : '--') +
     sc('Current Streak', sk.count ? sk.count + ' ' + sk.type : '--', sk.type === 'win' ? 'pos' : sk.type === 'loss' ? 'neg' : '') +
     sc('Avg Emotion', avgEmo + '/10');
-
+  
   renderTopPairs('pair-perf');
 
   const sess = {};
@@ -1822,8 +1664,9 @@ function renderAnalytics() {
     if (!sess[s]) sess[s] = { wins: 0, total: 0, pnl: 0 };
     sess[s].total++;
     if (t.status === 'win') sess[s].wins++;
-    sess[s].pnl += (parseFloat(t.pnl) || 0);
+    sess[s].pnl += ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0));
   });
+
   document.getElementById('session-perf').innerHTML = Object.entries(sess).length
     ? Object.entries(sess).map(([s, d]) => {
         const wr = d.wins / d.total;
@@ -1852,8 +1695,9 @@ function renderPnlChart(closed) {
   if (pnlChart) { pnlChart.destroy(); pnlChart = null; }
   const sorted = [...closed].sort((a, b) => (a.time||'').localeCompare(b.time||''));
   let cum = 0;
-  const data = sorted.map(t => { cum += (parseFloat(t.pnl) || 0); return parseFloat(cum.toFixed(2)); });
+  const data = sorted.map(t => { cum += ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0)); return parseFloat(cum.toFixed(2)); });
   if (!data.length) return;
+
   const ctx = document.getElementById('pnl-chart').getContext('2d');
   const lc = data[data.length-1] >= 0 ? '#22c87a' : '#f04a5a';
   Chart.defaults.color = '#555a66';
@@ -1908,12 +1752,15 @@ function editTrade(id) {
   editingId = id;
   document.getElementById('add-page-title').textContent = 'Edit Trade';
   document.getElementById('save-btn').textContent = 'Update trade';
+
   const f = (k, v) => { const el = document.getElementById(k); if (el) el.value = v || ''; };
+
   f('fp', t.pair); f('fa', t.account); f('fd', t.dir || 'long'); f('fss', t.session);
   f('fen', t.entry); f('fsl', t.sl); f('ftp', t.tp); f('ftm', t.time);
   f('fsz', t.size); f('frk', t.risk); f('frs', t.reason); f('ftf', t.tf);
-  f('ftg', t.tags); f('fex', t.exit); f('fpn', t.pnl); f('fst', t.status || 'open');
-  f('fel', t.early || 'no'); f('fer', t.earlyReason); f('fwl', t.well); f('fim', t.improve); f('fgr', t.grade);
+  f('ftg', t.tags); f('fex', t.exit); f('fpn', t.pnl); f('fcom', t.commission); 
+  f('fst', t.status || 'open'); f('fel', t.early || 'no');
+  f('fer', t.earlyReason); f('fwl', t.well); f('fim', t.improve); f('fgr', t.grade);
   document.getElementById('femo').value = t.emotion || 7; document.getElementById('emo-out').textContent = t.emotion || 7;
   document.getElementById('fcnf').value = t.confidence || 7; document.getElementById('cnf-out').textContent = t.confidence || 7;
   tempImages = t.images ? [...t.images] : [];
@@ -1925,6 +1772,7 @@ async function saveTrade() {
   const pair  = document.getElementById('fp').value.trim().toUpperCase();
   const acct  = document.getElementById('fa').value.trim();
   const entry = parseFloat(document.getElementById('fen').value);
+
   if (!pair || isNaN(entry) || !acct) { alert('Pair, Account and Entry price are required.'); return; }
 
   const sl = parseFloat(document.getElementById('fsl').value) || null;
@@ -1938,6 +1786,7 @@ async function saveTrade() {
     dir:         document.getElementById('fd').value,
     exit:        parseFloat(document.getElementById('fex').value) || null,
     pnl:         parseFloat(document.getElementById('fpn').value) || null,
+    commission:  parseFloat(document.getElementById('fcom').value) || 0,
     status:      document.getElementById('fst').value,
     session:     document.getElementById('fss').value,
     time:        document.getElementById('ftm').value || new Date().toISOString().slice(0,16),
@@ -1966,7 +1815,8 @@ async function saveTrade() {
     if (editingId) { const idx = trades.findIndex(t => t.id === editingId); if (idx !== -1) trades[idx] = trade; }
     else trades.unshift(trade);
     extractAndSaveAccounts();
-    const msg = document.getElementById('save-msg'); msg.style.display = 'inline';
+    const msg = document.getElementById('save-msg');
+    msg.style.display = 'inline';
     setTimeout(() => msg.style.display = 'none', 3000);
     clearForm();
     renderDashboard(); renderLog(); renderAnalytics();
@@ -1977,7 +1827,7 @@ function clearForm() {
   editingId = null;
   document.getElementById('add-page-title').textContent = 'New Trade';
   document.getElementById('save-btn').textContent = 'Save trade';
-  ['fp','fa','fen','fsl','ftp','fex','fpn','frs','ftf','ftg','fer','fwl','fim','fsz','frk'].forEach(id => {
+  ['fp','fa','fen','fsl','ftp','fex','fpn','fcom','frs','ftf','ftg','fer','fwl','fim','fsz','frk'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('fd').value  = 'long';
