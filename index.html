@@ -971,38 +971,66 @@ function getAcctLabel(accNum) {
    was inverting every trade.
 ═══════════════════════════════════════════════════════ */
 function processOrderLegs(rawOrders, acctLabel) {
-  // Step 1: Parse all filled orders
+  /* ══════════════════════════════════════════════════════════════
+     HOW TRADELOCKER ORDERSHISTORY WORKS (Alpha-LIVE confirmed)
+     ──────────────────────────────────────────────────────────────
+     Each position generates exactly 2 filled market orders:
+       • Opener leg: the BUY or SELL that opened the position
+       • Closer leg: the opposite side that closed it
+
+     Both legs share the SAME posGroupId (row[16]).
+     The API returns rows newest-first (closer before opener).
+
+     CRITICAL: row[12] = null on EVERY row for this broker.
+               row[7]  = lot size on market orders (NOT a price).
+
+     IDENTIFICATION STRATEGY:
+     Within each posGroupId group, sort by raw ms timestamp ASC.
+     The leg with the SMALLER timestamp = opener.
+     The leg with the LARGER  timestamp = closer.
+     A group with only 1 leg = still-open position.
+
+     DIRECTION: comes from opener.side
+       opener "buy"  → LONG trade  (closer will be "sell")
+       opener "sell" → SHORT trade (closer will be "buy")
+  ══════════════════════════════════════════════════════════════ */
+
+  // Step 1: Parse all filled orders, keep raw ms timestamp for sorting
   const filled = [];
   for (const row of rawOrders) {
     if (!Array.isArray(row)) continue;
 
-    const orderId   = String(row[0] || '').trim();
-    const instrId   = String(row[1] || '').trim();
-    const lots      = parseFloat(row[3]) || null;
-    const side      = String(row[4] || '').toLowerCase().trim();
-    const orderType = String(row[5] || '').toLowerCase().trim();
-    const status    = String(row[6] || '').toLowerCase().trim();
-    // row[7]: on market orders = lots (not a price!), on stop/limit = trigger price
-    const fillPrice = parseFloat(row[8]) || null;
-    // row[12] is always null on Alpha — skip entirely
-    const ts        = parseTS(row[13]);
-    const posGroupId = String(row[16] || '').trim(); // ← THE KEY
+    const orderId    = String(row[0] || '').trim();
+    const instrId    = String(row[1] || '').trim();
+    const lots       = parseFloat(row[3]) || null;
+    const side       = String(row[4] || '').toLowerCase().trim();
+    const orderType  = String(row[5] || '').toLowerCase().trim();
+    const status     = String(row[6] || '').toLowerCase().trim();
+    // row[7] on market orders = lots (NOT a price) — ignore for entry/exit
+    // row[8] = actual fill price — USE THIS
+    const fillPrice  = parseFloat(row[8]) || null;
+    // row[12] = always null on Alpha — do not use
+    const tsRaw      = row[13];                          // keep as number for numeric sort
+    const tsMs       = typeof tsRaw === 'string' ? parseInt(tsRaw) : (tsRaw || 0);
+    const tsISO      = parseTS(tsRaw);                   // ISO string for storage
+    const posGroupId = String(row[16] || '').trim();     // ← shared key between open+close legs
 
     if (status !== 'filled') continue;
     if (!fillPrice || fillPrice <= 0 || fillPrice > 1e9) continue;
     if (side !== 'buy' && side !== 'sell') continue;
-    if (!posGroupId || posGroupId === '0' || posGroupId === 'false' || posGroupId === '') continue;
+    // posGroupId must be a real 19-digit order ID, not '0', 'false', or empty
+    if (!posGroupId || posGroupId === '0' || posGroupId === 'false') continue;
 
     const pair = instrId
       ? (tlInstrumentMap[instrId] || (/^\d+$/.test(instrId) ? null : normPair(instrId)))
       : null;
 
-    filled.push({ orderId, instrId, posGroupId, pair, lots, side, orderType, fillPrice, ts });
+    filled.push({ orderId, instrId, posGroupId, pair, lots, side, orderType, fillPrice, tsMs, tsISO });
   }
 
   addLog('ok', 'Filled legs: ' + filled.length + ' of ' + rawOrders.length);
 
-  // Step 2: Group by position group ID
+  // Step 2: Group by posGroupId
   const groups = {};
   for (const leg of filled) {
     if (!groups[leg.posGroupId]) groups[leg.posGroupId] = [];
@@ -1012,33 +1040,47 @@ function processOrderLegs(rawOrders, acctLabel) {
   const groupList = Object.entries(groups);
   addLog('ok', 'Position groups: ' + groupList.length);
 
-  // Step 3: Build journal trades from each group
+  // Diagnostic: dump all groups so we can verify
+  for (const [pgId, legs] of groupList) {
+    addLog('diag', 'Group ' + pgId.slice(-8) + ': ' + legs.length + ' legs → ' +
+      legs.map(l => l.side + '@' + l.fillPrice + ' ts=' + l.tsMs).join(' | '));
+  }
+
+  // Step 3: Build journal trades
   const result = [];
 
   for (const [posGroupId, legs] of groupList) {
-    // Sort oldest first
-    legs.sort((a, b) => (a.ts || '').localeCompare(b.ts || ''));
+    // Sort by raw millisecond timestamp ASCENDING (oldest = opener)
+    legs.sort((a, b) => a.tsMs - b.tsMs);
 
-    const opener = legs[0];
-    const closer = legs.length > 1 ? legs[legs.length - 1] : null;
+    const opener  = legs[0];
+    const closer  = legs.length > 1 ? legs[legs.length - 1] : null;
+    const isOpen  = !closer;
 
-    // Direction = opener's side
+    // Direction from opener's side (not closer's — closer is always opposite)
     const dir = opener.side === 'buy' ? 'long' : 'short';
 
     let pair = opener.pair;
     if (!pair && closer) pair = closer.pair;
     if (!pair) {
-      addLog('skip', 'No pair resolved for posGroup ' + posGroupId);
+      addLog('skip', 'No pair for group ' + posGroupId.slice(-8) + ' instrId=' + opener.instrId);
       continue;
     }
 
-    const entry = opener.fillPrice;
-    const exit  = closer ? closer.fillPrice : null;
+    const entry = opener.fillPrice;   // opener fill = entry price
+    const exit  = closer ? closer.fillPrice : null;  // closer fill = exit price
     const size  = opener.lots;
-    const time  = opener.ts;
-    const isOpen = !closer;
+    const time  = opener.tsISO;
 
-    // PNL: always calculate since API returns null
+    // Validate: for a LONG, exit should be above entry for a win (just a sanity log)
+    if (!isOpen && exit !== null) {
+      const expectedWin = dir === 'long' ? exit > entry : exit < entry;
+      addLog('diag', pair + ' ' + dir.toUpperCase() +
+        ' open@' + entry + ' close@' + exit +
+        (expectedWin ? ' → profit direction ✓' : ' → loss direction'));
+    }
+
+    // Always calculate PNL from prices (row[12] is null on this broker)
     const pnl = isOpen ? null : calcPNL(pair, dir, entry, exit, size);
 
     let status = 'open';
@@ -1048,14 +1090,13 @@ function processOrderLegs(rawOrders, acctLabel) {
       else                                  status = 'breakeven';
     }
 
-    // Log multi-leg groups (partial fills, etc.)
     if (legs.length > 2) {
-      addLog('info', 'Multi-leg group (' + legs.length + ' legs): ' + pair + ' posId=' + posGroupId.slice(-8));
+      addLog('info', 'Multi-leg (' + legs.length + '): ' + pair + ' — using first opener, last closer');
     }
 
     result.push({
       id:          Date.now() + (Math.random() * 999999 | 0),
-      tlId:        posGroupId,          // use position group ID for deduplication
+      tlId:        posGroupId,
       account:     acctLabel,
       pair, dir, entry, exit,
       sl: null, tp: null, rr: null,
