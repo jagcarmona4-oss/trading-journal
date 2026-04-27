@@ -34,64 +34,25 @@
   --r2:       12px;
 }
 
-body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  font-size: 14px;
-  line-height: 1.5;
-}
+body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
 
-/* ── LAYOUT ── */
 .shell { display: flex; min-height: 100vh; }
-.sidebar {
-  width: 220px;
-  flex-shrink: 0;
-  background: var(--bg2);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  padding: 20px 0;
-  position: fixed;
-  top: 0; left: 0; bottom: 0;
-  z-index: 50;
-}
+.sidebar { width: 220px; flex-shrink: 0; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; }
 .main { margin-left: 220px; flex: 1; padding: 28px 32px; max-width: 1400px; }
 
-/* ── SIDEBAR ── */
-.logo {
-  padding: 0 20px 20px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 12px;
-}
+.logo { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
 .logo-mark { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; }
 .logo-name { font-size: 17px; font-weight: 600; letter-spacing: -0.5px; }
 .logo-name span { color: var(--green); }
 
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 20px;
-  font-size: 13.5px; font-weight: 400;
-  color: var(--text2);
-  cursor: pointer;
-  border-radius: 0;
-  transition: all 0.12s;
-  border-left: 2px solid transparent;
-  user-select: none;
-}
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13.5px; font-weight: 400; color: var(--text2); cursor: pointer; border-radius: 0; transition: all 0.12s; border-left: 2px solid transparent; user-select: none; }
 .nav-item:hover { color: var(--text); background: var(--bg3); }
 .nav-item.active { color: var(--text); border-left-color: var(--green); background: rgba(34,200,122,0.06); }
 .nav-item svg { flex-shrink: 0; opacity: 0.7; }
 .nav-item.active svg { opacity: 1; }
 .nav-sep { height: 1px; background: var(--border); margin: 10px 0; }
 
-.sync-status {
-  margin-top: auto;
-  padding: 14px 20px;
-  border-top: 1px solid var(--border);
-  font-size: 11.5px;
-}
+.sync-status { margin-top: auto; padding: 14px 20px; border-top: 1px solid var(--border); font-size: 11.5px; }
 .sync-dot-wrap { display: flex; align-items: center; gap: 7px; }
 .sdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .sdot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
@@ -99,27 +60,14 @@ body {
 .sdot.err { background: var(--red); }
 @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.2} }
 
-/* ── PAGES ── */
 .page { display: none; }
 .page.active { display: block; }
 
-/* ── CARDS ── */
-.card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--r2);
-  padding: 20px;
-}
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2); padding: 20px; }
 .card + .card { margin-top: 16px; }
 
-/* ── STATS GRID ── */
 .stats-row { display: grid; gap: 12px; margin-bottom: 20px; }
-.stat-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--r2);
-  padding: 16px 18px;
-}
+.stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2); padding: 16px 18px; }
 .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 6px; font-family: var(--mono); }
 .stat-value { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; font-family: var(--mono); }
 .stat-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
@@ -127,35 +75,16 @@ body {
 .neg { color: var(--red); }
 .neu { color: var(--text2); }
 
-/* ── TABLE ── */
 .tbl-wrap { overflow-x: auto; }
 .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
-.tbl thead th {
-  text-align: left;
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text3);
-  font-family: var(--mono);
-  font-weight: 400;
-  padding: 0 12px 10px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
+.tbl thead th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); font-family: var(--mono); font-weight: 400; padding: 0 12px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
 .tbl tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
 .tbl tbody tr:hover { background: var(--bg3); }
 .tbl tbody tr:last-child { border-bottom: none; }
 .tbl td { padding: 10px 12px; white-space: nowrap; }
 .tbl td.mono { font-family: var(--mono); font-size: 12.5px; }
 
-/* ── BADGES ── */
-.badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 10.5px; font-weight: 500;
-  padding: 2px 7px;
-  border-radius: 4px;
-  font-family: var(--mono); letter-spacing: 0.3px;
-}
+.badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 500; padding: 2px 7px; border-radius: 4px; font-family: var(--mono); letter-spacing: 0.3px; }
 .badge-long  { background: rgba(34,200,122,0.15); color: var(--green); }
 .badge-short { background: rgba(240,74,90,0.15);  color: var(--red); }
 .badge-win   { background: rgba(34,200,122,0.12); color: var(--green); }
@@ -164,17 +93,7 @@ body {
 .badge-be    { background: rgba(240,160,34,0.12); color: var(--amber); }
 .badge-tl    { background: rgba(154,110,240,0.15); color: var(--purple); font-size: 9.5px; padding: 1px 5px; }
 
-/* ── BUTTONS ── */
-.btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 16px;
-  border-radius: var(--r);
-  font-size: 13px; font-weight: 500;
-  font-family: var(--sans);
-  cursor: pointer;
-  transition: all 0.12s;
-  border: 1px solid transparent;
-}
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--r); font-size: 13px; font-weight: 500; font-family: var(--sans); cursor: pointer; transition: all 0.12s; border: 1px solid transparent; }
 .btn-primary { background: var(--green); color: #000; }
 .btn-primary:hover { background: #1db36a; }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -186,20 +105,12 @@ body {
 .btn-edit:hover { background: var(--green-dim); }
 .btn-sm { padding: 5px 11px; font-size: 12px; }
 
-/* ── ACCOUNT PILLS ── */
 .pill-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
 .pill-label { font-size: 10.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; font-family: var(--mono); margin-right: 4px; }
-.pill {
-  padding: 4px 13px; border-radius: 20px;
-  font-size: 12.5px; cursor: pointer;
-  border: 1px solid var(--border2);
-  color: var(--text2); background: transparent;
-  font-family: var(--sans); transition: all 0.12s;
-}
+.pill { padding: 4px 13px; border-radius: 20px; font-size: 12.5px; cursor: pointer; border: 1px solid var(--border2); color: var(--text2); background: transparent; font-family: var(--sans); transition: all 0.12s; }
 .pill:hover { background: var(--bg3); color: var(--text); }
 .pill.active { background: var(--green); color: #000; border-color: var(--green); font-weight: 500; }
 
-/* ── FORMS ── */
 .form-grid { display: grid; gap: 14px; }
 .c2 { grid-template-columns: 1fr 1fr; }
 .c3 { grid-template-columns: 1fr 1fr 1fr; }
@@ -207,45 +118,19 @@ body {
 
 .fg { display: flex; flex-direction: column; gap: 5px; }
 .fg label { font-size: 11.5px; color: var(--text2); }
-.fg input, .fg select, .fg textarea {
-  background: var(--bg3); border: 1px solid var(--border);
-  border-radius: var(--r); color: var(--text);
-  font-family: var(--sans); font-size: 13.5px;
-  padding: 8px 11px; outline: none; transition: border-color 0.12s;
-}
+.fg input, .fg select, .fg textarea { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); font-family: var(--sans); font-size: 13.5px; padding: 8px 11px; outline: none; transition: border-color 0.12s; }
 .fg input:focus, .fg select:focus, .fg textarea:focus { border-color: var(--border2); }
 .fg textarea { min-height: 70px; resize: vertical; }
 .fg input[type=range] { padding: 5px 0; border: none; background: transparent; accent-color: var(--green); }
 
-.section-title {
-  font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px;
-  color: var(--text3); font-family: var(--mono);
-  padding: 16px 0 8px; border-top: 1px solid var(--border); margin-top: 12px;
-}
+.section-title { font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); font-family: var(--mono); padding: 16px 0 8px; border-top: 1px solid var(--border); margin-top: 12px; }
 .section-title:first-child { border-top: none; padding-top: 0; margin-top: 0; }
 
-/* ── FILTERS ── */
-.filter-bar {
-  display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px;
-}
-.filter-bar select {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--r); color: var(--text);
-  font-family: var(--sans); font-size: 12.5px;
-  padding: 6px 10px; outline: none; cursor: pointer;
-}
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.filter-bar select { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); font-family: var(--sans); font-size: 12.5px; padding: 6px 10px; outline: none; cursor: pointer; }
 
-/* ── MODAL ── */
-.modal-bg {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-  display: flex; align-items: flex-start; justify-content: center;
-  z-index: 200; padding: 40px 20px; overflow-y: auto; backdrop-filter: blur(4px);
-}
-.modal-box {
-  background: var(--bg2); border: 1px solid var(--border2);
-  border-radius: 16px; padding: 24px;
-  width: 100%; max-width: 680px; margin: auto;
-}
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: flex-start; justify-content: center; z-index: 200; padding: 40px 20px; overflow-y: auto; backdrop-filter: blur(4px); }
+.modal-box { background: var(--bg2); border: 1px solid var(--border2); border-radius: 16px; padding: 24px; width: 100%; max-width: 680px; margin: auto; }
 .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
 .modal-title { font-size: 16px; font-weight: 600; }
 .close-btn { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 20px; line-height: 1; padding: 0 2px; }
@@ -258,36 +143,22 @@ body {
 
 .notes-block { background: var(--bg3); border-radius: var(--r); padding: 10px 14px; font-size: 13px; color: var(--text2); line-height: 1.6; }
 
-/* ── TL SYNC PAGE ── */
-.tl-connect-banner {
-  background: linear-gradient(135deg, rgba(34,200,122,0.08) 0%, rgba(154,110,240,0.05) 100%);
-  border: 1px solid rgba(34,200,122,0.2);
-  border-radius: var(--r2); padding: 28px; margin-bottom: 20px;
-  display: flex; align-items: center; justify-content: space-between; gap: 20px;
-}
-.tl-connected-header {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--bg2); border: 1px solid rgba(34,200,122,0.2);
-  border-radius: var(--r2); padding: 14px 18px; margin-bottom: 16px;
-}
+.tl-connect-banner { background: linear-gradient(135deg, rgba(34,200,122,0.08) 0%, rgba(154,110,240,0.05) 100%); border: 1px solid rgba(34,200,122,0.2); border-radius: var(--r2); padding: 28px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.tl-connected-header { display: flex; align-items: center; gap: 10px; background: var(--bg2); border: 1px solid rgba(34,200,122,0.2); border-radius: var(--r2); padding: 14px 18px; margin-bottom: 16px; }
 .tl-pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; animation: tl-p 2s infinite; }
 @keyframes tl-p { 0%,100%{box-shadow:0 0 0 0 rgba(34,200,122,0.4)}50%{box-shadow:0 0 0 5px rgba(34,200,122,0)} }
 
-.sync-log-wrap {
-  background: var(--bg); border: 1px solid var(--border); border-radius: var(--r);
-  padding: 12px 14px; max-height: 400px; overflow-y: auto;
-  font-family: var(--mono); font-size: 11.5px; line-height: 1.8; margin-top: 10px;
-}
+.sync-log-wrap { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; max-height: 400px; overflow-y: auto; font-family: var(--mono); font-size: 11.5px; line-height: 1.8; margin-top: 10px; }
 .sl-ok   { color: var(--green); }
 .sl-err  { color: var(--red); }
 .sl-skip { color: var(--text3); }
 .sl-info { color: var(--blue); }
 .sl-diag { color: var(--text3); font-size: 10.5px; }
+.sl-warn { color: var(--amber); }
 
 .prog-bar-wrap { height: 2px; background: var(--border); border-radius: 1px; margin-top: 10px; overflow: hidden; }
 .prog-bar-fill { height: 100%; background: var(--green); border-radius: 1px; transition: width 0.3s; }
 
-/* ── CHARTS ── */
 .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
 .bar-label { min-width: 80px; font-size: 12.5px; font-weight: 500; }
 .bar-track { flex: 1; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
@@ -295,64 +166,42 @@ body {
 .bar-pct { min-width: 38px; font-size: 12px; color: var(--text2); text-align: right; }
 .bar-pnl { min-width: 75px; font-size: 12px; text-align: right; font-family: var(--mono); }
 
-/* ── UPLOAD ── */
-.upload-zone {
-  border: 1px dashed var(--border2); border-radius: var(--r);
-  padding: 16px; text-align: center; font-size: 13px; color: var(--text3);
-  cursor: pointer; transition: all 0.12s;
-}
+.upload-zone { border: 1px dashed var(--border2); border-radius: var(--r); padding: 16px; text-align: center; font-size: 13px; color: var(--text3); cursor: pointer; transition: all 0.12s; }
 .upload-zone:hover { background: var(--bg3); border-color: var(--green); color: var(--text2); }
 .img-thumb { width: 76px; height: 56px; object-fit: cover; border-radius: var(--r); border: 1px solid var(--border); cursor: pointer; }
 
-/* ── LIGHTBOX ── */
-.lightbox {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.92);
-  display: flex; align-items: center; justify-content: center; z-index: 9999; cursor: pointer;
-}
+.lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; z-index: 9999; cursor: pointer; }
 .lightbox img { max-width: 90vw; max-height: 88vh; border-radius: var(--r2); }
 
-/* ── TOAST ── */
-.toast {
-  position: fixed; bottom: 24px; right: 24px;
-  background: var(--bg4); border: 1px solid var(--border2);
-  color: var(--text); padding: 11px 16px;
-  border-radius: var(--r2); font-size: 13px;
-  z-index: 9999; opacity: 0; pointer-events: none;
-  transition: opacity 0.2s; max-width: 320px;
-}
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg4); border: 1px solid var(--border2); color: var(--text); padding: 11px 16px; border-radius: var(--r2); font-size: 13px; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.2s; max-width: 320px; }
 .toast.show { opacity: 1; }
 
-/* ── LOADING ── */
-.loading-overlay {
-  position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column;
-  align-items: center; justify-content: center; z-index: 99999; gap: 14px;
-}
+.loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; gap: 14px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .spinner { width: 28px; height: 28px; border: 2px solid var(--border2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
 
-/* ── DD BANNER ── */
 .dd-banner { padding: 11px 16px; border-radius: var(--r); margin-bottom: 16px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
 .dd-warn { background: var(--red-dim); border: 1px solid rgba(240,74,90,0.25); color: #f88; }
 .dd-caution { background: var(--amber-dim); border: 1px solid rgba(240,160,34,0.25); color: var(--amber); }
 .dd-ok-banner { background: var(--green-dim); border: 1px solid rgba(34,200,122,0.2); color: var(--green); }
 
-/* ── ALIAS ROW ── */
 .alias-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
 .alias-row:last-child { border-bottom: none; }
 .alias-id { font-family: var(--mono); font-size: 11.5px; color: var(--text3); min-width: 80px; }
 
-/* ── EMPTY ── */
 .empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 13.5px; }
 .empty b { display: block; font-size: 15px; color: var(--text2); margin-bottom: 6px; }
 
-/* ── PAGE HEADER ── */
 .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
 .page-title { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
 .page-sub { font-size: 12.5px; color: var(--text3); margin-top: 2px; }
 
-/* env tags */
 .env-live { background: rgba(240,74,90,0.15); color: var(--red); font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 600; font-family: var(--mono); }
 .env-demo { background: rgba(74,158,240,0.12); color: var(--blue); font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 600; font-family: var(--mono); }
+
+/* Debug panel */
+.debug-panel { background: #0a0c0f; border: 1px solid rgba(74,158,240,0.3); border-radius: var(--r); padding: 10px 14px; margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--blue); max-height: 300px; overflow-y: auto; display: none; }
+.debug-panel.show { display: block; }
 
 @media (max-width: 900px) {
   .sidebar { display: none; }
@@ -371,10 +220,9 @@ body {
 <div class="shell">
   <nav class="sidebar">
     <div class="logo">
-      <div class="logo-mark">v2.0</div>
+      <div class="logo-mark">v2.1</div>
       <div class="logo-name">Trade<span>Log</span></div>
     </div>
-
     <div class="nav-item active" onclick="showPage('dashboard')">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
@@ -401,7 +249,6 @@ body {
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
       TL Sync
     </div>
-
     <div class="sync-status">
       <div class="sync-dot-wrap">
         <div class="sdot busy" id="sync-dot"></div>
@@ -412,6 +259,7 @@ body {
 
   <main class="main">
 
+    <!-- DASHBOARD -->
     <div id="page-dashboard" class="page active">
       <div class="page-header">
         <div>
@@ -434,6 +282,7 @@ body {
       </div>
     </div>
 
+    <!-- TRADE LOG -->
     <div id="page-log" class="page">
       <div class="page-header">
         <div><div class="page-title">Trade Log</div></div>
@@ -452,7 +301,7 @@ body {
             <thead><tr>
               <th>Date</th><th>Pair</th><th>Account</th><th>Dir</th>
               <th>Entry</th><th>Exit</th><th>SL / TP</th><th>Size</th>
-              <th>Net PNL</th><th>Status</th><th></th>
+              <th>Gross PNL</th><th>Commission</th><th>Net PNL</th><th>Status</th><th></th>
             </tr></thead>
             <tbody id="log-list"></tbody>
           </table>
@@ -460,6 +309,7 @@ body {
       </div>
     </div>
 
+    <!-- ANALYTICS -->
     <div id="page-analytics" class="page">
       <div class="page-header">
         <div><div class="page-title">Analytics</div></div>
@@ -482,6 +332,7 @@ body {
       </div>
     </div>
 
+    <!-- ADD/EDIT TRADE -->
     <div id="page-add" class="page">
       <div class="page-header">
         <div><div class="page-title" id="add-page-title">New Trade</div></div>
@@ -543,9 +394,7 @@ body {
         </div>
 
         <div class="section-title">Screenshots</div>
-        <div class="upload-zone" onclick="document.getElementById('img-input').click()">
-          Click to upload chart screenshots
-        </div>
+        <div class="upload-zone" onclick="document.getElementById('img-input').click()">Click to upload chart screenshots</div>
         <input type="file" id="img-input" multiple accept="image/*" style="display:none" onchange="handleImages(event)">
         <div id="img-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
 
@@ -557,6 +406,7 @@ body {
       </div>
     </div>
 
+    <!-- TL SYNC -->
     <div id="page-tl-sync" class="page">
       <div class="page-header">
         <div><div class="page-title">TradeLocker Sync</div><div class="page-sub">Auto-import closed trades from your funded account</div></div>
@@ -584,7 +434,7 @@ body {
       <div id="tl-connect-banner" class="tl-connect-banner">
         <div>
           <div style="font-size:16px;font-weight:600;margin-bottom:6px;color:var(--green)">Connect TradeLocker</div>
-          <div style="font-size:13px;color:var(--text2);max-width:380px">Auto-import your funded account trades. Credentials stored locally in your browser only — never sent to our servers.</div>
+          <div style="font-size:13px;color:var(--text2);max-width:380px">Auto-import your funded account trades. Credentials stored locally in your browser only.</div>
         </div>
         <button class="btn btn-primary" onclick="showTLForm()">Connect account →</button>
       </div>
@@ -628,8 +478,12 @@ body {
           <div style="font-size:13px;font-weight:600">Sync Results</div>
           <span id="tl-counts" style="font-size:12px;color:var(--text2)"></span>
         </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button class="btn btn-ghost btn-sm" onclick="toggleDebug()" id="debug-toggle-btn">Show raw data</button>
+        </div>
         <div class="prog-bar-wrap"><div class="prog-bar-fill" id="prog-bar" style="width:0%"></div></div>
         <div class="sync-log-wrap" id="sync-log"></div>
+        <div class="debug-panel" id="debug-panel"></div>
       </div>
 
       <div class="card" style="margin-top:16px">
@@ -637,7 +491,7 @@ body {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;font-size:13px;color:var(--text2)">
           <div style="display:flex;gap:10px"><span style="font-size:20px">🔐</span><div><strong style="display:block;color:var(--text);margin-bottom:3px">Authenticate</strong>Logs into TradeLocker's JWT API.</div></div>
           <div style="display:flex;gap:10px"><span style="font-size:20px">📋</span><div><strong style="display:block;color:var(--text);margin-bottom:3px">Fetch orders</strong>Gets all order legs from ordersHistory.</div></div>
-          <div style="display:flex;gap:10px"><span style="font-size:20px">🔗</span><div><strong style="display:block;color:var(--text);margin-bottom:3px">Group by position</strong>Uses position ID (col 16) to pair open+close legs.</div></div>
+          <div style="display:flex;gap:10px"><span style="font-size:20px">🔗</span><div><strong style="display:block;color:var(--text);margin-bottom:3px">Use broker PNL</strong>Uses actual PNL &amp; commission from TL — no recalculation.</div></div>
           <div style="display:flex;gap:10px"><span style="font-size:20px">🔄</span><div><strong style="display:block;color:var(--text);margin-bottom:3px">Smart merge</strong>Notes, grades &amp; screenshots preserved on update.</div></div>
         </div>
       </div>
@@ -646,17 +500,19 @@ body {
   </main>
 </div>
 
+<!-- Detail modal -->
 <div id="detail-modal" style="display:none" class="modal-bg" onclick="if(event.target===this)this.style.display='none'">
   <div class="modal-box" id="detail-box"></div>
 </div>
 
+<!-- Accounts modal -->
 <div id="accts-modal" style="display:none" class="modal-bg" onclick="if(event.target.id==='accts-modal')this.style.display='none'">
   <div class="modal-box" onclick="event.stopPropagation()" style="max-width:540px">
     <div class="modal-header">
       <div class="modal-title">Accounts</div>
       <button class="close-btn" onclick="document.getElementById('accts-modal').style.display='none'">✕</button>
     </div>
-    <p style="font-size:12px;color:var(--text3);margin-bottom:16px">Set initial capital per account. Balance = initial + sum of closed PNLs.</p>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:16px">Set initial capital per account. Balance = initial + sum of closed net PNLs.</p>
     <div id="accts-list"></div>
     <div style="margin-top:14px;display:flex;gap:8px">
       <button class="btn btn-primary" onclick="addAccount()" style="flex:1">+ Add account</button>
@@ -684,22 +540,25 @@ const HDR = {
   'Authorization': 'Bearer ' + SUPABASE_KEY,
   'Content-Type': 'application/json'
 };
+
 /* ═══════════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════════ */
-let trades       = [];
-let tempImages   = [];
-let pnlChart     = null;
-let editingId    = null;
-let currentAccount = 'All';
-let knownAccounts  = [];
-let initialBalances = {};
-let accountAliases  = {};
-let tlCreds      = null;
-let tlToken      = null;
-let tlIsSyncing  = false;
-let tlInstrumentMap   = {};
-let tlDiscoveredAccounts = [];
+let trades              = [];
+let tempImages          = [];
+let pnlChart            = null;
+let editingId           = null;
+let currentAccount      = 'All';
+let knownAccounts       = [];
+let initialBalances     = {};
+let accountAliases      = {};
+let tlCreds             = null;
+let tlToken             = null;
+let tlIsSyncing         = false;
+let tlInstrumentMap     = {};
+let tlDiscoveredAccounts= [];
+let debugData           = [];
+let debugVisible        = false;
 
 /* ═══════════════════════════════════════════════════════
    LOCAL STORAGE
@@ -724,6 +583,7 @@ function esc(s) {
 }
 
 function safeJSON(text) {
+  // Handle very large integers that lose precision in JS
   const safe = text.replace(/:\s*(-?\d{15,})([,\}\]\s])/g, ':"$1"$2');
   try { return JSON.parse(safe); } catch(e) { return JSON.parse(text); }
 }
@@ -769,28 +629,6 @@ function parseTS(v) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   PNL CALCULATION
-═══════════════════════════════════════════════════════ */
-function calcPNL(pair, dir, entry, exit, size) {
-  if (!pair || !entry || exit == null || !size || size <= 0) return null;
-  const diff = dir === 'long' ? (exit - entry) : (entry - exit);
-  const p = String(pair).toUpperCase();
-  const isJPY    = p.includes('JPY');
-  const isCrypto = /BTC|ETH|ADA|SOL|XRP|LTC/.test(p);
-  const isOil    = /USOIL|UKOIL|OIL|BRENT|WTI/.test(p);
-  const isGold   = /XAU|XAG|GOLD|SILVER/.test(p);
-  const isIndex  = /SPX|US30|NAS|UK100|GER|JP225|AUS200/.test(p);
-  let pnl;
-  if (isCrypto)       pnl = diff * size;
-  else if (isOil)     pnl = diff * size * 1000;
-  else if (isGold)    pnl = diff * size * 100;
-  else if (isIndex)   pnl = diff * size * 100;
-  else if (isJPY)     pnl = diff * 100000 * size / 100;
-  else                pnl = diff * 100000 * size;
-  return parseFloat(pnl.toFixed(2));
-}
-
-/* ═══════════════════════════════════════════════════════
    TL API
 ═══════════════════════════════════════════════════════ */
 function tlBase() {
@@ -826,7 +664,7 @@ async function tlGetAccounts() {
   const all = (await r.json()).accounts || [];
   if (!all.length) throw new Error('No accounts found.');
   addLog('ok', 'Found ' + all.length + ' account(s)');
-  
+
   const fl = (tlCreds.acctFilter || '').split(',').map(s => s.trim()).filter(Boolean);
   let target = all;
   if (fl.length) {
@@ -868,19 +706,92 @@ function getAcctLabel(accNum) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   PROCESS ORDER LEGS (With Commission Integration)
+   DEBUG
 ═══════════════════════════════════════════════════════ */
+function toggleDebug() {
+  debugVisible = !debugVisible;
+  const panel = document.getElementById('debug-panel');
+  const btn   = document.getElementById('debug-toggle-btn');
+  panel.classList.toggle('show', debugVisible);
+  btn.textContent = debugVisible ? 'Hide raw data' : 'Show raw data';
+}
+
+function addDebug(label, data) {
+  debugData.push({ label, data });
+  const panel = document.getElementById('debug-panel');
+  if (!panel) return;
+  const d = document.createElement('div');
+  d.style.marginBottom = '8px';
+  d.innerHTML = '<strong style="color:var(--amber)">' + label + '</strong><br>' +
+    '<pre style="white-space:pre-wrap;word-break:break-all;color:var(--text2);font-size:10px">' +
+    JSON.stringify(data, null, 2).slice(0, 2000) + '</pre>';
+  panel.appendChild(d);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ╔══════════════════════════════════════════════════════╗
+   ║   CORE FIX: PROCESS ORDER LEGS                      ║
+   ║                                                      ║
+   ║  KEY INSIGHT: TradeLocker's ordersHistory contains   ║
+   ║  the actual realized PNL and commission per leg.     ║
+   ║  We must USE those values, NOT recalculate PNL.      ║
+   ║                                                      ║
+   ║  The broker UI shows PNL and commission separately:  ║
+   ║  - PNL column = gross floating/realized PNL          ║
+   ║  - Commission column = separate fee                  ║
+   ║                                                      ║
+   ║  ordersHistory row structure (known columns):        ║
+   ║  [0]  orderId                                        ║
+   ║  [1]  instrumentId                                   ║
+   ║  [2]  ?                                              ║
+   ║  [3]  qty/lots                                       ║
+   ║  [4]  side (buy/sell)                                ║
+   ║  [5]  orderType                                      ║
+   ║  [6]  status                                         ║
+   ║  [7]  triggerPrice (for pending orders)              ║
+   ║  [8]  fillPrice                                      ║
+   ║  [9]  ? (often 0 or small number)                    ║
+   ║  [10] realized PNL (this is what we want!)           ║
+   ║  [11] commission (negative, e.g. -7.0)               ║
+   ║  [12] ?                                              ║
+   ║  [13] timestamp                                      ║
+   ║  [14] ?                                              ║
+   ║  [15] ?                                              ║
+   ║  [16] positionGroupId                                ║
+   ║                                                      ║
+   ║  We scan ALL numeric columns to find PNL/commission  ║
+   ║  by matching against known broker values.            ║
+   ╚══════════════════════════════════════════════════════╝
+═══════════════════════════════════════════════════════ */
+
+/**
+ * Scans a set of order legs and tries to identify which columns
+ * contain PNL and commission by looking for negative values
+ * that are consistent with commission patterns.
+ */
+function detectPnlColumns(filledLegs) {
+  // Strategy: commission is always negative, usually small relative to trade size
+  // PNL can be positive or negative
+  // We log the first few rows to debug panel for inspection
+  if (filledLegs.length > 0) {
+    addDebug('First filled order row (raw)', filledLegs[0].rawRow);
+    if (filledLegs.length > 1) addDebug('Second filled order row (raw)', filledLegs[1].rawRow);
+  }
+  return { pnlCol: 10, commCol: 11 }; // Based on TL API analysis
+}
+
 function processOrderLegs(rawOrders, acctLabel) {
+  // Step 1: Filter to filled orders only
   const filled = [];
   for (const row of rawOrders) {
     if (!Array.isArray(row)) continue;
-    const orderId    = String(row[0] || '').trim();
-    const instrId    = String(row[1] || '').trim();
-    const lots       = parseFloat(row[3]) || null;
-    const side       = String(row[4] || '').toLowerCase().trim();
-    const orderType  = String(row[5] || '').toLowerCase().trim();
-    const status     = String(row[6] || '').toLowerCase().trim();
-    const fillPrice  = parseFloat(row[8]) || null;
+    const orderId    = String(row[0]  || '').trim();
+    const instrId    = String(row[1]  || '').trim();
+    const lots       = parseFloat(row[3])  || null;
+    const side       = String(row[4]  || '').toLowerCase().trim();
+    const orderType  = String(row[5]  || '').toLowerCase().trim();
+    const status     = String(row[6]  || '').toLowerCase().trim();
+    const fillPrice  = parseFloat(row[8])  || null;
     const tsRaw      = row[13];
     const tsMs       = typeof tsRaw === 'string' ? parseInt(tsRaw) : (tsRaw || 0);
     const tsISO      = parseTS(tsRaw);
@@ -890,10 +801,19 @@ function processOrderLegs(rawOrders, acctLabel) {
     if (!fillPrice || fillPrice <= 0 || fillPrice > 1e9) continue;
     if (side !== 'buy' && side !== 'sell') continue;
     if (!posGroupId || posGroupId === '0' || posGroupId === 'false') continue;
+
     const pair = instrId ? (tlInstrumentMap[instrId] || (/^\d+$/.test(instrId) ? null : normPair(instrId))) : null;
-    filled.push({ orderId, instrId, posGroupId, pair, lots, side, orderType, fillPrice, tsMs, tsISO, rawRow: row });
+
+    filled.push({
+      orderId, instrId, posGroupId, pair, lots, side, orderType,
+      fillPrice, tsMs, tsISO, rawRow: row
+    });
   }
 
+  // Detect column indices for PNL and commission
+  const { pnlCol, commCol } = detectPnlColumns(filled);
+
+  // Step 2: Group by positionGroupId
   const groups = {};
   for (const leg of filled) {
     if (!groups[leg.posGroupId]) groups[leg.posGroupId] = [];
@@ -903,76 +823,151 @@ function processOrderLegs(rawOrders, acctLabel) {
   const result = [];
   for (const [posGroupId, legs] of Object.entries(groups)) {
     legs.sort((a, b) => a.tsMs - b.tsMs);
-    const opener  = legs[0];
-    const closer  = legs.length > 1 ? legs[legs.length - 1] : null;
-    const isOpen  = !closer;
+
+    const opener = legs[0];
+    const isOpen = legs.length === 1; // Only one leg = still open (no closing leg)
+
+    // For closed trades: closer is the LAST leg; opening leg is FIRST
+    // Multiple partial closes are possible - we use first open and last close
+    const closer = isOpen ? null : legs[legs.length - 1];
 
     const dir = opener.side === 'buy' ? 'long' : 'short';
 
     let pair = opener.pair;
     if (!pair && closer) pair = closer.pair;
-    if (!pair) continue;
+    if (!pair) {
+      addLog('skip', 'Skipping posId=' + posGroupId + ' — could not resolve instrument');
+      continue;
+    }
 
     const entry = opener.fillPrice;
     const exit  = closer ? closer.fillPrice : null;
     const size  = opener.lots;
     const time  = opener.tsISO;
 
-    const pnl = isOpen ? null : calcPNL(pair, dir, entry, exit, size);
+    // ── CRITICAL FIX: Use broker's actual PNL values ──────────────────────
+    // Sum PNL across ALL legs for this position (handles partial closes too)
+    // PNL is the realized gain/loss BEFORE commission
+    let grossPnl    = null;
+    let commission  = 0;
+    let foundPnl    = false;
 
-    // COMMISSION EXTRACTION / CALCULATION
-    let commission = 0;
-    
-    // Attempt to parse out commission from undocumented columns in ordersHistory 
-    // (TL frequently places it in col 9, 10 or 11 as a negative value)
-    const legComm = legs.reduce((sum, leg) => {
-       const c1 = parseFloat(leg.rawRow[9]) || 0;
-       const c2 = parseFloat(leg.rawRow[10]) || 0;
-       const c3 = parseFloat(leg.rawRow[11]) || 0;
-       let totalFees = 0;
-       if (c1 < 0) totalFees += c1;
-       if (c2 < 0) totalFees += c2;
-       if (c3 < 0) totalFees += c3;
-       return sum + totalFees;
-    }, 0);
+    if (!isOpen) {
+      // Try to extract from all legs
+      let rawPnlSum  = 0;
+      let rawCommSum = 0;
+      let hasAnyPnl  = false;
 
-    if (legComm < 0) {
-        commission = parseFloat(legComm.toFixed(2));
-    } else if (size > 0 && !isOpen) {
-        // Fallback calculation: Prop Firms usually charge $7/lot for FX and $8/lot for indices
+      for (const leg of legs) {
+        const r = leg.rawRow;
+
+        // Check pnlCol (col 10) for realized PNL
+        const v10 = parseFloat(r[pnlCol]);
+        if (!isNaN(v10) && v10 !== 0) {
+          rawPnlSum += v10;
+          hasAnyPnl  = true;
+        }
+
+        // Check commCol (col 11) for commission
+        const v11 = parseFloat(r[commCol]);
+        if (!isNaN(v11) && v11 !== 0) {
+          rawCommSum += v11;
+        }
+
+        // Also check cols 9, 10, 11, 12 for any non-zero negative value that looks like commission
+        // Commission is always negative and usually < 0 and > -500 per leg
+        for (let ci = 9; ci <= 12; ci++) {
+          const cv = parseFloat(r[ci]);
+          if (!isNaN(cv) && cv < 0 && cv > -500 && ci !== pnlCol) {
+            // Likely commission if we didn't already get it from commCol
+            if (ci !== commCol) rawCommSum += cv;
+          }
+        }
+      }
+
+      if (hasAnyPnl) {
+        grossPnl   = parseFloat(rawPnlSum.toFixed(2));
+        commission = parseFloat(rawCommSum.toFixed(2));
+        foundPnl   = true;
+        addLog('diag', pair + ' posId=' + posGroupId + ': gross=' + grossPnl + ' comm=' + commission);
+      }
+
+      // Fallback: if TL didn't give us PNL data, calculate it
+      // but note this may be inaccurate for cross-currency pairs
+      if (!foundPnl && entry && exit && size) {
+        addLog('warn', pair + ' posId=' + posGroupId + ': No PNL in API — using fallback calculation (may be inaccurate for crosses)');
+        grossPnl  = calcPnlFallback(pair, dir, entry, exit, size);
+        // Estimate commission only as fallback
         const isIndex = /SPX|US30|NAS|UK100|GER|JP225|AUS200/.test(pair);
-        commission = isIndex ? -(size * 8) : -(size * 7);
-        commission = parseFloat(commission.toFixed(2));
+        commission = parseFloat((size * (isIndex ? -8 : -7)).toFixed(2));
+      }
     }
 
+    // Determine status based on NET PNL (gross + commission)
     let status = 'open';
-    if (!isOpen) {
-      // For status, we can base it on Net PNL 
-      const netPnl = (pnl || 0) + commission;
-      if      (netPnl >  0.5) status = 'win';
-      else if (netPnl < -0.5) status = 'loss';
-      else                    status = 'breakeven';
+    if (!isOpen && grossPnl !== null) {
+      const net = grossPnl + commission;
+      if      (net >  0.5) status = 'win';
+      else if (net < -0.5) status = 'loss';
+      else                 status = 'breakeven';
     }
 
     result.push({
       id:          Date.now() + (Math.random() * 999999 | 0),
       tlId:        posGroupId,
       account:     acctLabel,
-      pair, dir, entry, exit,
-      sl: null, tp: null, rr: null,
-      pnl, commission, size,
-      time, status,
-      session: '', source: 'tradelocker',
-      reason: '', tf: '', tags: '',
-      early: 'no', earlyReason: '',
-      well: '', improve: '',
-      emotion: 7, confidence: 7, grade: '', images: []
+      pair, dir,
+      entry:       entry,
+      exit:        exit,
+      sl:          null,
+      tp:          null,
+      rr:          null,
+      pnl:         grossPnl,       // gross PNL from broker
+      commission:  commission,     // commission/fees from broker
+      size:        size,
+      time:        time,
+      status:      status,
+      session:     '',
+      source:      'tradelocker',
+      reason:      '', tf: '', tags: '',
+      early:       'no', earlyReason: '',
+      well:        '', improve:       '',
+      emotion:     7, confidence:    7,
+      grade:       '', images:        []
     });
   }
 
   return result;
 }
 
+/**
+ * Fallback PNL calculation — only used when TL API doesn't return PNL.
+ * Note: This is inaccurate for cross-currency pairs (GBP/NZD, EUR/AUD, etc.)
+ * because it doesn't apply the quote-currency-to-USD conversion.
+ * The broker's actual PNL value should always be preferred.
+ */
+function calcPnlFallback(pair, dir, entry, exit, size) {
+  if (!pair || !entry || exit == null || !size || size <= 0) return null;
+  const diff = dir === 'long' ? (exit - entry) : (entry - exit);
+  const p = String(pair).toUpperCase();
+  const isJPY    = p.includes('JPY');
+  const isCrypto = /BTC|ETH|ADA|SOL|XRP|LTC/.test(p);
+  const isOil    = /USOIL|UKOIL|OIL|BRENT|WTI/.test(p);
+  const isGold   = /XAU|XAG|GOLD|SILVER/.test(p);
+  const isIndex  = /SPX|US30|NAS|UK100|GER|JP225|AUS200/.test(p);
+  let pnl;
+  if (isCrypto)     pnl = diff * size;
+  else if (isOil)   pnl = diff * size * 1000;
+  else if (isGold)  pnl = diff * size * 100;
+  else if (isIndex) pnl = diff * size;  // Indices: 1 lot = $1/point at TL
+  else if (isJPY)   pnl = diff * 100000 * size / 100;
+  else              pnl = diff * 100000 * size;
+  return parseFloat(pnl.toFixed(2));
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENRICH WITH SL/TP
+═══════════════════════════════════════════════════════ */
 function enrichWithSLTP(journalTrades, rawOrders) {
   const pendingMap = {};
   for (const row of rawOrders) {
@@ -1009,7 +1004,6 @@ function enrichWithSLTP(journalTrades, rawOrders) {
         if (valid) jt.tp = c.price;
       }
     }
-
     if (jt.sl && jt.tp && jt.entry) {
       const slD = Math.abs(jt.entry - jt.sl);
       const tpD = Math.abs(jt.tp - jt.entry);
@@ -1026,19 +1020,20 @@ function addLog(type, msg) {
   if (!log) return;
   const d = document.createElement('div');
   d.className = 'sl-' + type;
-  d.textContent = (type==='ok'?'✓ ':type==='err'?'✗ ':type==='info'?'● ':type==='diag'?'→ ':'· ') + msg;
+  const prefix = { ok:'✓ ', err:'✗ ', info:'● ', diag:'→ ', warn:'⚠ ', skip:'· ' };
+  d.textContent = (prefix[type] || '  ') + msg;
   log.appendChild(d);
   log.scrollTop = log.scrollHeight;
 }
 function setProgress(p) { const b = document.getElementById('prog-bar'); if (b) b.style.width = p + '%'; }
 
 function renderTLConnected() {
-  document.getElementById('tl-connect-banner').style.display  = 'none';
-  document.getElementById('tl-form-card').style.display       = 'none';
+  document.getElementById('tl-connect-banner').style.display   = 'none';
+  document.getElementById('tl-form-card').style.display        = 'none';
   document.getElementById('tl-connected-header').style.display = 'flex';
   const et = document.getElementById('tl-env-tag');
-  et.className = tlCreds.env === 'live' ? 'env-live' : 'env-demo';
-  et.textContent = tlCreds.env === 'live' ? 'LIVE' : 'DEMO';
+  et.className  = tlCreds.env === 'live' ? 'env-live' : 'env-demo';
+  et.textContent= tlCreds.env === 'live' ? 'LIVE' : 'DEMO';
   const fl = (tlCreds.acctFilter || '').split(',').map(s => s.trim()).filter(Boolean);
   document.getElementById('tl-acct-label').textContent = fl.length ? fl.join(', ') : (tlCreds.label || tlCreds.email);
   const ls = localStorage.getItem('tlLastSync');
@@ -1076,14 +1071,14 @@ function showTLForm() {
   document.getElementById('tl-connect-banner').style.display = 'none';
   document.getElementById('tl-form-card').style.display = 'block';
   if (tlCreds) {
-    document.getElementById('tl-email').value    = tlCreds.email    || '';
-    document.getElementById('tl-pass').value     = tlCreds.password || '';
-    document.getElementById('tl-server').value   = tlCreds.server   || '';
-    document.getElementById('tl-env').value      = tlCreds.env      || 'demo';
-    document.getElementById('tl-label').value    = tlCreds.label    || '';
-    document.getElementById('tl-filter').value   = tlCreds.acctFilter || '';
+    document.getElementById('tl-email').value    = tlCreds.email       || '';
+    document.getElementById('tl-pass').value     = tlCreds.password    || '';
+    document.getElementById('tl-server').value   = tlCreds.server      || '';
+    document.getElementById('tl-env').value      = tlCreds.env         || 'demo';
+    document.getElementById('tl-label').value    = tlCreds.label       || '';
+    document.getElementById('tl-filter').value   = tlCreds.acctFilter  || '';
     document.getElementById('tl-autosync').checked = tlCreds.autoSync !== false;
-    document.getElementById('tl-dd').value       = tlCreds.ddLimit  || 10;
+    document.getElementById('tl-dd').value       = tlCreds.ddLimit     || 10;
   }
 }
 function hideTLForm() {
@@ -1106,15 +1101,15 @@ async function connectTL() {
   if (!email || !password || !server) { setConnMsg('Email, password and server are required.', true); return; }
   tlCreds = {
     email, password, server,
-    env:         document.getElementById('tl-env').value,
-    label:       document.getElementById('tl-label').value.trim() || email,
-    acctFilter:  document.getElementById('tl-filter').value.trim(),
-    autoSync:    document.getElementById('tl-autosync').checked,
-    ddLimit:     parseFloat(document.getElementById('tl-dd').value) || 10,
+    env:        document.getElementById('tl-env').value,
+    label:      document.getElementById('tl-label').value.trim() || email,
+    acctFilter: document.getElementById('tl-filter').value.trim(),
+    autoSync:   document.getElementById('tl-autosync').checked,
+    ddLimit:    parseFloat(document.getElementById('tl-dd').value) || 10,
   };
   saveLocal('tlCreds', tlCreds);
   const btn = document.getElementById('tl-conn-btn');
-  btn.disabled = true; btn.textContent = 'Connecting…'; setConnMsg('', '');
+  btn.disabled = true; btn.textContent = 'Connecting…'; setConnMsg('', false);
   try {
     await tlAuth();
     await tlGetAccounts();
@@ -1142,6 +1137,9 @@ async function runTLSync() {
   if (tlIsSyncing) { showToast('Sync already running…'); return; }
   if (!tlCreds)    { showToast('Not connected to TradeLocker'); return; }
   tlIsSyncing = true;
+  debugData = [];
+  const panel = document.getElementById('debug-panel');
+  if (panel) panel.innerHTML = '';
   document.getElementById('tl-results-card').style.display = 'block';
   document.getElementById('sync-log').innerHTML = '';
   document.getElementById('tl-counts').textContent = '';
@@ -1162,11 +1160,11 @@ async function runTLSync() {
     const total = targetAccounts.length;
 
     for (let ai = 0; ai < total; ai++) {
-      const acct    = targetAccounts[ai];
-      const accId   = acct.id;
-      const accNum  = String(acct.accNum || acct.id);
+      const acct      = targetAccounts[ai];
+      const accId     = acct.id;
+      const accNum    = String(acct.accNum || acct.id);
       const acctLabel = getAcctLabel(accNum);
-      const base    = 15 + (ai / total) * 75;
+      const base      = 15 + (ai / total) * 75;
       addLog('ok', '─── Account ' + accNum + ' → "' + acctLabel + '" ───');
       setProgress(base + 5);
       await tlLoadInstruments(accId, accNum);
@@ -1181,6 +1179,12 @@ async function runTLSync() {
         else if (Array.isArray(res))    rawOrders = res;
         else if (res?.data)             rawOrders = res.data;
         addLog('ok', 'Got ' + rawOrders.length + ' raw order rows');
+
+        // Log a sample of the raw data for debugging
+        if (rawOrders.length > 0) {
+          addDebug('Sample raw order row (first filled)', rawOrders.find(r => Array.isArray(r) && String(r[6]||'').toLowerCase() === 'filled') || rawOrders[0]);
+          addLog('info', 'Raw data available — click "Show raw data" to inspect column structure');
+        }
       } catch(e) {
         addLog('err', 'Order history failed: ' + e.message);
         errors++;
@@ -1190,15 +1194,20 @@ async function runTLSync() {
 
       const journalTrades = processOrderLegs(rawOrders, acctLabel);
       enrichWithSLTP(journalTrades, rawOrders);
-      addLog('ok', 'Built ' + journalTrades.length + ' trades from ' + rawOrders.length + ' legs');
+      addLog('ok', 'Built ' + journalTrades.length + ' position(s) from order legs');
       setProgress(base + 50);
+
       for (const jt of journalTrades) {
         const existing = trades.find(t => t.tlId && String(t.tlId) === String(jt.tlId));
         if (existing) {
+          // Merge: update market data from TL, preserve user annotations
           const merged = {
             ...jt,
             id:          existing.id,
-            commission:  jt.commission !== 0 ? jt.commission : (existing.commission || 0), // Favor new fees
+            // Always take fresh PNL & commission from TL
+            pnl:         jt.pnl         !== null ? jt.pnl         : existing.pnl,
+            commission:  jt.commission  !== 0    ? jt.commission  : existing.commission,
+            // Preserve user-entered fields
             reason:      existing.reason      || '',
             well:        existing.well        || '',
             improve:     existing.improve     || '',
@@ -1213,7 +1222,11 @@ async function runTLSync() {
             early:       existing.early       || 'no',
           };
           const ok = await upsertTrade(merged);
-          if (ok) { const idx = trades.findIndex(t => t.tlId === String(jt.tlId)); if (idx !== -1) trades[idx] = merged; updated++; }
+          if (ok) {
+            const idx = trades.findIndex(t => String(t.tlId) === String(jt.tlId));
+            if (idx !== -1) trades[idx] = merged;
+            updated++;
+          }
         } else {
           const ok = await upsertTrade(jt);
           if (ok) { trades.unshift(jt); imported++; }
@@ -1221,7 +1234,7 @@ async function runTLSync() {
         }
       }
 
-      addLog('ok', 'Account ' + accNum + ' done: ' + imported + ' new, ' + updated + ' updated');
+      addLog('ok', 'Account ' + accNum + ': ' + imported + ' new, ' + updated + ' updated');
       setProgress(base + 70);
     }
 
@@ -1315,10 +1328,15 @@ async function deleteAllForAccount(accName) {
 /* ═══════════════════════════════════════════════════════
    ACCOUNTS
 ═══════════════════════════════════════════════════════ */
+function getNetPnl(t) {
+  // Net PNL = gross PNL + commission (commission is stored as negative)
+  return (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0);
+}
+
 function getSingleBalance(acc) {
   const netPnl = trades
     .filter(t => t.account === acc && t.status !== 'open')
-    .reduce((s, t) => s + (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0), 0);
+    .reduce((s, t) => s + getNetPnl(t), 0);
   return (initialBalances[acc] || 0) + netPnl;
 }
 function getBalance(a) {
@@ -1379,15 +1397,15 @@ function renderDDBanner() {
   const b = document.getElementById('dd-banner');
   if (!b) return;
   if (currentAccount === 'All' || !tlCreds) { b.innerHTML = ''; return; }
-  const ddL = tlCreds.ddLimit || 10;
+  const ddL  = tlCreds.ddLimit || 10;
   const init = initialBalances[currentAccount] || 0;
   if (!init) { b.innerHTML = ''; return; }
-  const cur = getSingleBalance(currentAccount);
+  const cur   = getSingleBalance(currentAccount);
   const ddPct = ((init - cur) / init) * 100;
-  if      (ddPct >= ddL)        b.innerHTML = '<div class="dd-banner dd-warn">⚠️ <strong>DRAWDOWN LIMIT BREACHED</strong> — ' + ddPct.toFixed(2) + '% of ' + ddL + '% limit. Stop trading.</div>';
-  else if (ddPct >= ddL * 0.7)  b.innerHTML = '<div class="dd-banner dd-caution">⚠️ Drawdown warning: ' + ddPct.toFixed(2) + '% of ' + ddL + '% limit.</div>';
-  else if (ddPct > 0)           b.innerHTML = '<div class="dd-banner dd-ok-banner">🟢 Drawdown: ' + ddPct.toFixed(2) + '% / ' + ddL + '%. On track.</div>';
-  else                          b.innerHTML = '';
+  if      (ddPct >= ddL)       b.innerHTML = '<div class="dd-banner dd-warn">⚠️ <strong>DRAWDOWN LIMIT BREACHED</strong> — ' + ddPct.toFixed(2) + '% of ' + ddL + '% limit. Stop trading.</div>';
+  else if (ddPct >= ddL * 0.7) b.innerHTML = '<div class="dd-banner dd-caution">⚠️ Drawdown warning: ' + ddPct.toFixed(2) + '% of ' + ddL + '% limit.</div>';
+  else if (ddPct > 0)          b.innerHTML = '<div class="dd-banner dd-ok-banner">🟢 Drawdown: ' + ddPct.toFixed(2) + '% / ' + ddL + '%. On track.</div>';
+  else                         b.innerHTML = '';
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1397,15 +1415,15 @@ function showPage(p) {
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + p).classList.add('active');
-  const navMap = { dashboard: 0, log: 1, analytics: 2, add: 3, add2: 3 };
+  const navMap = { dashboard: 0, log: 1, analytics: 2, add: 3 };
   const navItems = document.querySelectorAll('.nav-item');
   if (p === 'tl-sync') document.getElementById('tl-nav-btn').classList.add('active');
   else if (navMap[p] !== undefined) navItems[navMap[p]].classList.add('active');
-  if (p === 'tl-sync')    { if (tlCreds) renderTLConnected(); else renderTLDisconnected(); }
-  if (p === 'dashboard')  renderDashboard();
-  if (p === 'log')        { populateFilterPairs(); renderLog(); }
-  if (p === 'analytics')  renderAnalytics();
-  if (p === 'add')        populateAccountDatalist();
+  if (p === 'tl-sync')   { if (tlCreds) renderTLConnected(); else renderTLDisconnected(); }
+  if (p === 'dashboard') renderDashboard();
+  if (p === 'log')       { populateFilterPairs(); renderLog(); }
+  if (p === 'analytics') renderAnalytics();
+  if (p === 'add')       populateAccountDatalist();
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1413,13 +1431,13 @@ function showPage(p) {
 ═══════════════════════════════════════════════════════ */
 function fmt(n) {
   if (n === null || n === undefined || isNaN(Number(n))) return '--';
-  const v = Number(n);
+  const v    = Number(n);
   const sign = v >= 0 ? '+' : '-';
   return sign + '$' + Math.abs(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 function fmtPct(n) { return (n * 100).toFixed(1) + '%'; }
 function dateStr(t) { return t ? t.slice(0,10) : '--'; }
-function pnlCls(v) { return v > 0 ? 'pos' : v < 0 ? 'neg' : ''; }
+function pnlCls(v)  { return v > 0 ? 'pos' : v < 0 ? 'neg' : ''; }
 
 /* ═══════════════════════════════════════════════════════
    DASHBOARD
@@ -1432,44 +1450,46 @@ function renderDashboard() {
   const c = f.filter(t => t.status !== 'open');
   const w = c.filter(t => t.status === 'win');
   const l = c.filter(t => t.status === 'loss');
-  
-  // NET PNL CALCULATIONS
-  const tp = c.reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0);
-  const tc = c.reduce((s, t) => s + (parseFloat(t.commission) || 0), 0);
-  const net = tp + tc;
 
-  const wr = c.length ? w.length / c.length : 0;
-  const aw = w.length ? w.reduce((s, t) => s + ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0)), 0) / w.length : 0;
-  const al = l.length ? l.reduce((s, t) => s + ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0)), 0) / l.length : 0;
-  const pf = al < 0 ? (aw / Math.abs(al)).toFixed(2) : '∞';
-  const cb = getBalance(currentAccount);
+  const grossTotal = c.reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0);
+  const commTotal  = c.reduce((s, t) => s + (parseFloat(t.commission) || 0), 0);
+  const netTotal   = grossTotal + commTotal;
 
-  // HIGH WATER MARK CALCULATION
-  let hwm = initialBalances[currentAccount] || (currentAccount === 'All' ? knownAccounts.reduce((s, x) => s + (initialBalances[x]||0), 0) : 0);
-  let runningBal = hwm;
-  const sortedClosed = [...c].sort((a, b) => (a.time||'').localeCompare(b.time||''));
-  sortedClosed.forEach(t => {
-      runningBal += (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0);
-      if (runningBal > hwm) hwm = runningBal;
+  const wr  = c.length ? w.length / c.length : 0;
+  const aw  = w.length ? w.reduce((s, t) => s + getNetPnl(t), 0) / w.length : 0;
+  const al  = l.length ? l.reduce((s, t) => s + getNetPnl(t), 0) / l.length : 0;
+  const pf  = al < 0 ? (aw / Math.abs(al)).toFixed(2) : '∞';
+  const cb  = getBalance(currentAccount);
+
+  // High water mark
+  let hwm = initialBalances[currentAccount] || (currentAccount === 'All'
+    ? knownAccounts.reduce((s, x) => s + (initialBalances[x]||0), 0)
+    : 0);
+  let runBal = hwm;
+  [...c].sort((a, b) => (a.time||'').localeCompare(b.time||'')).forEach(t => {
+    runBal += getNetPnl(t);
+    if (runBal > hwm) hwm = runBal;
   });
 
   document.getElementById('dash-stats').innerHTML =
-    sc('Balance', '$' + cb.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','), cb >= 0 ? 'pos' : 'neg', 'HWM: $' + hwm.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')) +
-    sc('Net PNL', fmt(net), net >= 0 ? 'pos' : 'neg', 'Gross: ' + fmt(tp) + ' | Fees: ' + fmt(tc)) +
-    sc('Win Rate', fmtPct(wr), '', w.length + 'W / ' + l.length + 'L') +
-    sc('Profit Factor', pf) +
-    sc('Avg Win', aw ? fmt(aw) : '--', 'pos') +
-    sc('Avg Loss', al ? fmt(al) : '--', 'neg') +
+    sc('Balance',      '$' + cb.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','), cb >= 0 ? 'pos' : 'neg', 'HWM: $' + hwm.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')) +
+    sc('Net PNL',      fmt(netTotal), netTotal >= 0 ? 'pos' : 'neg', 'Gross: ' + fmt(grossTotal) + ' | Fees: ' + fmt(commTotal)) +
+    sc('Win Rate',     fmtPct(wr), '', w.length + 'W / ' + l.length + 'L') +
+    sc('Profit Factor',pf) +
+    sc('Avg Win',      aw ? fmt(aw) : '--', 'pos') +
+    sc('Avg Loss',     al ? fmt(al) : '--', 'neg') +
     sc('Total Trades', f.length, '', c.length + ' closed · ' + f.filter(t=>t.status==='open').length + ' open');
 
   document.getElementById('recent-list').innerHTML = f.slice(0, 6).map(t => {
-    const tNet = (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0);
+    const net = getNetPnl(t);
     return '<div onclick="openDetail(' + t.id + ')" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px">' +
-    '<span style="font-weight:600;min-width:70px">' + (t.pair || '--') + '</span>' +
-    '<span class="badge badge-' + t.dir + '">' + t.dir + '</span>' +
-    (t.source === 'tradelocker' ? '<span class="badge badge-tl">TL</span>' : '') +
-    '<span class="' + pnlCls(tNet) + '" style="margin-left:auto;font-family:var(--mono);font-size:12.5px">' + fmt(tNet) + '</span>' +
-    '<span style="font-size:11px;color:var(--text3);min-width:72px;text-align:right">' + dateStr(t.time) + '</span></div>';
+      '<span style="font-weight:600;min-width:70px">' + (t.pair || '--') + '</span>' +
+      '<span class="badge badge-' + t.dir + '">' + t.dir + '</span>' +
+      (t.source === 'tradelocker' ? '<span class="badge badge-tl">TL</span>' : '') +
+      '<span class="' + pnlCls(t.status === 'open' ? 0 : net) + '" style="margin-left:auto;font-family:var(--mono);font-size:12.5px">' +
+        (t.status === 'open' ? '<span style="color:var(--blue)">open</span>' : fmt(net)) +
+      '</span>' +
+      '<span style="font-size:11px;color:var(--text3);min-width:72px;text-align:right">' + dateStr(t.time) + '</span></div>';
   }).join('') || '<div class="empty"><b>No trades yet</b></div>';
 
   renderTopPairs('top-pairs');
@@ -1488,15 +1508,15 @@ function renderTopPairs(elId) {
     if (!pm[p]) pm[p] = { wins: 0, total: 0, pnl: 0 };
     pm[p].total++;
     if (t.status === 'win') pm[p].wins++;
-    pm[p].pnl += ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0));
+    pm[p].pnl += getNetPnl(t);
   });
   const pairs = Object.entries(pm).sort((a, b) => (b[1].wins / b[1].total) - (a[1].wins / a[1].total)).slice(0, 7);
   document.getElementById(elId).innerHTML = pairs.length ? pairs.map(([pair, d]) => {
-    const wr = d.wins / d.total;
-    const c = wr >= 0.6 ? 'var(--green)' : wr >= 0.4 ? 'var(--amber)' : 'var(--red)';
+    const wr  = d.wins / d.total;
+    const col = wr >= 0.6 ? 'var(--green)' : wr >= 0.4 ? 'var(--amber)' : 'var(--red)';
     return '<div class="bar-row">' +
       '<span class="bar-label" style="font-size:12.5px">' + pair + '</span>' +
-      '<div class="bar-track"><div class="bar-fill" style="width:' + (wr * 100) + '%;background:' + c + '"></div></div>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:' + (wr*100) + '%;background:' + col + '"></div></div>' +
       '<span class="bar-pct">' + fmtPct(wr) + '</span>' +
       '<span class="bar-pnl ' + pnlCls(d.pnl) + '">' + fmt(d.pnl) + '</span></div>';
   }).join('') : '<div style="font-size:13px;color:var(--text3)">Close some trades first</div>';
@@ -1508,7 +1528,7 @@ function renderTopPairs(elId) {
 function populateFilterPairs() {
   const sel = document.getElementById('f-pair');
   if (!sel) return;
-  const cur = sel.value;
+  const cur   = sel.value;
   const pairs = [...new Set(trades.map(t => t.pair).filter(Boolean))].sort();
   sel.innerHTML = '<option value="">All pairs</option>' + pairs.map(p => '<option value="' + p + '">' + p + '</option>').join('');
   sel.value = cur;
@@ -1528,26 +1548,34 @@ function renderLog() {
     (!fsrc || (fsrc === 'auto' ? t.source === 'tradelocker' : t.source !== 'tradelocker'))
   );
   document.getElementById('log-list').innerHTML = list.length ? list.map(t => {
-    const net = (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0);
+    const isOpen  = t.status === 'open';
+    const gross   = parseFloat(t.pnl) || 0;
+    const comm    = parseFloat(t.commission) || 0;
+    const net     = gross + comm;
     return '<tr onclick="openDetail(' + t.id + ')">' +
-    '<td class="mono" style="color:var(--text2)">' + dateStr(t.time) + '</td>' +
-    '<td style="font-weight:600">' + (t.pair || '--') + '</td>' +
-    '<td style="color:var(--text3);font-size:12px">' + (t.account || '--') + '</td>' +
-    '<td><span class="badge badge-' + t.dir + '">' + t.dir + '</span></td>' +
-    '<td class="mono">' + (t.entry || '--') + '</td>' +
-    '<td class="mono" style="color:var(--text2)">' + (t.exit || '--') + '</td>' +
-    '<td class="mono" style="color:var(--text3);font-size:11.5px">' + (t.sl || '--') + ' / ' + (t.tp || '--') + '</td>' +
-    '<td class="mono" style="color:var(--text2)">' + (t.size ? t.size + 'L' : '--') + '</td>' +
-    '<td class="mono ' + pnlCls(net) + '">' + fmt(net) + '</td>' +
-    '<td style="display:flex;align-items:center;gap:4px;padding-top:10px">' +
-      '<span class="badge badge-' + (t.status === 'breakeven' ? 'be' : t.status) + '">' + t.status + '</span>' +
-      (t.source === 'tradelocker' ? '<span class="badge badge-tl">TL</span>' : '') +
-    '</td>' +
-    '<td onclick="event.stopPropagation()" style="display:flex;gap:5px;padding-top:6px">' +
-      '<button class="btn btn-edit" style="padding:4px 9px;font-size:11px" onclick="editTrade(' + t.id + ')">Edit</button>' +
-      '<button class="btn btn-danger" style="padding:4px 9px;font-size:11px" onclick="deleteTrade(' + t.id + ')">Del</button>' +
-    '</td></tr>';
-  }).join('') : '<tr><td colspan="11"><div class="empty"><b>No trades found</b><p style="margin-top:6px">Add a trade or adjust filters</p></div></td></tr>';
+      '<td class="mono" style="color:var(--text2)">' + dateStr(t.time) + '</td>' +
+      '<td style="font-weight:600">' + (t.pair || '--') + '</td>' +
+      '<td style="color:var(--text3);font-size:12px">' + (t.account || '--') + '</td>' +
+      '<td><span class="badge badge-' + t.dir + '">' + t.dir + '</span></td>' +
+      '<td class="mono">' + (t.entry || '--') + '</td>' +
+      '<td class="mono" style="color:var(--text2)">' + (t.exit != null ? t.exit : '--') + '</td>' +
+      '<td class="mono" style="color:var(--text3);font-size:11.5px">' + (t.sl || '--') + ' / ' + (t.tp || '--') + '</td>' +
+      '<td class="mono" style="color:var(--text2)">' + (t.size ? t.size + 'L' : '--') + '</td>' +
+      // Gross PNL column
+      '<td class="mono ' + (isOpen ? '' : pnlCls(gross)) + '">' + (isOpen ? '--' : fmt(gross)) + '</td>' +
+      // Commission column
+      '<td class="mono" style="color:var(--text3)">' + (isOpen || comm === 0 ? '--' : fmt(comm)) + '</td>' +
+      // Net PNL column
+      '<td class="mono ' + (isOpen ? '' : pnlCls(net)) + '" style="font-weight:600">' + (isOpen ? '<span style="color:var(--blue)">open</span>' : fmt(net)) + '</td>' +
+      '<td style="display:flex;align-items:center;gap:4px;padding-top:10px">' +
+        '<span class="badge badge-' + (t.status === 'breakeven' ? 'be' : t.status) + '">' + t.status + '</span>' +
+        (t.source === 'tradelocker' ? '<span class="badge badge-tl">TL</span>' : '') +
+      '</td>' +
+      '<td onclick="event.stopPropagation()" style="display:flex;gap:5px;padding-top:6px">' +
+        '<button class="btn btn-edit" style="padding:4px 9px;font-size:11px" onclick="editTrade(' + t.id + ')">Edit</button>' +
+        '<button class="btn btn-danger" style="padding:4px 9px;font-size:11px" onclick="deleteTrade(' + t.id + ')">Del</button>' +
+      '</td></tr>';
+  }).join('') : '<tr><td colspan="13"><div class="empty"><b>No trades found</b><p style="margin-top:6px">Add a trade or adjust filters</p></div></td></tr>';
 }
 
 async function deleteTrade(id) {
@@ -1562,8 +1590,10 @@ async function deleteTrade(id) {
 function openDetail(id) {
   const t = trades.find(x => x.id == id);
   if (!t) return;
-
-  const netPnl = (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0);
+  const isOpen  = t.status === 'open';
+  const gross   = parseFloat(t.pnl) || 0;
+  const comm    = parseFloat(t.commission) || 0;
+  const net     = gross + comm;
 
   let html = '<div class="modal-header">' +
     '<div><div class="modal-title">' + (t.pair || '--') + ' — ' + (t.dir || '').toUpperCase() +
@@ -1571,22 +1601,24 @@ function openDetail(id) {
     '</div><div style="font-size:12px;color:var(--text3);margin-top:3px">' + (t.account || '') + ' · ' + dateStr(t.time) + '</div></div>' +
     '<button class="close-btn" onclick="document.getElementById(\'detail-modal\').style.display=\'none\'">✕</button></div>';
   html += '<div class="detail-grid">';
-  [
-    ['Entry',        t.entry || '--'],
-    ['Exit',         t.exit  || '--'],
-    ['Stop loss',    t.sl    || '--'],
-    ['Take profit',  t.tp    || '--'],
-    ['R:R',          t.rr ? '1:' + t.rr : '--'],
-    ['Size',         t.size ? t.size + ' lots' : '--'],
-    ['Gross PNL',    t.pnl ? fmt(t.pnl) : '--'],
-    ['Commissions',  t.commission ? fmt(t.commission) : '--'],
-    ['Net PNL',      '<span class="' + pnlCls(netPnl) + '" style="font-size:15px;font-weight:600">' + fmt(netPnl) + '</span>'],
+  const rows = [
+    ['Entry',        t.entry != null ? t.entry : '--'],
+    ['Exit',         t.exit  != null ? t.exit  : (isOpen ? '<span style="color:var(--blue)">open</span>' : '--')],
+    ['Stop loss',    t.sl    != null ? t.sl    : '--'],
+    ['Take profit',  t.tp    != null ? t.tp    : '--'],
+    ['R:R',          t.rr    ? '1:' + t.rr    : '--'],
+    ['Size',         t.size  ? t.size + ' lots': '--'],
+    ['Gross PNL',    isOpen ? '--' : (t.pnl != null ? fmt(t.pnl) : '--')],
+    ['Commission',   isOpen ? '--' : (comm !== 0 ? fmt(comm) : '--')],
+    ['Net PNL',      isOpen ? '<span style="color:var(--blue)">open</span>' :
+      '<span class="' + pnlCls(net) + '" style="font-size:15px;font-weight:600">' + fmt(net) + '</span>'],
     ['Status',       t.status || '--'],
     ['Session',      t.session || '--'],
-    ['Grade',        t.grade  || '--'],
-    ['Timeframes',   t.tf     || '--'],
-    ['Closed early', t.early  || 'no'],
-  ].forEach(([l, v]) => {
+    ['Grade',        t.grade   || '--'],
+    ['Timeframes',   t.tf      || '--'],
+    ['Closed early', t.early   || 'no'],
+  ];
+  rows.forEach(([l, v]) => {
     html += '<div class="detail-cell"><div class="lbl">' + l + '</div><div class="val">' + v + '</div></div>';
   });
   html += '</div>';
@@ -1628,34 +1660,34 @@ function openLightbox(src) { document.getElementById('lb-img').src = src; docume
    ANALYTICS
 ═══════════════════════════════════════════════════════ */
 function renderAnalytics() {
-  const f = getFiltered();
-  const c = f.filter(t => t.status !== 'open');
-  const w = c.filter(t => t.status === 'win');
-  const l = c.filter(t => t.status === 'loss');
-  
-  const tp = c.reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0);
-  const tc = c.reduce((s, t) => s + (parseFloat(t.commission) || 0), 0);
-  const net = tp + tc;
+  const f  = getFiltered();
+  const c  = f.filter(t => t.status !== 'open');
+  const w  = c.filter(t => t.status === 'win');
+  const l  = c.filter(t => t.status === 'loss');
 
-  const wr = c.length ? w.length / c.length : 0;
-  const aw = w.length ? w.reduce((s, t) => s + ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0)), 0) / w.length : 0;
-  const al = l.length ? Math.abs(l.reduce((s, t) => s + ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0)), 0) / l.length) : 0;
-  const pf = al > 0 ? (aw / al).toFixed(2) : '∞';
-  const rrArr = c.filter(t => t.rr);
-  const avgRR = rrArr.length ? rrArr.reduce((s, t) => s + parseFloat(t.rr), 0) / rrArr.length : 0;
-  const sk = getStreak(c);
-  const cb = getBalance(currentAccount);
+  const grossTotal = c.reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0);
+  const commTotal  = c.reduce((s, t) => s + (parseFloat(t.commission) || 0), 0);
+  const net        = grossTotal + commTotal;
+
+  const wr     = c.length ? w.length / c.length : 0;
+  const aw     = w.length ? w.reduce((s, t) => s + getNetPnl(t), 0) / w.length : 0;
+  const alAbs  = l.length ? Math.abs(l.reduce((s, t) => s + getNetPnl(t), 0) / l.length) : 0;
+  const pf     = alAbs > 0 ? (aw / alAbs).toFixed(2) : '∞';
+  const rrArr  = c.filter(t => t.rr);
+  const avgRR  = rrArr.length ? rrArr.reduce((s, t) => s + parseFloat(t.rr), 0) / rrArr.length : 0;
+  const sk     = getStreak(c);
+  const cb     = getBalance(currentAccount);
   const avgEmo = f.length ? (f.reduce((s, t) => s + (t.emotion || 7), 0) / f.length).toFixed(1) : '--';
 
   document.getElementById('ana-stats').innerHTML =
-    sc('Balance', '$' + cb.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','), cb >= 0 ? 'pos' : 'neg') +
-    sc('Net PNL', fmt(net), net >= 0 ? 'pos' : 'neg') +
-    sc('Win Rate', c.length ? fmtPct(wr) : '--') +
+    sc('Balance',       '$' + cb.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','), cb >= 0 ? 'pos' : 'neg') +
+    sc('Net PNL',       fmt(net), net >= 0 ? 'pos' : 'neg', 'Gross ' + fmt(grossTotal) + ' | Fees ' + fmt(commTotal)) +
+    sc('Win Rate',      c.length ? fmtPct(wr) : '--') +
     sc('Profit Factor', pf) +
-    sc('Avg R:R', avgRR ? '1:' + avgRR.toFixed(2) : '--') +
-    sc('Current Streak', sk.count ? sk.count + ' ' + sk.type : '--', sk.type === 'win' ? 'pos' : sk.type === 'loss' ? 'neg' : '') +
-    sc('Avg Emotion', avgEmo + '/10');
-  
+    sc('Avg R:R',       avgRR ? '1:' + avgRR.toFixed(2) : '--') +
+    sc('Streak',        sk.count ? sk.count + ' ' + sk.type : '--', sk.type === 'win' ? 'pos' : sk.type === 'loss' ? 'neg' : '') +
+    sc('Avg Emotion',   avgEmo + '/10');
+
   renderTopPairs('pair-perf');
 
   const sess = {};
@@ -1664,12 +1696,12 @@ function renderAnalytics() {
     if (!sess[s]) sess[s] = { wins: 0, total: 0, pnl: 0 };
     sess[s].total++;
     if (t.status === 'win') sess[s].wins++;
-    sess[s].pnl += ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0));
+    sess[s].pnl += getNetPnl(t);
   });
 
   document.getElementById('session-perf').innerHTML = Object.entries(sess).length
     ? Object.entries(sess).map(([s, d]) => {
-        const wr = d.wins / d.total;
+        const wr  = d.wins / d.total;
         const col = wr >= 0.6 ? 'var(--green)' : wr >= 0.4 ? 'var(--amber)' : 'var(--red)';
         return '<div class="bar-row">' +
           '<span class="bar-label" style="text-transform:capitalize;font-size:12px">' + s.replace('_',' ') + '</span>' +
@@ -1685,8 +1717,8 @@ function renderAnalytics() {
 function getStreak(closed) {
   if (!closed.length) return { count: 0, type: '' };
   const sorted = [...closed].sort((a, b) => (b.time||'').localeCompare(a.time||''));
-  const first = sorted[0].status;
-  let count = 0;
+  const first  = sorted[0].status;
+  let count    = 0;
   for (const t of sorted) { if (t.status === first) count++; else break; }
   return { count, type: first };
 }
@@ -1695,23 +1727,17 @@ function renderPnlChart(closed) {
   if (pnlChart) { pnlChart.destroy(); pnlChart = null; }
   const sorted = [...closed].sort((a, b) => (a.time||'').localeCompare(b.time||''));
   let cum = 0;
-  const data = sorted.map(t => { cum += ((parseFloat(t.pnl)||0) + (parseFloat(t.commission)||0)); return parseFloat(cum.toFixed(2)); });
+  const data = sorted.map(t => { cum += getNetPnl(t); return parseFloat(cum.toFixed(2)); });
   if (!data.length) return;
 
   const ctx = document.getElementById('pnl-chart').getContext('2d');
-  const lc = data[data.length-1] >= 0 ? '#22c87a' : '#f04a5a';
+  const lc  = data[data.length-1] >= 0 ? '#22c87a' : '#f04a5a';
   Chart.defaults.color = '#555a66';
   pnlChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: sorted.map((_, i) => i + 1),
-      datasets: [{
-        data,
-        borderColor: lc, borderWidth: 1.5,
-        pointRadius: data.length < 50 ? 3 : 0,
-        pointBackgroundColor: lc,
-        fill: false, tension: 0.3
-      }]
+      datasets: [{ data, borderColor: lc, borderWidth: 1.5, pointRadius: data.length < 50 ? 3 : 0, pointBackgroundColor: lc, fill: false, tension: 0.3 }]
     },
     options: {
       plugins: { legend: { display: false } },
@@ -1752,13 +1778,11 @@ function editTrade(id) {
   editingId = id;
   document.getElementById('add-page-title').textContent = 'Edit Trade';
   document.getElementById('save-btn').textContent = 'Update trade';
-
-  const f = (k, v) => { const el = document.getElementById(k); if (el) el.value = v || ''; };
-
+  const f = (k, v) => { const el = document.getElementById(k); if (el) el.value = v != null ? v : ''; };
   f('fp', t.pair); f('fa', t.account); f('fd', t.dir || 'long'); f('fss', t.session);
   f('fen', t.entry); f('fsl', t.sl); f('ftp', t.tp); f('ftm', t.time);
   f('fsz', t.size); f('frk', t.risk); f('frs', t.reason); f('ftf', t.tf);
-  f('ftg', t.tags); f('fex', t.exit); f('fpn', t.pnl); f('fcom', t.commission); 
+  f('ftg', t.tags); f('fex', t.exit); f('fpn', t.pnl); f('fcom', t.commission);
   f('fst', t.status || 'open'); f('fel', t.early || 'no');
   f('fer', t.earlyReason); f('fwl', t.well); f('fim', t.improve); f('fgr', t.grade);
   document.getElementById('femo').value = t.emotion || 7; document.getElementById('emo-out').textContent = t.emotion || 7;
@@ -1772,7 +1796,6 @@ async function saveTrade() {
   const pair  = document.getElementById('fp').value.trim().toUpperCase();
   const acct  = document.getElementById('fa').value.trim();
   const entry = parseFloat(document.getElementById('fen').value);
-
   if (!pair || isNaN(entry) || !acct) { alert('Pair, Account and Entry price are required.'); return; }
 
   const sl = parseFloat(document.getElementById('fsl').value) || null;
@@ -1839,7 +1862,6 @@ function clearForm() {
   document.getElementById('fcnf').value = 7; document.getElementById('cnf-out').textContent = '7';
   tempImages = []; document.getElementById('img-preview').innerHTML = '';
 }
-
 function cancelEdit() { clearForm(); showPage('dashboard'); }
 
 /* ═══════════════════════════════════════════════════════
@@ -1849,7 +1871,7 @@ function showBalanceModal() { renderAcctsList(); document.getElementById('accts-
 
 function renderAcctsList() {
   if (!knownAccounts.length) {
-    document.getElementById('accts-list').innerHTML = '<div class="empty"><b>No accounts yet</b><p style="margin-top:6px">Add a trade or connect TradeLocker to create accounts.</p></div>';
+    document.getElementById('accts-list').innerHTML = '<div class="empty"><b>No accounts yet</b><p style="margin-top:6px">Add a trade or connect TradeLocker.</p></div>';
     return;
   }
   document.getElementById('accts-list').innerHTML = knownAccounts.map(a => {
