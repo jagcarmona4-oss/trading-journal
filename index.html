@@ -863,23 +863,106 @@ function processOrderLegs(rawOrders, acctLabel) {
   return result;
 }
 
+// ══════════════════════════════════════════════════════════════
+// Live FX rate cache for cross-pair USD conversion.
+// Populated once per sync via fetchLiveFxRates().
+// ══════════════════════════════════════════════════════════════
+let liveFxRates = {};  // e.g. { 'USDCAD': 1.387, 'NZDUSD': 0.587, ... }
+
+async function fetchLiveFxRates() {
+  // Fetch rates needed for common cross-pair USD conversion
+  const pairs = ['USDCAD','USDNZD','USDAUD','USDCHF','USDGBP','USDEUR','USDJPY'];
+  try {
+    // Use exchangerate-api free endpoint (no key needed for these pairs)
+    const r = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    if (!r.ok) throw new Error('rate fetch failed');
+    const data = await r.json();
+    const rates = data.rates || {};
+    liveFxRates = rates;
+    addLog('ok', 'Live FX rates loaded (USD base): CAD=' + (rates.CAD||'?') + ' NZD=' + (rates.NZD||'?') + ' AUD=' + (rates.AUD||'?'));
+  } catch(e) {
+    addLog('warn', 'Could not fetch live FX rates — using approximate rates for cross-pair PNL. Results may be slightly off.');
+    // Approximate fallback rates (April 2026)
+    liveFxRates = { CAD: 1.387, NZD: 1.703, AUD: 1.565, CHF: 0.896, GBP: 0.751, EUR: 0.924, JPY: 143.5 };
+  }
+}
+
+// Given a pair like GBP/CAD, returns what currency the PNL is denominated in.
+// For standard forex: PNL is in the QUOTE currency.
+// e.g. GBP/CAD → PNL in CAD. GBP/NZD → PNL in NZD.
+function getQuoteCurrency(pair) {
+  const p = String(pair).toUpperCase().replace('/', '');
+  if (p.length === 6) return p.slice(3, 6);  // e.g. GBPCAD → CAD
+  return 'USD';  // fallback for indices/metals already in USD
+}
+
+// Convert an amount from a given currency to USD using live rates
+function toUSD(amount, currency) {
+  if (!currency || currency === 'USD') return amount;
+  const rate = liveFxRates[currency];  // how many units of currency per 1 USD
+  if (!rate || rate === 0) {
+    addLog('warn', 'No FX rate for ' + currency + ' — PNL may be inaccurate');
+    return amount;
+  }
+  return amount / rate;
+}
+
+// ══════════════════════════════════════════════════════════════
+// FIXED fallback PNL calculation:
+//   - For standard forex: pips × lotSize × 100,000, then convert
+//     quote currency → USD using live FX rates
+//   - For indices (SPX500, US30, NAS100): diff × size × 100
+//     (1 standard lot = $100 per index point on TradeLocker)
+//   - For Gold (XAU/USD): diff × size × 100
+//   - For JPY pairs: pips × lotSize × 100,000 ÷ 100 (2dp pricing)
+//   - Crypto/Oil: special multipliers
+//
+// This is only used when the TL API col[10] returns 0 for all legs.
+// The broker's own PNL (col 10) is always preferred when available.
+// ══════════════════════════════════════════════════════════════
 function calcPnlFallback(pair, dir, entry, exit, size) {
   if (!pair || !entry || exit == null || !size || size <= 0) return null;
   const diff = dir === 'long' ? (exit - entry) : (entry - exit);
-  const p = String(pair).toUpperCase();
-  const isJPY    = p.includes('JPY');
-  const isCrypto = /BTC|ETH|ADA|SOL|XRP|LTC/.test(p);
-  const isOil    = /USOIL|UKOIL|OIL|BRENT|WTI/.test(p);
-  const isGold   = /XAU|XAG|GOLD|SILVER/.test(p);
-  const isIndex  = /SPX|US30|NAS|UK100|GER|JP225|AUS200/.test(p);
-  let pnl;
-  if (isCrypto)     pnl = diff * size;
-  else if (isOil)   pnl = diff * size * 1000;
-  else if (isGold)  pnl = diff * size * 100;
-  else if (isIndex) pnl = diff * size;
-  else if (isJPY)   pnl = diff * 100000 * size / 100;
-  else              pnl = diff * 100000 * size;
-  return parseFloat(pnl.toFixed(2));
+  const p = String(pair).toUpperCase().replace('/', '');
+
+  const isJPY    = p.endsWith('JPY');
+  const isCrypto = /^(BTC|ETH|ADA|SOL|XRP|LTC)/.test(p);
+  const isOil    = /USOIL|UKOIL|BRENT|WTI/.test(p);
+  const isGold   = /XAU|XAG/.test(p);
+  // Indices on TL use $100/point per standard lot
+  const isIndex  = /SPX|US30|NAS100|UK100|GER40|JP225|AUS200/.test(p);
+
+  let pnlInQuoteCcy;
+  let quoteCcy = 'USD';
+
+  if (isCrypto) {
+    return parseFloat((diff * size).toFixed(2));
+  } else if (isOil) {
+    return parseFloat((diff * size * 1000).toFixed(2));
+  } else if (isGold) {
+    // XAU/USD: PNL in USD, 1 lot = 100 troy oz
+    return parseFloat((diff * size * 100).toFixed(2));
+  } else if (isIndex) {
+    // TradeLocker indices: 1 standard lot = $100 per point (confirmed from SPX500 data)
+    return parseFloat((diff * size * 100).toFixed(2));
+  } else if (isJPY) {
+    // JPY pairs: 3dp pricing, 1 lot = 100,000 units, PNL in JPY then /100 for cents
+    pnlInQuoteCcy = diff * 100000 * size;
+    quoteCcy = p.slice(-3);  // e.g. JPY
+    const pnlUSD = toUSD(pnlInQuoteCcy, quoteCcy);
+    return parseFloat(pnlUSD.toFixed(2));
+  } else {
+    // Standard forex: 1 lot = 100,000 units, PNL in quote currency
+    pnlInQuoteCcy = diff * 100000 * size;
+    quoteCcy = getQuoteCurrency(pair);
+    if (quoteCcy === 'USD') {
+      return parseFloat(pnlInQuoteCcy.toFixed(2));
+    } else {
+      // Cross pair: convert quote currency → USD
+      const pnlUSD = toUSD(pnlInQuoteCcy, quoteCcy);
+      return parseFloat(pnlUSD.toFixed(2));
+    }
+  }
 }
 
 function enrichWithSLTP(journalTrades, rawOrders) {
@@ -1055,6 +1138,8 @@ async function runTLSync() {
 
   let imported = 0, updated = 0, errors = 0;
   try {
+    addLog('ok', 'Fetching live FX rates for cross-pair PNL conversion…');
+    await fetchLiveFxRates();
     addLog('ok', 'Authenticating…');
     setProgress(5);
     await tlAuth();
