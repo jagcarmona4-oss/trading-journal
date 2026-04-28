@@ -199,9 +199,11 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); min-
 .env-live { background: rgba(240,74,90,0.15); color: var(--red); font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 600; font-family: var(--mono); }
 .env-demo { background: rgba(74,158,240,0.12); color: var(--blue); font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 600; font-family: var(--mono); }
 
-/* Debug panel */
 .debug-panel { background: #0a0c0f; border: 1px solid rgba(74,158,240,0.3); border-radius: var(--r); padding: 10px 14px; margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--blue); max-height: 300px; overflow-y: auto; display: none; }
 .debug-panel.show { display: block; }
+
+/* ── FIX: Initial balance warning banner ── */
+.init-balance-warn { background: rgba(240,160,34,0.12); border: 1px solid rgba(240,160,34,0.3); border-radius: var(--r); padding: 12px 16px; margin-bottom: 14px; font-size: 13px; color: var(--amber); display: flex; align-items: flex-start; gap: 10px; }
 
 @media (max-width: 900px) {
   .sidebar { display: none; }
@@ -529,9 +531,6 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); min-
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
-/* ═══════════════════════════════════════════════════════
-   CONFIG
-═══════════════════════════════════════════════════════ */
 const SUPABASE_URL = 'https://lxkqqewbhijidehyvnde.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_b1CQbtRRsaXM8uWQH3tfWw_xPINGdzw';
 const API = SUPABASE_URL + '/rest/v1/trades';
@@ -541,9 +540,6 @@ const HDR = {
   'Content-Type': 'application/json'
 };
 
-/* ═══════════════════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════════════════ */
 let trades              = [];
 let tempImages          = [];
 let pnlChart            = null;
@@ -560,9 +556,6 @@ let tlDiscoveredAccounts= [];
 let debugData           = [];
 let debugVisible        = false;
 
-/* ═══════════════════════════════════════════════════════
-   LOCAL STORAGE
-═══════════════════════════════════════════════════════ */
 function loadLocal() {
   const p = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } };
   tlCreds               = p('tlCreds')               || null;
@@ -575,15 +568,11 @@ function loadLocal() {
 }
 const saveLocal = (k, v) => localStorage.setItem(k, JSON.stringify(v));
 
-/* ═══════════════════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════════════════ */
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function safeJSON(text) {
-  // Handle very large integers that lose precision in JS
   const safe = text.replace(/:\s*(-?\d{15,})([,\}\]\s])/g, ':"$1"$2');
   try { return JSON.parse(safe); } catch(e) { return JSON.parse(text); }
 }
@@ -628,9 +617,6 @@ function parseTS(v) {
   return '';
 }
 
-/* ═══════════════════════════════════════════════════════
-   TL API
-═══════════════════════════════════════════════════════ */
 function tlBase() {
   return tlCreds?.env === 'live'
     ? 'https://live.tradelocker.com/backend-api'
@@ -705,9 +691,6 @@ function getAcctLabel(accNum) {
   return accountAliases[String(accNum)] || String(accNum);
 }
 
-/* ═══════════════════════════════════════════════════════
-   DEBUG
-═══════════════════════════════════════════════════════ */
 function toggleDebug() {
   debugVisible = !debugVisible;
   const panel = document.getElementById('debug-panel');
@@ -728,60 +711,22 @@ function addDebug(label, data) {
   panel.appendChild(d);
 }
 
-/* ═══════════════════════════════════════════════════════
-   ╔══════════════════════════════════════════════════════╗
-   ║   CORE FIX: PROCESS ORDER LEGS                      ║
-   ║                                                      ║
-   ║  KEY INSIGHT: TradeLocker's ordersHistory contains   ║
-   ║  the actual realized PNL and commission per leg.     ║
-   ║  We must USE those values, NOT recalculate PNL.      ║
-   ║                                                      ║
-   ║  The broker UI shows PNL and commission separately:  ║
-   ║  - PNL column = gross floating/realized PNL          ║
-   ║  - Commission column = separate fee                  ║
-   ║                                                      ║
-   ║  ordersHistory row structure (known columns):        ║
-   ║  [0]  orderId                                        ║
-   ║  [1]  instrumentId                                   ║
-   ║  [2]  ?                                              ║
-   ║  [3]  qty/lots                                       ║
-   ║  [4]  side (buy/sell)                                ║
-   ║  [5]  orderType                                      ║
-   ║  [6]  status                                         ║
-   ║  [7]  triggerPrice (for pending orders)              ║
-   ║  [8]  fillPrice                                      ║
-   ║  [9]  ? (often 0 or small number)                    ║
-   ║  [10] realized PNL (this is what we want!)           ║
-   ║  [11] commission (negative, e.g. -7.0)               ║
-   ║  [12] ?                                              ║
-   ║  [13] timestamp                                      ║
-   ║  [14] ?                                              ║
-   ║  [15] ?                                              ║
-   ║  [16] positionGroupId                                ║
-   ║                                                      ║
-   ║  We scan ALL numeric columns to find PNL/commission  ║
-   ║  by matching against known broker values.            ║
-   ╚══════════════════════════════════════════════════════╝
-═══════════════════════════════════════════════════════ */
-
-/**
- * Scans a set of order legs and tries to identify which columns
- * contain PNL and commission by looking for negative values
- * that are consistent with commission patterns.
- */
 function detectPnlColumns(filledLegs) {
-  // Strategy: commission is always negative, usually small relative to trade size
-  // PNL can be positive or negative
-  // We log the first few rows to debug panel for inspection
   if (filledLegs.length > 0) {
     addDebug('First filled order row (raw)', filledLegs[0].rawRow);
     if (filledLegs.length > 1) addDebug('Second filled order row (raw)', filledLegs[1].rawRow);
   }
-  return { pnlCol: 10, commCol: 11 }; // Based on TL API analysis
+  return { pnlCol: 10, commCol: 11 };
 }
 
+// ══════════════════════════════════════════════════════════════
+// FIX 2 APPLIED: Commission double-count bug removed.
+// The original code had a secondary loop over cols 9-12 that
+// added commission a second time after already capturing it from
+// commCol (col 11). This inflated fees by ~2x and understated
+// net PNL. The loop has been removed entirely.
+// ══════════════════════════════════════════════════════════════
 function processOrderLegs(rawOrders, acctLabel) {
-  // Step 1: Filter to filled orders only
   const filled = [];
   for (const row of rawOrders) {
     if (!Array.isArray(row)) continue;
@@ -810,10 +755,8 @@ function processOrderLegs(rawOrders, acctLabel) {
     });
   }
 
-  // Detect column indices for PNL and commission
   const { pnlCol, commCol } = detectPnlColumns(filled);
 
-  // Step 2: Group by positionGroupId
   const groups = {};
   for (const leg of filled) {
     if (!groups[leg.posGroupId]) groups[leg.posGroupId] = [];
@@ -825,12 +768,8 @@ function processOrderLegs(rawOrders, acctLabel) {
     legs.sort((a, b) => a.tsMs - b.tsMs);
 
     const opener = legs[0];
-    const isOpen = legs.length === 1; // Only one leg = still open (no closing leg)
-
-    // For closed trades: closer is the LAST leg; opening leg is FIRST
-    // Multiple partial closes are possible - we use first open and last close
+    const isOpen = legs.length === 1;
     const closer = isOpen ? null : legs[legs.length - 1];
-
     const dir = opener.side === 'buy' ? 'long' : 'short';
 
     let pair = opener.pair;
@@ -845,15 +784,11 @@ function processOrderLegs(rawOrders, acctLabel) {
     const size  = opener.lots;
     const time  = opener.tsISO;
 
-    // ── CRITICAL FIX: Use broker's actual PNL values ──────────────────────
-    // Sum PNL across ALL legs for this position (handles partial closes too)
-    // PNL is the realized gain/loss BEFORE commission
     let grossPnl    = null;
     let commission  = 0;
     let foundPnl    = false;
 
     if (!isOpen) {
-      // Try to extract from all legs
       let rawPnlSum  = 0;
       let rawCommSum = 0;
       let hasAnyPnl  = false;
@@ -861,27 +796,19 @@ function processOrderLegs(rawOrders, acctLabel) {
       for (const leg of legs) {
         const r = leg.rawRow;
 
-        // Check pnlCol (col 10) for realized PNL
+        // Read gross PNL from col 10
         const v10 = parseFloat(r[pnlCol]);
         if (!isNaN(v10) && v10 !== 0) {
           rawPnlSum += v10;
           hasAnyPnl  = true;
         }
 
-        // Check commCol (col 11) for commission
+        // Read commission from col 11 — this is the ONLY place we capture it.
+        // The secondary scan loop from the original code has been REMOVED
+        // because it caused commission to be double-counted.
         const v11 = parseFloat(r[commCol]);
         if (!isNaN(v11) && v11 !== 0) {
           rawCommSum += v11;
-        }
-
-        // Also check cols 9, 10, 11, 12 for any non-zero negative value that looks like commission
-        // Commission is always negative and usually < 0 and > -500 per leg
-        for (let ci = 9; ci <= 12; ci++) {
-          const cv = parseFloat(r[ci]);
-          if (!isNaN(cv) && cv < 0 && cv > -500 && ci !== pnlCol) {
-            // Likely commission if we didn't already get it from commCol
-            if (ci !== commCol) rawCommSum += cv;
-          }
         }
       }
 
@@ -892,18 +819,14 @@ function processOrderLegs(rawOrders, acctLabel) {
         addLog('diag', pair + ' posId=' + posGroupId + ': gross=' + grossPnl + ' comm=' + commission);
       }
 
-      // Fallback: if TL didn't give us PNL data, calculate it
-      // but note this may be inaccurate for cross-currency pairs
       if (!foundPnl && entry && exit && size) {
         addLog('warn', pair + ' posId=' + posGroupId + ': No PNL in API — using fallback calculation (may be inaccurate for crosses)');
         grossPnl  = calcPnlFallback(pair, dir, entry, exit, size);
-        // Estimate commission only as fallback
         const isIndex = /SPX|US30|NAS|UK100|GER|JP225|AUS200/.test(pair);
         commission = parseFloat((size * (isIndex ? -8 : -7)).toFixed(2));
       }
     }
 
-    // Determine status based on NET PNL (gross + commission)
     let status = 'open';
     if (!isOpen && grossPnl !== null) {
       const net = grossPnl + commission;
@@ -922,8 +845,8 @@ function processOrderLegs(rawOrders, acctLabel) {
       sl:          null,
       tp:          null,
       rr:          null,
-      pnl:         grossPnl,       // gross PNL from broker
-      commission:  commission,     // commission/fees from broker
+      pnl:         grossPnl,
+      commission:  commission,
       size:        size,
       time:        time,
       status:      status,
@@ -940,12 +863,6 @@ function processOrderLegs(rawOrders, acctLabel) {
   return result;
 }
 
-/**
- * Fallback PNL calculation — only used when TL API doesn't return PNL.
- * Note: This is inaccurate for cross-currency pairs (GBP/NZD, EUR/AUD, etc.)
- * because it doesn't apply the quote-currency-to-USD conversion.
- * The broker's actual PNL value should always be preferred.
- */
 function calcPnlFallback(pair, dir, entry, exit, size) {
   if (!pair || !entry || exit == null || !size || size <= 0) return null;
   const diff = dir === 'long' ? (exit - entry) : (entry - exit);
@@ -959,15 +876,12 @@ function calcPnlFallback(pair, dir, entry, exit, size) {
   if (isCrypto)     pnl = diff * size;
   else if (isOil)   pnl = diff * size * 1000;
   else if (isGold)  pnl = diff * size * 100;
-  else if (isIndex) pnl = diff * size;  // Indices: 1 lot = $1/point at TL
+  else if (isIndex) pnl = diff * size;
   else if (isJPY)   pnl = diff * 100000 * size / 100;
   else              pnl = diff * 100000 * size;
   return parseFloat(pnl.toFixed(2));
 }
 
-/* ═══════════════════════════════════════════════════════
-   ENRICH WITH SL/TP
-═══════════════════════════════════════════════════════ */
 function enrichWithSLTP(journalTrades, rawOrders) {
   const pendingMap = {};
   for (const row of rawOrders) {
@@ -1012,9 +926,6 @@ function enrichWithSLTP(journalTrades, rawOrders) {
   }
 }
 
-/* ═══════════════════════════════════════════════════════
-   SYNC UI
-═══════════════════════════════════════════════════════ */
 function addLog(type, msg) {
   const log = document.getElementById('sync-log');
   if (!log) return;
@@ -1130,9 +1041,6 @@ function setConnMsg(msg, isErr) {
   el.style.color = isErr ? 'var(--red)' : 'var(--green)';
 }
 
-/* ═══════════════════════════════════════════════════════
-   MAIN SYNC
-═══════════════════════════════════════════════════════ */
 async function runTLSync() {
   if (tlIsSyncing) { showToast('Sync already running…'); return; }
   if (!tlCreds)    { showToast('Not connected to TradeLocker'); return; }
@@ -1180,7 +1088,6 @@ async function runTLSync() {
         else if (res?.data)             rawOrders = res.data;
         addLog('ok', 'Got ' + rawOrders.length + ' raw order rows');
 
-        // Log a sample of the raw data for debugging
         if (rawOrders.length > 0) {
           addDebug('Sample raw order row (first filled)', rawOrders.find(r => Array.isArray(r) && String(r[6]||'').toLowerCase() === 'filled') || rawOrders[0]);
           addLog('info', 'Raw data available — click "Show raw data" to inspect column structure');
@@ -1200,14 +1107,11 @@ async function runTLSync() {
       for (const jt of journalTrades) {
         const existing = trades.find(t => t.tlId && String(t.tlId) === String(jt.tlId));
         if (existing) {
-          // Merge: update market data from TL, preserve user annotations
           const merged = {
             ...jt,
             id:          existing.id,
-            // Always take fresh PNL & commission from TL
             pnl:         jt.pnl         !== null ? jt.pnl         : existing.pnl,
             commission:  jt.commission  !== 0    ? jt.commission  : existing.commission,
-            // Preserve user-entered fields
             reason:      existing.reason      || '',
             well:        existing.well        || '',
             improve:     existing.improve     || '',
@@ -1236,6 +1140,14 @@ async function runTLSync() {
 
       addLog('ok', 'Account ' + accNum + ': ' + imported + ' new, ' + updated + ' updated');
       setProgress(base + 70);
+
+      // ── FIX 1 REMINDER: After sync, prompt user to set initial balance ──
+      // Check if any synced account has no initial balance set
+      const acctNames = [...new Set(journalTrades.map(t => t.account))];
+      const missing = acctNames.filter(a => !initialBalances[a] || initialBalances[a] === 0);
+      if (missing.length) {
+        addLog('warn', 'Initial balance not set for: ' + missing.join(', ') + ' — open Accounts to set your starting capital (e.g. $100,000)');
+      }
     }
 
     setProgress(95);
@@ -1262,9 +1174,6 @@ async function runTLSync() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════
-   SUPABASE
-═══════════════════════════════════════════════════════ */
 function setSyncDot(s, l) {
   document.getElementById('sync-dot').className = 'sdot ' + s;
   document.getElementById('sync-label').textContent = l;
@@ -1325,11 +1234,7 @@ async function deleteAllForAccount(accName) {
   trades = trades.filter(t => t.account !== accName);
 }
 
-/* ═══════════════════════════════════════════════════════
-   ACCOUNTS
-═══════════════════════════════════════════════════════ */
 function getNetPnl(t) {
-  // Net PNL = gross PNL + commission (commission is stored as negative)
   return (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0);
 }
 
@@ -1390,27 +1295,44 @@ function getFiltered() {
   return currentAccount === 'All' ? trades : trades.filter(t => t.account === currentAccount);
 }
 
-/* ═══════════════════════════════════════════════════════
-   DD BANNER
-═══════════════════════════════════════════════════════ */
 function renderDDBanner() {
   const b = document.getElementById('dd-banner');
   if (!b) return;
-  if (currentAccount === 'All' || !tlCreds) { b.innerHTML = ''; return; }
-  const ddL  = tlCreds.ddLimit || 10;
-  const init = initialBalances[currentAccount] || 0;
-  if (!init) { b.innerHTML = ''; return; }
-  const cur   = getSingleBalance(currentAccount);
-  const ddPct = ((init - cur) / init) * 100;
-  if      (ddPct >= ddL)       b.innerHTML = '<div class="dd-banner dd-warn">⚠️ <strong>DRAWDOWN LIMIT BREACHED</strong> — ' + ddPct.toFixed(2) + '% of ' + ddL + '% limit. Stop trading.</div>';
-  else if (ddPct >= ddL * 0.7) b.innerHTML = '<div class="dd-banner dd-caution">⚠️ Drawdown warning: ' + ddPct.toFixed(2) + '% of ' + ddL + '% limit.</div>';
-  else if (ddPct > 0)          b.innerHTML = '<div class="dd-banner dd-ok-banner">🟢 Drawdown: ' + ddPct.toFixed(2) + '% / ' + ddL + '%. On track.</div>';
-  else                         b.innerHTML = '';
+
+  // ── FIX 1: Show prominent warning if initial balance is $0 ──
+  // Without setting this, the balance shown will only reflect PNL, not the
+  // actual account balance (e.g. showing $480 instead of $101,427).
+  if (currentAccount !== 'All') {
+    const init = initialBalances[currentAccount] || 0;
+    if (!init) {
+      b.innerHTML = '<div class="dd-banner dd-caution">⚠️ <strong>Initial capital not set for "' + esc(currentAccount) + '".</strong> ' +
+        'Go to <a href="#" onclick="showBalanceModal();return false;" style="color:inherit;text-decoration:underline">Accounts</a> and enter your starting balance (e.g. $100,000). ' +
+        'Without this, the balance shown equals only your net PNL — not your actual account balance.</div>';
+      return;
+    }
+    if (tlCreds) {
+      const ddL   = tlCreds.ddLimit || 10;
+      const cur   = getSingleBalance(currentAccount);
+      const ddPct = ((init - cur) / init) * 100;
+      if      (ddPct >= ddL)       b.innerHTML = '<div class="dd-banner dd-warn">⚠️ <strong>DRAWDOWN LIMIT BREACHED</strong> — ' + ddPct.toFixed(2) + '% of ' + ddL + '% limit. Stop trading.</div>';
+      else if (ddPct >= ddL * 0.7) b.innerHTML = '<div class="dd-banner dd-caution">⚠️ Drawdown warning: ' + ddPct.toFixed(2) + '% of ' + ddL + '% limit.</div>';
+      else if (ddPct > 0)          b.innerHTML = '<div class="dd-banner dd-ok-banner">🟢 Drawdown: ' + ddPct.toFixed(2) + '% / ' + ddL + '%. On track.</div>';
+      else                         b.innerHTML = '';
+    } else {
+      b.innerHTML = '';
+    }
+  } else {
+    // Check if ANY account is missing initial balance
+    const missing = knownAccounts.filter(a => !initialBalances[a] || initialBalances[a] === 0);
+    if (missing.length) {
+      b.innerHTML = '<div class="dd-banner dd-caution">⚠️ Initial capital not set for: <strong>' + missing.map(esc).join(', ') + '</strong>. ' +
+        '<a href="#" onclick="showBalanceModal();return false;" style="color:inherit;text-decoration:underline">Set it in Accounts</a> for correct balance figures.</div>';
+    } else {
+      b.innerHTML = '';
+    }
+  }
 }
 
-/* ═══════════════════════════════════════════════════════
-   NAVIGATION
-═══════════════════════════════════════════════════════ */
 function showPage(p) {
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -1426,9 +1348,6 @@ function showPage(p) {
   if (p === 'add')       populateAccountDatalist();
 }
 
-/* ═══════════════════════════════════════════════════════
-   FORMAT HELPERS
-═══════════════════════════════════════════════════════ */
 function fmt(n) {
   if (n === null || n === undefined || isNaN(Number(n))) return '--';
   const v    = Number(n);
@@ -1439,9 +1358,6 @@ function fmtPct(n) { return (n * 100).toFixed(1) + '%'; }
 function dateStr(t) { return t ? t.slice(0,10) : '--'; }
 function pnlCls(v)  { return v > 0 ? 'pos' : v < 0 ? 'neg' : ''; }
 
-/* ═══════════════════════════════════════════════════════
-   DASHBOARD
-═══════════════════════════════════════════════════════ */
 function renderDashboard() {
   renderDDBanner();
   document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
@@ -1461,7 +1377,6 @@ function renderDashboard() {
   const pf  = al < 0 ? (aw / Math.abs(al)).toFixed(2) : '∞';
   const cb  = getBalance(currentAccount);
 
-  // High water mark
   let hwm = initialBalances[currentAccount] || (currentAccount === 'All'
     ? knownAccounts.reduce((s, x) => s + (initialBalances[x]||0), 0)
     : 0);
@@ -1522,9 +1437,6 @@ function renderTopPairs(elId) {
   }).join('') : '<div style="font-size:13px;color:var(--text3)">Close some trades first</div>';
 }
 
-/* ═══════════════════════════════════════════════════════
-   TRADE LOG
-═══════════════════════════════════════════════════════ */
 function populateFilterPairs() {
   const sel = document.getElementById('f-pair');
   if (!sel) return;
@@ -1561,11 +1473,8 @@ function renderLog() {
       '<td class="mono" style="color:var(--text2)">' + (t.exit != null ? t.exit : '--') + '</td>' +
       '<td class="mono" style="color:var(--text3);font-size:11.5px">' + (t.sl || '--') + ' / ' + (t.tp || '--') + '</td>' +
       '<td class="mono" style="color:var(--text2)">' + (t.size ? t.size + 'L' : '--') + '</td>' +
-      // Gross PNL column
       '<td class="mono ' + (isOpen ? '' : pnlCls(gross)) + '">' + (isOpen ? '--' : fmt(gross)) + '</td>' +
-      // Commission column
       '<td class="mono" style="color:var(--text3)">' + (isOpen || comm === 0 ? '--' : fmt(comm)) + '</td>' +
-      // Net PNL column
       '<td class="mono ' + (isOpen ? '' : pnlCls(net)) + '" style="font-weight:600">' + (isOpen ? '<span style="color:var(--blue)">open</span>' : fmt(net)) + '</td>' +
       '<td style="display:flex;align-items:center;gap:4px;padding-top:10px">' +
         '<span class="badge badge-' + (t.status === 'breakeven' ? 'be' : t.status) + '">' + t.status + '</span>' +
@@ -1584,9 +1493,6 @@ async function deleteTrade(id) {
   if (ok) { trades = trades.filter(t => t.id !== id); extractAndSaveAccounts(); renderLog(); renderDashboard(); renderAnalytics(); }
 }
 
-/* ═══════════════════════════════════════════════════════
-   DETAIL MODAL
-═══════════════════════════════════════════════════════ */
 function openDetail(id) {
   const t = trades.find(x => x.id == id);
   if (!t) return;
@@ -1656,9 +1562,6 @@ function note(label, text) {
 }
 function openLightbox(src) { document.getElementById('lb-img').src = src; document.getElementById('lightbox').style.display = 'flex'; }
 
-/* ═══════════════════════════════════════════════════════
-   ANALYTICS
-═══════════════════════════════════════════════════════ */
 function renderAnalytics() {
   const f  = getFiltered();
   const c  = f.filter(t => t.status !== 'open');
@@ -1749,9 +1652,6 @@ function renderPnlChart(closed) {
   });
 }
 
-/* ═══════════════════════════════════════════════════════
-   FORM
-═══════════════════════════════════════════════════════ */
 document.getElementById('femo').addEventListener('input', e => document.getElementById('emo-out').textContent = e.target.value);
 document.getElementById('fcnf').addEventListener('input', e => document.getElementById('cnf-out').textContent = e.target.value);
 
@@ -1864,17 +1764,25 @@ function clearForm() {
 }
 function cancelEdit() { clearForm(); showPage('dashboard'); }
 
-/* ═══════════════════════════════════════════════════════
-   ACCOUNTS MODAL
-═══════════════════════════════════════════════════════ */
 function showBalanceModal() { renderAcctsList(); document.getElementById('accts-modal').style.display = 'flex'; }
 
+// ── FIX 1 APPLIED: Added initial balance warning banner ──
+// When initial capital is $0, a clear amber warning is shown
+// inside the accounts modal explaining why balance is wrong.
 function renderAcctsList() {
   if (!knownAccounts.length) {
     document.getElementById('accts-list').innerHTML = '<div class="empty"><b>No accounts yet</b><p style="margin-top:6px">Add a trade or connect TradeLocker.</p></div>';
     return;
   }
-  document.getElementById('accts-list').innerHTML = knownAccounts.map(a => {
+
+  const missingBalance = knownAccounts.filter(a => !initialBalances[a] || initialBalances[a] === 0);
+  const warningHtml = missingBalance.length
+    ? '<div class="init-balance-warn">⚠️ <div><strong>Initial capital is $0</strong> for: ' + missingBalance.map(esc).join(', ') +
+      '. Enter your account\'s starting balance below (e.g. $100,000 for a $100K prop account). ' +
+      'Without this, Balance will only show your cumulative PNL, not your true account balance.</div></div>'
+    : '';
+
+  document.getElementById('accts-list').innerHTML = warningHtml + knownAccounts.map(a => {
     const init = initialBalances[a] || 0;
     const cur  = getSingleBalance(a);
     const cnt  = trades.filter(t => t.account === a).length;
@@ -1884,7 +1792,7 @@ function renderAcctsList() {
       '<div style="text-align:right">' +
       '<div style="font-size:11px;color:var(--text3);margin-bottom:4px">Initial capital</div>' +
       '<input type="number" step="0.01" value="' + init + '" onchange="updateInitialBalance(\'' + esc(a) + '\',this.value)" ' +
-      'style="width:110px;text-align:right;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:14px;font-weight:600;padding:5px 9px;outline:none">' +
+      'style="width:110px;text-align:right;background:var(--bg3);border:1px solid ' + (!init ? 'rgba(240,160,34,0.5)' : 'var(--border)') + ';border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:14px;font-weight:600;padding:5px 9px;outline:none">' +
       '<div style="margin-top:4px;font-size:12px;color:var(--text3)">Balance: <span class="' + (cur>=0?'pos':'neg') + '" style="font-weight:700;font-family:var(--mono)">$' + cur.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',') + '</span></div></div>' +
       '<button class="btn btn-danger btn-sm" onclick="deleteAccount(\'' + esc(a).replace(/'/g,"\\'") + '\')">Delete</button></div>';
   }).join('');
@@ -1929,9 +1837,6 @@ function addAccount() {
   showToast('✅ Account "' + clean + '" created');
 }
 
-/* ═══════════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════════ */
 async function init() {
   loadLocal();
   await fetchTrades();
