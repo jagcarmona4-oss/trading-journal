@@ -386,6 +386,7 @@ th.sorted-desc::after { content: ' ↓'; }
         <div class="sdot busy" id="sync-dot"></div>
         <span id="sync-label" style="font-size:11px;color:var(--text3)">Connecting…</span>
       </div>
+      <div id="ai-key-status" style="margin-top:8px;font-size:10.5px;cursor:pointer" onclick="showApiKeyPrompt()"></div>
     </div>
   </nav>
 
@@ -538,36 +539,74 @@ th.sorted-desc::after { content: ' ↓'; }
     <!-- ═══════════════ AI COACH ═══════════════ -->
     <div id="page-ai-review" class="page">
       <div class="page-header">
-        <div><div class="page-title">AI Coach</div><div class="page-sub">Personalised coaching powered by Claude AI</div></div>
-      </div>
-      <div class="card" style="margin-bottom:14px">
-        <div style="font-size:13px;font-weight:600;margin-bottom:10px">What would you like reviewed?</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-          <button class="btn btn-ghost btn-sm ai-prompt-btn" data-type="overall" onclick="setAIPrompt('overall')">📊 Overall performance</button>
-          <button class="btn btn-ghost btn-sm ai-prompt-btn" data-type="pairs" onclick="setAIPrompt('pairs')">💱 Pair selection</button>
-          <button class="btn btn-ghost btn-sm ai-prompt-btn" data-type="risk" onclick="setAIPrompt('risk')">🛡️ Risk management</button>
-          <button class="btn btn-ghost btn-sm ai-prompt-btn" data-type="timing" onclick="setAIPrompt('timing')">⏰ Entry timing</button>
-          <button class="btn btn-ghost btn-sm ai-prompt-btn" data-type="psychology" onclick="setAIPrompt('psychology')">🧠 Psychology</button>
-          <button class="btn btn-ghost btn-sm ai-prompt-btn" data-type="improvement" onclick="setAIPrompt('improvement')">🎯 Top 3 improvements</button>
-        </div>
-        <div class="fg" style="margin-bottom:14px">
-          <label>Or ask anything</label>
-          <textarea id="ai-custom-prompt" style="min-height:60px" placeholder="e.g. Why do I keep losing on GBP/NZD longs? What is my best session?"></textarea>
-        </div>
-        <button class="btn btn-primary" onclick="runAIReview()" id="ai-run-btn">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Ask AI Coach
+        <div><div class="page-title">AI Coach</div><div class="page-sub">Automatic pattern detection + Claude AI deep analysis</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="showApiKeyPrompt()" style="gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          API Key
         </button>
       </div>
-      <div id="ai-response-card" style="display:none" class="card">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-          <div class="tl-pulse"></div>
-          <span style="font-size:13px;font-weight:600">AI Coach</span>
-          <span id="ai-typing" style="display:none">
-            <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
-          </span>
+
+      <!-- AUTO-ANALYSIS SECTION (no API key needed) -->
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text)">📡 Automatic Pattern Analysis</div>
+            <div style="font-size:11.5px;color:var(--text3);margin-top:2px">Rule-based insights from your data — no API key needed</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="runAutoAnalysis()">↻ Refresh</button>
         </div>
-        <div id="ai-response-text" class="ai-response"></div>
+        <div id="auto-analysis-wrap" style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:12.5px;color:var(--text3);text-align:center;padding:16px">Click Refresh or sync trades to see insights.</div>
+        </div>
+      </div>
+
+      <!-- DEEP AI ANALYSIS -->
+      <div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,var(--bg2) 0%,rgba(16,185,129,0.04) 100%);border-color:rgba(16,185,129,0.15)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div>
+            <div style="font-size:13px;font-weight:700">⚡ Deep AI Analysis</div>
+            <div style="font-size:11.5px;color:var(--text3);margin-top:2px">Full coaching report from Claude — requires API key</div>
+          </div>
+          <button class="btn btn-primary" onclick="runDeepAIAnalysis()" id="deep-ai-btn" style="font-weight:700">
+            ⚡ Deep AI Analysis
+          </button>
+        </div>
+        <div id="deep-ai-output" style="display:none;border-top:1px solid var(--border);padding-top:14px;margin-top:4px"></div>
+      </div>
+
+      <!-- FOCUSED QUESTIONS -->
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px">Ask a specific question</div>
+        <div style="font-size:11.5px;color:var(--text3);margin-bottom:12px">Focus Claude on a specific aspect of your trading</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="btn btn-ghost btn-sm ai-prompt-btn" data-type="overall" onclick="setAIPrompt('overall')">📊 Overall</button>
+          <button class="btn btn-ghost btn-sm ai-prompt-btn" data-type="pairs" onclick="setAIPrompt('pairs')">💱 Pairs</button>
+          <button class="btn btn-ghost btn-sm ai-prompt-btn" data-type="risk" onclick="setAIPrompt('risk')">🛡️ Risk</button>
+          <button class="btn btn-ghost btn-sm ai-prompt-btn" data-type="timing" onclick="setAIPrompt('timing')">⏰ Timing</button>
+          <button class="btn btn-ghost btn-sm ai-prompt-btn" data-type="psychology" onclick="setAIPrompt('psychology')">🧠 Psychology</button>
+          <button class="btn btn-ghost btn-sm ai-prompt-btn" data-type="improvement" onclick="setAIPrompt('improvement')">🎯 Top 3 fixes</button>
+        </div>
+        <div class="fg" style="margin-bottom:12px">
+          <label>Or type your own question</label>
+          <textarea id="ai-custom-prompt" style="min-height:56px" placeholder="e.g. Why do I keep losing on GBP/NZD longs?&#10;e.g. What time of day should I stop trading?&#10;e.g. Am I oversizing my positions?"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-primary" onclick="runAIReview()" id="ai-run-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Ask AI
+          </button>
+          <span style="font-size:11px;color:var(--text3)">Requires API key</span>
+        </div>
+        <div id="ai-response-card" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <div class="tl-pulse"></div>
+            <span style="font-size:13px;font-weight:600">AI Coach</span>
+            <span id="ai-typing" style="display:none;gap:3px">
+              <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+            </span>
+          </div>
+          <div id="ai-response-text" class="ai-response"></div>
+        </div>
       </div>
     </div>
 
@@ -842,6 +881,7 @@ th.sorted-desc::after { content: ' ↓'; }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
+
 window.onerror=function(m,s,l,c,e){console.error("[TradeLog v4]",m,"at line",l,e);return false;};
 
 window.onerror = function(msg, src, line, col, err) {
@@ -1574,6 +1614,7 @@ async function runTLSync() {
     document.getElementById('tl-counts').textContent = summary;
     addLog('ok', '✅ Sync complete — ' + summary);
     showToast('✅ Synced! ' + imported + ' new, ' + updated + ' updated');
+    runAutoAnalysis();
   } catch(e) {
     addLog('err', 'Sync failed: ' + e.message);
     console.error('TL sync error:', e);
@@ -2158,42 +2199,8 @@ RECENT TRADES (last 10):
 ${recent}`;
 }
 
-async function runAIReview() {
-  const customPrompt = document.getElementById('ai-custom-prompt').value.trim();
-  const systemPrompt = customPrompt
-    ? "You are a professional prop trading coach with expertise in forex and indices. Be concise, specific, and honest. Use bullet points. Max 400 words."
-    : (AI_PROMPTS[aiActiveType] + " Be concise, specific, and honest. Use bullet points. Max 400 words.");
-  const userMsg = customPrompt
-    ? customPrompt + "\n\n" + buildTradeDataSummary()
-    : buildTradeDataSummary();
+// runAIReview: see v4 section
 
-  const btn = document.getElementById('ai-run-btn');
-  btn.disabled = true; btn.textContent = 'Thinking…';
-  const card = document.getElementById('ai-response-card');
-  const resp = document.getElementById('ai-response-text');
-  card.style.display = 'block';
-  resp.textContent = '';
-
-  try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userMsg }]
-      })
-    });
-    const data = await r.json();
-    const text = (data.content||[]).map(b => b.text||'').join('');
-    resp.textContent = text || 'No response received.';
-  } catch(e) {
-    resp.textContent = 'Error reaching AI: ' + e.message;
-  } finally {
-    btn.disabled = false; btn.textContent = 'Ask AI Coach';
-  }
-}
 
 /* ═══════════════════════════════════════════════════════
    ENHANCED showPage — add insights + ai-review routing
@@ -2263,6 +2270,13 @@ function renderDashboard() {
   }).join('') || '<div class="empty"><b>No trades yet</b></div>';
 
   renderTopPairs('top-pairs');
+  // Refresh AI sidebar status
+  const aiStat = document.getElementById('ai-key-status');
+  if (aiStat) {
+    aiStat.innerHTML = getApiKey()
+      ? '<span style="color:var(--green)">🤖 AI Coach connected</span>'
+      : '<span style="color:var(--text3)">🤖 AI Coach — <span style="text-decoration:underline">add key</span></span>';
+  }
 }
 function sc(label, val, cls, sub) {
   return '<div class="stat-card">' +
@@ -2816,6 +2830,7 @@ async function init() {
   loadJournal();
   populatePlaybookSelect();
   renderDashboard();
+  setTimeout(runAutoAnalysis, 500);
   if (tlCreds && tlCreds.autoSync !== false) {
     setTimeout(async () => {
       showPage('tl-sync');
@@ -3283,49 +3298,353 @@ function buildTradeDataSummary() {
     "LAST 10 TRADES:\n"+recent;
 }
 
-async function runAIReview() {
-  const customPrompt = document.getElementById('ai-custom-prompt').value.trim();
-  const systemPrompt = customPrompt
-    ? "You are a professional prop trading coach specialising in forex and indices. Be direct, specific, constructive. Use numbered bullet points. Keep under 350 words."
-    : AI_PROMPTS[aiActiveType] + " Be direct, specific, constructive. Use numbered bullet points. Keep under 350 words.";
-  const userMsg = customPrompt
-    ? customPrompt + "\n\n" + buildTradeDataSummary()
-    : buildTradeDataSummary();
+/* ═══════════════════════════════════════════════════════
+   AI COACH — FIXED + AUTO-ANALYSIS ENGINE
+═══════════════════════════════════════════════════════ */
 
-  const btn = document.getElementById('ai-run-btn');
-  btn.disabled = true; btn.textContent = 'Thinking…';
-  const card = document.getElementById('ai-response-card');
-  const resp = document.getElementById('ai-response-text');
-  const typing = document.getElementById('ai-typing');
-  card.style.display = 'block';
-  resp.textContent = '';
-  if (typing) typing.style.display = 'inline-flex';
+// API key stored in session (never persisted to disk)
+let _aiKey = localStorage.getItem('_tlApiKey') || '';
+
+function getApiKey() { return _aiKey; }
+
+function saveApiKey(k) {
+  _aiKey = k.trim();
+  if (_aiKey) localStorage.setItem('_tlApiKey', _aiKey);
+  else localStorage.removeItem('_tlApiKey');
+}
+
+async function callClaude(systemPrompt, userMsg, maxTokens) {
+  const key = getApiKey();
+  if (!key) throw new Error('NO_KEY');
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: maxTokens || 1000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMsg }]
+    })
+  });
+  const data = await r.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return (data.content || []).map(b => b.text || '').join('');
+}
+
+function showApiKeyPrompt(onSuccess) {
+  const existing = document.getElementById('api-key-modal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'api-key-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(6px)';
+  modal.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:18px;padding:28px;max-width:460px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div style="width:36px;height:36px;background:linear-gradient(135deg,var(--green),var(--cyan));border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div style="font-size:17px;font-weight:700">Connect AI Coach</div>
+      </div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:20px;line-height:1.5">Enter your Anthropic API key to enable AI-powered trade analysis. Keys are stored only in your browser and never leave your device.</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input id="api-key-input" type="password" placeholder="sk-ant-api03-..." 
+          style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:13px;padding:10px 12px;outline:none;width:100%;transition:border-color 0.12s"
+          onfocus="this.style.borderColor='rgba(16,185,129,0.4)'" 
+          onblur="this.style.borderColor=''"
+          value="${getApiKey()}">
+        <div style="font-size:11px;color:var(--text3)">
+          Get your key at <a href="https://console.anthropic.com/settings/api-keys" target="_blank" style="color:var(--green)">console.anthropic.com</a> — Claude API usage is pay-per-use, typically a few cents per analysis.
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button onclick="
+            const k = document.getElementById('api-key-input').value.trim();
+            if (!k.startsWith('sk-ant')) { document.getElementById('api-key-err').textContent='Key must start with sk-ant…'; return; }
+            saveApiKey(k);
+            document.getElementById('api-key-modal').remove();
+            ${onSuccess ? onSuccess + '()' : ''};
+          " style="flex:1;background:var(--green);color:#000;font-weight:700;border:none;border-radius:8px;padding:10px;font-family:var(--sans);font-size:13px;cursor:pointer">Save &amp; Continue</button>
+          <button onclick="document.getElementById('api-key-modal').remove()" style="background:var(--bg4);color:var(--text2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-family:var(--sans);font-size:13px;cursor:pointer">Cancel</button>
+        </div>
+        <div id="api-key-err" style="font-size:11.5px;color:var(--red)"></div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('api-key-input')?.focus(), 100);
+}
+
+// removed duplicate
+
+
+function formatAIResponse(text) {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '<strong style="color:var(--text)">$1</strong>')
+    .replace(/^(\d+\.\s)/gm, '<span style="color:var(--green);font-weight:600">$1</span>')
+    .replace(/^([-•]\s)/gm, '<span style="color:var(--text3)">▸</span> ')
+    .replace(/\n\n/g, '</p><p style="margin-top:10px">')
+    .replace(/\n/g, '<br>')
+    .replace(/^/, '<p>')
+    .replace(/$/, '</p>');
+}
+
+/* ═══════════════════════════════════════════════════════
+   AUTO-ANALYSIS ENGINE — Runs after each sync, shows
+   rule-based insights without needing an API key.
+   AI-powered deep analysis runs on demand.
+═══════════════════════════════════════════════════════ */
+
+function runAutoAnalysis() {
+  const closed = getFiltered().filter(t => t.status !== 'open');
+  if (closed.length < 3) return;
+
+  const insights = [];
+
+  // ── Worst pair finder
+  const pairMap = {};
+  closed.forEach(t => {
+    if (!pairMap[t.pair]) pairMap[t.pair] = { wins:0, total:0, pnl:0 };
+    pairMap[t.pair].total++;
+    if (t.status === 'win') pairMap[t.pair].wins++;
+    pairMap[t.pair].pnl += getNetPnl(t);
+  });
+  const worstPairs = Object.entries(pairMap)
+    .filter(([,d]) => d.total >= 2 && d.pnl < 0)
+    .sort((a,b) => a[1].pnl - b[1].pnl)
+    .slice(0, 2);
+  worstPairs.forEach(([pair, d]) => {
+    insights.push({
+      type: 'danger',
+      icon: '⚠️',
+      title: pair + ' is hurting you',
+      body: d.total + ' trades, ' + (d.wins/d.total*100).toFixed(0) + '% win rate, net ' + fmt(d.pnl) + '. Consider avoiding this pair or reviewing your edge on it.',
+      action: { label: 'Filter to ' + pair, fn: 'filterLogTo("' + pair + '")' }
+    });
+  });
+
+  // ── Best pair
+  const bestPair = Object.entries(pairMap)
+    .filter(([,d]) => d.total >= 2 && d.pnl > 0)
+    .sort((a,b) => b[1].pnl/b[1].total - a[1].pnl/a[1].total)[0];
+  if (bestPair) {
+    const [pair, d] = bestPair;
+    insights.push({
+      type: 'success',
+      icon: '🎯',
+      title: pair + ' is your strongest pair',
+      body: (d.wins/d.total*100).toFixed(0) + '% win rate, avg ' + fmt(d.pnl/d.total) + ' per trade. This is where your edge is clearest — consider sizing up here.',
+      action: null
+    });
+  }
+
+  // ── Loss streak tilt risk
+  const sorted = [...closed].sort((a,b) => (a.time||'').localeCompare(b.time||''));
+  let curLoss = 0, maxLoss = 0, tiltSequences = 0;
+  let prevWasLoss = false;
+  sorted.forEach(t => {
+    if (t.status === 'loss') {
+      curLoss++;
+      if (curLoss > maxLoss) maxLoss = curLoss;
+      if (curLoss === 3) tiltSequences++;
+    } else { curLoss = 0; }
+  });
+  if (maxLoss >= 3) {
+    insights.push({
+      type: 'warning',
+      icon: '🧠',
+      title: 'Tilt risk detected — ' + maxLoss + ' consecutive losses at worst',
+      body: tiltSequences > 1
+        ? 'You have had ' + tiltSequences + ' separate 3+ loss streaks. This is a pattern. Consider a hard rule: stop for the day after 3 losses.'
+        : 'Your worst losing streak was ' + maxLoss + ' in a row. Have a clear rule for when to stop trading for the day.',
+      action: null
+    });
+  }
+
+  // ── Overtrading days
+  const byDay = {};
+  closed.forEach(t => {
+    if (!t.time) return;
+    const d = t.time.slice(0,10);
+    if (!byDay[d]) byDay[d] = { count:0, pnl:0 };
+    byDay[d].count++;
+    byDay[d].pnl += getNetPnl(t);
+  });
+  const overtradeDays = Object.entries(byDay).filter(([,d]) => d.count >= 5 && d.pnl < 0);
+  if (overtradeDays.length >= 2) {
+    const avgLoss = overtradeDays.reduce((s,[,d]) => s+d.pnl, 0) / overtradeDays.length;
+    insights.push({
+      type: 'warning',
+      icon: '📉',
+      title: 'Overtrading on losing days',
+      body: overtradeDays.length + ' days with 5+ trades ended negative (avg ' + fmt(avgLoss) + '). When you start losing, you tend to trade more. Try a daily trade limit of 3–4.',
+      action: null
+    });
+  }
+
+  // ── Commission drag check
+  const totalComm = closed.reduce((s,t) => s+(parseFloat(t.commission)||0), 0);
+  const totalGross = closed.reduce((s,t) => s+(parseFloat(t.pnl)||0), 0);
+  const commPct = totalGross > 0 ? Math.abs(totalComm/totalGross)*100 : 0;
+  if (commPct > 25) {
+    insights.push({
+      type: 'warning',
+      icon: '💸',
+      title: 'Commission eating ' + commPct.toFixed(0) + '% of your gross',
+      body: 'You made ' + fmt(totalGross) + ' gross but paid ' + fmt(totalComm) + ' in fees. Fewer, higher-conviction trades with larger sizing could improve your net significantly.',
+      action: null
+    });
+  }
+
+  // ── Best/worst session
+  const sessMap = {};
+  closed.forEach(t => {
+    const s = t.session || 'unknown';
+    if (!sessMap[s]) sessMap[s] = { wins:0, total:0, pnl:0 };
+    sessMap[s].total++;
+    if (t.status==='win') sessMap[s].wins++;
+    sessMap[s].pnl += getNetPnl(t);
+  });
+  const sessEntries = Object.entries(sessMap).filter(([s,d]) => d.total >= 2 && s !== 'unknown');
+  if (sessEntries.length >= 2) {
+    const best = sessEntries.sort((a,b) => b[1].pnl - a[1].pnl)[0];
+    const worst = sessEntries.sort((a,b) => a[1].pnl - b[1].pnl)[0];
+    if (best[1].pnl > 0 && worst[1].pnl < 0) {
+      insights.push({
+        type: 'info',
+        icon: '⏰',
+        title: best[0].replace('_',' ') + ' session is your sweet spot',
+        body: 'Net ' + fmt(best[1].pnl) + ' in ' + best[0].replace('_',' ') + ' vs ' + fmt(worst[1].pnl) + ' in ' + worst[0].replace('_',' ') + '. Focusing on your best session window could significantly improve results.',
+        action: null
+      });
+    }
+  }
+
+  // ── Win rate vs expectancy check
+  const wins = closed.filter(t => t.status==='win');
+  const losses = closed.filter(t => t.status==='loss');
+  const wr = closed.length ? wins.length/closed.length : 0;
+  const avgW = wins.length ? wins.reduce((s,t)=>s+getNetPnl(t),0)/wins.length : 0;
+  const avgL = losses.length ? losses.reduce((s,t)=>s+getNetPnl(t),0)/losses.length : 0;
+  const ev = wr*avgW + (1-wr)*avgL;
+  if (ev < 0) {
+    insights.push({
+      type: 'danger',
+      icon: '📊',
+      title: 'Negative expected value per trade',
+      body: 'With ' + (wr*100).toFixed(0) + '% win rate, avg win ' + fmt(avgW) + ' and avg loss ' + fmt(avgL) + ', your EV is ' + fmt(ev) + ' per trade. You need either a higher win rate OR better risk:reward to be consistently profitable.',
+      action: null
+    });
+  } else if (ev > 0) {
+    const needed = Math.abs(avgL)/(Math.abs(avgL)+avgW);
+    if (wr > needed + 0.05) {
+      insights.push({
+        type: 'success',
+        icon: '✅',
+        title: 'Positive EV — your edge is real',
+        body: 'Expected value of ' + fmt(ev) + ' per trade with your current stats. Your win rate (' + (wr*100).toFixed(0) + '%) beats the breakeven rate (' + (needed*100).toFixed(0) + '%). Protect this edge.',
+        action: null
+      });
+    }
+  }
+
+  // ── Grading check (if user grades trades)
+  const graded = closed.filter(t => t.grade);
+  if (graded.length >= 3) {
+    const gradeMap = {};
+    graded.forEach(t => {
+      if (!gradeMap[t.grade]) gradeMap[t.grade] = { pnl:0, wins:0, total:0 };
+      gradeMap[t.grade].total++;
+      if (t.status==='win') gradeMap[t.grade].wins++;
+      gradeMap[t.grade].pnl += getNetPnl(t);
+    });
+    const aGrade = gradeMap['A'] || gradeMap['B'];
+    const fGrade = gradeMap['F'] || gradeMap['D'];
+    if (aGrade && fGrade && fGrade.pnl < 0) {
+      insights.push({
+        type: 'warning',
+        icon: '📝',
+        title: 'Your low-grade trades are costing you',
+        body: 'Grade A/B trades net ' + fmt((gradeMap['A']?.pnl||0)+(gradeMap['B']?.pnl||0)) + ' vs grade D/F costing ' + fmt(fGrade.pnl) + '. Eliminating trades you know are poor setups could significantly improve performance.',
+        action: null
+      });
+    }
+  }
+
+  renderAutoAnalysis(insights);
+}
+
+function filterLogTo(pair) {
+  showPage('log');
+  const sel = document.getElementById('f-pair');
+  if (sel) { sel.value = pair; renderLog(); }
+}
+
+function renderAutoAnalysis(insights) {
+  const wrap = document.getElementById('auto-analysis-wrap');
+  if (!wrap) return;
+  if (!insights.length) {
+    wrap.innerHTML = '<div style="font-size:12.5px;color:var(--text3);text-align:center;padding:16px">No significant patterns detected yet. Trade more to unlock insights.</div>';
+    return;
+  }
+
+  const colors = {
+    danger:  { bg: 'rgba(239,68,68,0.06)',   border: 'rgba(239,68,68,0.2)',   dot: 'var(--red)' },
+    warning: { bg: 'rgba(245,158,11,0.06)',  border: 'rgba(245,158,11,0.2)',  dot: 'var(--amber)' },
+    success: { bg: 'rgba(16,185,129,0.06)',  border: 'rgba(16,185,129,0.2)', dot: 'var(--green)' },
+    info:    { bg: 'rgba(59,130,246,0.06)',   border: 'rgba(59,130,246,0.2)',  dot: 'var(--blue)' },
+  };
+
+  wrap.innerHTML = insights.map((ins, idx) => {
+    const c = colors[ins.type] || colors.info;
+    return `
+      <div style="background:${c.bg};border:1px solid ${c.border};border-radius:10px;padding:13px 16px;display:flex;align-items:flex-start;gap:12px;animation:pagein 0.3s ease ${idx*0.06}s both">
+        <span style="font-size:18px;flex-shrink:0;line-height:1.3">${ins.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;margin-bottom:3px;color:var(--text)">${ins.title}</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.55">${ins.body}</div>
+          ${ins.action ? `<button onclick="${ins.action.fn}" style="margin-top:7px;background:none;border:1px solid ${c.border};color:var(--text2);border-radius:6px;padding:3px 10px;font-family:var(--sans);font-size:11px;cursor:pointer">${ins.action.label} →</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function runDeepAIAnalysis() {
+  if (!getApiKey()) { showApiKeyPrompt('runDeepAIAnalysis'); return; }
+
+  const btn = document.getElementById('deep-ai-btn');
+  const wrap = document.getElementById('deep-ai-output');
+  if (!btn || !wrap) return;
+
+  btn.disabled = true; btn.textContent = '⚡ Analysing…';
+  wrap.style.display = 'block';
+  wrap.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:12px 0;color:var(--text3)"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span><span style="margin-left:4px;font-size:12.5px">Claude is reading your trading data…</span></div>';
+
+  const system = "You are an elite prop trading coach who has reviewed hundreds of funded traders. Analyse this trader's data deeply and give a structured, brutally honest coaching report. Use this exact format:\n\n**🎯 THE HEADLINE**\nOne sentence summary of their biggest issue.\n\n**✅ WHAT'S WORKING**\n2-3 bullet points of genuine strengths.\n\n**❌ CRITICAL PROBLEMS**\n2-3 specific issues with numbers from their data.\n\n**📋 YOUR 30-DAY ACTION PLAN**\nThree specific, measurable changes to make in the next 30 days. Be very concrete — e.g. 'Trade only GBP/CAD and GBP/NZD for 2 weeks' not 'trade fewer pairs'.\n\n**📊 KEY METRIC TO WATCH**\nOne number to track each week that shows improvement.\n\nBe brutally honest. Use the actual numbers from their data. Do not be generic.";
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userMsg }]
-      })
-    });
-    const data = await r.json();
-    if (typing) typing.style.display = 'none';
-    if (data.error) {
-      resp.textContent = 'API error: ' + (data.error.message || JSON.stringify(data.error));
-    } else {
-      const text = (data.content||[]).map(b => b.text||'').join('');
-      resp.textContent = text || 'No response received.';
-    }
+    const text = await callClaude(system, buildTradeDataSummary(), 1500);
+    wrap.innerHTML = '<div class="ai-response" style="font-size:13px;line-height:1.75">' + formatAIResponse(text) + '</div>' +
+      '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">' +
+      '<span style="font-size:11px;color:var(--text3)">Analysis based on ' + getFiltered().filter(t=>t.status!=="open").length + ' closed trades</span>' +
+      '<button onclick="copyToClipboard(this.closest(\'.card\').querySelector(\'.ai-response\').innerText)" style="background:none;border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:4px 10px;font-family:var(--sans);font-size:11px;cursor:pointer">Copy report</button>' +
+      '</div>';
   } catch(e) {
-    if (typing) typing.style.display = 'none';
-    resp.innerHTML = '<span style="color:var(--amber)">⚠ Could not reach AI — check your internet connection. The AI Coach requires an active connection to the Anthropic API.</span>';
+    if (e.message === 'NO_KEY') {
+      showApiKeyPrompt('runDeepAIAnalysis');
+      wrap.style.display = 'none';
+    } else {
+      wrap.innerHTML = '<span style="color:var(--red);font-size:12.5px">Error: ' + e.message + '</span>';
+    }
   } finally {
-    btn.disabled = false; btn.textContent = 'Ask AI Coach';
+    btn.disabled = false; btn.textContent = '⚡ Deep AI Analysis';
   }
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard'));
 }
 
 /* ══ NAV ══ */
@@ -3345,11 +3664,13 @@ function showPage(p) {
   if (p === 'analytics')    renderAnalytics();
   if (p === 'insights')     renderInsights();
   if (p === 'daily-journal'){ renderJournal(); }
+  if (p === 'ai-review')     { runAutoAnalysis(); }
   if (p === 'playbooks')    { renderPlaybooks(); }
   if (p === 'add')          { populateAccountDatalist(); populatePlaybookSelect(); }
 }
 
 init();
+
 </script>
 </body>
 </html>
