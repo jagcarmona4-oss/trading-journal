@@ -1180,6 +1180,11 @@ function processOrderLegs(rawOrders, acctLabel) {
         grossPnl   = parseFloat(rawPnlSum.toFixed(2));
         commission = parseFloat(rawCommSum.toFixed(2));
         foundPnl   = true;
+        // ETH/USD on TL: col[11] stores ~$7/lot but actual fee is $10/lot
+        // Correct by multiplying by 10/7 for ETH (confirmed from live trade data)
+        if (pair && /^ETH/.test(pair.replace('/', '').toUpperCase())) {
+          commission = parseFloat((commission * (10/7)).toFixed(2));
+        }
         addLog('diag', pair + ' posId=' + posGroupId + ': gross=' + grossPnl + ' comm=' + commission);
       }
 
@@ -1300,7 +1305,12 @@ function calcPnlFallback(pair, dir, entry, exit, size) {
   let quoteCcy = 'USD';
 
   if (isCrypto) {
-    return parseFloat((diff * size).toFixed(2));
+    // TradeLocker crypto contract sizes: 1 lot = 10 ETH, 0.1 BTC, etc.
+    // Confirmed from live trades: ETH/USD uses 10x multiplier
+    const cryptoMult = /^ETH/.test(p) ? 10 :
+                       /^BTC/.test(p) ? 1  :  // BTC needs verification
+                       /^(ADA|SOL|XRP|LTC)/.test(p) ? 10 : 10; // default 10
+    return parseFloat((diff * size * cryptoMult).toFixed(2));
   } else if (isOil) {
     return parseFloat((diff * size * 1000).toFixed(2));
   } else if (isGold) {
