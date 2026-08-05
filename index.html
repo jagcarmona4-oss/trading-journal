@@ -307,6 +307,13 @@ th.sorted-desc::after { content: ' ↓'; }
   .c2, .c3, .c4 { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ── v5 fix: the JS emits these class names, the CSS above only defined the short forms,
+      so stat cards and bar labels were rendering unstyled ── */
+.stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.9px; margin-bottom: 6px; font-family: var(--mono); }
+.stat-value { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; font-family: var(--mono); line-height: 1; margin-bottom: 4px; }
+.bar-label  { min-width: 70px; font-size: 12px; font-weight: 500; }
+.pill-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.9px; font-family: var(--mono); margin-right: 4px; }
 </style>
 </head>
 <body>
@@ -3679,7 +3686,656 @@ function showPage(p) {
   if (p === 'add')          { populateAccountDatalist(); populatePlaybookSelect(); }
 }
 
-init();
+/* duplicate init() removed — the call above already boots the app */
+
+</script>
+
+<!-- ═══════════ DISCIPLINE GATE (v5) ═══════════ -->
+<script>
+/* ══════════════════════════════════════════════════════════════════════
+   TradeLog Pro — Discipline Gate (v5, inline)
+
+   Adds a "Discipline" page that:
+     · reads the trades the TradeLocker sync already pulled in
+     · hard-locks you out once you have hit your daily trade limit
+     · gates entries behind your 3 rules and your two session windows
+     · logs the checklist per day and scores compliance over 30 days
+   Self-contained: it wraps showPage() and injects its own nav item,
+   page, styles and status pill. Nothing above is modified.
+   ══════════════════════════════════════════════════════════════════════ */
+(function () {
+'use strict';
+if (window.__discLoaded) return;
+window.__discLoaded = true;
+
+/* ─────────────────────────── config & storage ─────────────────────── */
+
+const CFG_KEY = 'disc_cfg_v1';
+const LOG_KEY = 'disc_log_v1';
+
+const DEF_CFG = {
+  maxTrades:  1,                                  // trades allowed per day
+  windows:    [['08:00', '10:00'], ['21:00', '23:00']],
+  clearedMin: 20,                                 // how long an "armed" clearance lasts
+};
+
+let cfg = Object.assign({}, DEF_CFG, readLS(CFG_KEY) || {});
+let log = readLS(LOG_KEY) || {};                  // { 'YYYY-MM-DD': entry }
+let remoteOK = false;                             // Supabase cross-device sync
+
+const RULES = [
+  { id: 'daily',  label: 'Trading with the daily?',
+    hint: 'Daily candle direction agrees with the entry you are about to take.' },
+  { id: 'window', label: 'Inside your dedicated hours?',
+    hint: 'Checked automatically from the clock.', auto: true },
+  { id: 'engulf', label: 'Engulfing candle confirmation?',
+    hint: 'Body fully engulfs the prior candle at your level — note the timeframe below.' },
+];
+
+function readLS(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+function writeLS(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+/* ── optional Supabase sync so the log follows you between devices ──
+   Run this once in the Supabase SQL editor to enable it:
+
+     create table discipline (id text primary key, data jsonb);
+     alter table discipline enable row level security;
+     create policy anon_all on discipline for all using (true) with check (true);
+
+   Without the table the module silently falls back to this browser only. */
+const DISC_API = (typeof SUPABASE_URL !== 'undefined') ? SUPABASE_URL + '/rest/v1/discipline' : null;
+const DISC_HDR = (typeof HDR !== 'undefined') ? HDR : null;
+
+async function pullLog() {
+  if (!DISC_API || !DISC_HDR) return;
+  try {
+    const r = await fetch(DISC_API + '?id=eq.disc-log', { headers: DISC_HDR });
+    if (!r.ok) throw 0;
+    const rows = await r.json();
+    remoteOK = true;
+    const remote = rows[0] && rows[0].data;
+    if (remote && typeof remote === 'object') {
+      log = Object.assign({}, remote, log);        // local edits win on conflict
+      writeLS(LOG_KEY, log);
+    }
+  } catch (e) { remoteOK = false; }
+}
+
+let pushTimer = null;
+function saveLog() {
+  writeLS(LOG_KEY, log);
+  if (!remoteOK) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => {
+    fetch(DISC_API, {
+      method: 'POST',
+      headers: Object.assign({}, DISC_HDR, { Prefer: 'resolution=merge-duplicates,return=minimal' }),
+      body: JSON.stringify({ id: 'disc-log', data: log }),
+    }).catch(() => { remoteOK = false; });
+  }, 700);
+}
+
+function saveCfg() { writeLS(CFG_KEY, cfg); }
+
+/* ─────────────────────────── time helpers ─────────────────────────── */
+
+const pad = n => String(n).padStart(2, '0');
+const dayKey = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const todayKey = () => dayKey(new Date());
+const minsOf = d => d.getHours() * 60 + d.getMinutes();
+const hm2min = s => { const [h, m] = String(s).split(':').map(Number); return h * 60 + (m || 0); };
+const min2hm = m => pad(Math.floor(m / 60) % 24) + ':' + pad(m % 60);
+const pretty = m => { const h = Math.floor(m / 60), x = m % 60; return (h ? h + 'h ' : '') + x + 'm'; };
+
+/* Trades imported from TradeLocker are stored as UTC wall-clock with no
+   timezone suffix, so parsing them raw would shift your 9pm entries into
+   the next day. Tag them as UTC before converting to local time. */
+function tradeDate(t) {
+  if (!t || !t.time) return null;
+  let s = String(t.time);
+  if (!/[zZ]|[+-]\d\d:?\d\d$/.test(s) && t.source === 'tradelocker') s += 'Z';
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function allTrades() { return (typeof trades !== 'undefined' && Array.isArray(trades)) ? trades : []; }
+function netOf(t) {
+  if (typeof getNetPnl === 'function') return getNetPnl(t);
+  return (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0);
+}
+function money(v) {
+  if (typeof fmt === 'function') return fmt(v);
+  return (v >= 0 ? '+$' : '-$') + Math.abs(v).toFixed(2);
+}
+function esc2(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function toast(m) { if (typeof showToast === 'function') showToast(m); }
+
+function tradesOn(key) {
+  return allTrades().filter(t => { const d = tradeDate(t); return d && dayKey(d) === key; });
+}
+
+/* window status for a given clock position */
+function windowState(now) {
+  const m = minsOf(now);
+  const ws = cfg.windows.map(w => ({ s: hm2min(w[0]), e: hm2min(w[1]) }))
+                        .sort((a, b) => a.s - b.s);
+  for (const w of ws) if (m >= w.s && m < w.e) return { inside: true, left: w.e - m, win: w };
+  for (const w of ws) if (m < w.s) return { inside: false, until: w.s - m, win: w };
+  const first = ws[0];
+  return { inside: false, until: (1440 - m) + first.s, win: first };
+}
+function inAnyWindow(d) { return windowState(d).inside; }
+
+/* ─────────────────────────── day entry model ──────────────────────── */
+
+function entryFor(key) {
+  if (!log[key]) log[key] = { bias: '', biasNote: '', pair: '', checks: {}, engulfTf: '', armedAt: 0, overrides: [], post: '' };
+  const e = log[key];
+  e.checks = e.checks || {};
+  e.overrides = e.overrides || [];
+  return e;
+}
+const today = () => entryFor(todayKey());
+
+function checklistDone(e) {
+  return RULES.every(r => !!e.checks[r.id]);
+}
+function armedSecsLeft(e) {
+  if (!e.armedAt) return 0;
+  const left = Math.floor((e.armedAt + cfg.clearedMin * 60000 - Date.now()) / 1000);
+  return left > 0 ? left : 0;
+}
+
+/* the single source of truth for "can I trade right now" */
+function gateState() {
+  const now = new Date();
+  const e = today();
+  const ts = tradesOn(todayKey());
+  const ws = windowState(now);
+  if (ts.length >= cfg.maxTrades) return { code: 'done', now, e, ts, ws };
+  if (!ws.inside)                 return { code: 'closed', now, e, ts, ws };
+  if (armedSecsLeft(e))           return { code: 'armed', now, e, ts, ws };
+  if (checklistDone(e))           return { code: 'ready', now, e, ts, ws };
+  return { code: 'checklist', now, e, ts, ws };
+}
+
+const STATE_META = {
+  done:      { tone: 'red',   head: 'Done for the day',        sub: 'You have taken your trade. Close the platform.' },
+  closed:    { tone: 'grey',  head: 'Outside your hours',      sub: 'No setups count right now — not even good ones.' },
+  checklist: { tone: 'amber', head: 'Checklist not complete',  sub: 'Answer all three questions before you touch the order ticket.' },
+  ready:     { tone: 'green', head: 'Rules met — arm the trade', sub: 'Press Arm to open a short clearance window.' },
+  armed:     { tone: 'green', head: 'Cleared to trade',        sub: 'Take the entry you just described, then stop.' },
+};
+const TONE = {
+  red:   { c: 'var(--red)',   bg: 'rgba(239,68,68,0.07)',  bd: 'rgba(239,68,68,0.25)' },
+  amber: { c: 'var(--amber)', bg: 'rgba(245,158,11,0.07)', bd: 'rgba(245,158,11,0.25)' },
+  green: { c: 'var(--green)', bg: 'rgba(16,185,129,0.07)', bd: 'rgba(16,185,129,0.25)' },
+  grey:  { c: 'var(--text2)', bg: 'var(--bg3)',            bd: 'var(--border2)' },
+};
+
+/* ─────────────────────────── markup injection ─────────────────────── */
+
+const style = document.createElement('style');
+style.textContent = `
+.disc-hero{border-radius:var(--r3);padding:20px 22px;display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.disc-lamp{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.disc-lamp.live{animation:disc-p 2.4s infinite}
+@keyframes disc-p{0%,100%{box-shadow:0 0 0 0 currentColor;opacity:1}50%{box-shadow:0 0 0 7px transparent;opacity:.55}}
+.disc-head{font-size:20px;font-weight:700;letter-spacing:-.4px;line-height:1.2}
+.disc-sub{font-size:12.5px;color:var(--text2);margin-top:3px}
+.disc-clock{margin-left:auto;text-align:right;font-family:var(--mono)}
+.disc-clock b{font-size:26px;font-weight:600;letter-spacing:-1px;display:block;line-height:1}
+.disc-clock span{font-size:10.5px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase}
+.rule{display:flex;gap:12px;align-items:flex-start;padding:13px 15px;border:1px solid var(--border);border-radius:var(--r2);background:var(--bg2);margin-bottom:8px;cursor:pointer;transition:border-color .12s,background .12s}
+.rule:hover{border-color:var(--border3)}
+.rule.on{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.05)}
+.rule.blocked{opacity:.55;cursor:not-allowed}
+.rule-box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;margin-top:1px}
+.rule.on .rule-box{background:var(--green);border-color:var(--green)}
+.rule-n{font-family:var(--mono);font-size:10px;color:var(--text3);min-width:14px;margin-top:4px}
+.rule-t{font-size:13.5px;font-weight:500}
+.rule-h{font-size:11.5px;color:var(--text3);margin-top:3px;line-height:1.5}
+.disc-pill{position:fixed;bottom:16px;left:16px;z-index:120;display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:22px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;backdrop-filter:blur(8px);box-shadow:var(--shadow2)}
+@media(min-width:1001px){.disc-pill{left:252px}}
+.win-chip{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border-radius:6px;border:1px solid var(--border2);color:var(--text2)}
+.win-chip.now{border-color:rgba(16,185,129,.4);color:var(--green);background:rgba(16,185,129,.08)}
+.disc-stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:13px 15px}
+.disc-stat .l{font-size:9.5px;font-family:var(--mono);letter-spacing:.9px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.disc-stat .v{font-size:21px;font-weight:700;font-family:var(--mono);letter-spacing:-.5px;line-height:1}
+.disc-stat .s{font-size:10.5px;color:var(--text3);margin-top:4px}
+.day-dot{width:100%;aspect-ratio:1;border-radius:4px;min-height:16px}
+`;
+document.head.appendChild(style);
+
+/* sidebar entry, placed above "Overview" so it reads first */
+(function injectNav() {
+  const sb = document.querySelector('.sidebar');
+  const first = sb && sb.querySelector('.nav-section');
+  if (!sb || !first) return;
+  const sec = document.createElement('div');
+  sec.className = 'nav-section';
+  sec.innerHTML =
+    '<div class="nav-section-label">Before you trade</div>' +
+    '<div class="nav-item" id="nav-discipline">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+      '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>' +
+      'Discipline<span class="nav-badge" id="disc-nav-badge"></span></div>';
+  sb.insertBefore(sec, first);
+  sec.querySelector('.nav-item').onclick = () => window.showPage('discipline');
+})();
+
+const page = document.createElement('div');
+page.id = 'page-discipline';
+page.className = 'page';
+(document.querySelector('main.main') || document.body).insertBefore(
+  page, (document.querySelector('main.main') || document.body).firstChild);
+
+const pill = document.createElement('div');
+pill.className = 'disc-pill';
+pill.onclick = () => window.showPage('discipline');
+document.body.appendChild(pill);
+
+/* ─────────────────────────── rendering ───────────────────────────── */
+
+function render() {
+  const g = gateState();
+  renderPill(g);
+  renderBadge(g);
+  if (!page.classList.contains('active')) return;
+
+  const a = document.activeElement;
+  if (a && page.contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) { patchLive(g); return; }
+
+  const m = STATE_META[g.code], t = TONE[m.tone];
+  const armed = armedSecsLeft(g.e);
+
+  page.innerHTML =
+    '<div class="page-header"><div><div class="page-title">Discipline</div>' +
+    '<div class="page-sub">One trade a day, inside your hours, with the daily and an engulf. Nothing else.</div></div>' +
+    '<div style="display:flex;gap:8px;align-items:center">' +
+      (typeof runTLSync === 'function' ? '<button class="btn btn-ghost btn-sm" id="disc-sync">↻ Pull trades</button>' : '') +
+      '<span style="font-size:10.5px;font-family:var(--mono);color:var(--text3)">' +
+      (remoteOK ? 'synced' : 'this device only') + '</span></div></div>' +
+
+    /* hero */
+    '<div class="disc-hero" style="background:' + t.bg + ';border:1px solid ' + t.bd + '">' +
+      '<div class="disc-lamp' + (g.code === 'armed' ? ' live' : '') + '" style="background:' + t.c + ';color:' + t.c + '"></div>' +
+      '<div style="min-width:200px"><div class="disc-head" style="color:' + t.c + '">' + m.head + '</div>' +
+      '<div class="disc-sub">' + m.sub + '</div></div>' +
+      '<div class="disc-clock"><b id="disc-time">' + pad(g.now.getHours()) + ':' + pad(g.now.getMinutes()) + '</b>' +
+      '<span id="disc-window">' + windowCaption(g) + '</span></div>' +
+    '</div>' +
+
+    /* windows */
+    '<div class="card" style="margin-bottom:14px">' +
+      '<div class="card-title">Your windows</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
+        cfg.windows.map(w => {
+          const on = minsOf(g.now) >= hm2min(w[0]) && minsOf(g.now) < hm2min(w[1]);
+          return '<span class="win-chip' + (on ? ' now' : '') + '">' + w[0] + ' – ' + w[1] + '</span>';
+        }).join('') +
+        '<span style="font-size:11.5px;color:var(--text3);margin-left:6px">local time · ' +
+        cfg.maxTrades + ' trade' + (cfg.maxTrades === 1 ? '' : 's') + ' per day max</span>' +
+        '<button class="btn btn-ghost btn-xs" id="disc-edit-cfg" style="margin-left:auto">Edit limits</button>' +
+      '</div>' +
+      '<div id="disc-cfg-form" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">' +
+        '<div class="form-grid c4">' +
+          '<div class="fg"><label>Window 1 start</label><input id="cw1s" type="time" value="' + cfg.windows[0][0] + '"></div>' +
+          '<div class="fg"><label>Window 1 end</label><input id="cw1e" type="time" value="' + cfg.windows[0][1] + '"></div>' +
+          '<div class="fg"><label>Window 2 start</label><input id="cw2s" type="time" value="' + (cfg.windows[1] ? cfg.windows[1][0] : '') + '"></div>' +
+          '<div class="fg"><label>Window 2 end</label><input id="cw2e" type="time" value="' + (cfg.windows[1] ? cfg.windows[1][1] : '') + '"></div>' +
+        '</div>' +
+        '<div class="form-grid c2" style="margin-top:12px">' +
+          '<div class="fg"><label>Max trades per day</label><input id="cmax" type="number" min="1" max="10" value="' + cfg.maxTrades + '"></div>' +
+          '<div class="fg"><label>Clearance lasts (minutes)</label><input id="cclr" type="number" min="5" max="120" value="' + cfg.clearedMin + '"></div>' +
+        '</div>' +
+        '<button class="btn btn-primary btn-sm" id="disc-save-cfg" style="margin-top:12px">Save limits</button>' +
+      '</div>' +
+    '</div>' +
+
+    (g.code === 'done' ? doneCard(g) : gateCard(g, armed)) +
+    todayCard(g) +
+    statsCard();
+
+  wire(g);
+}
+
+function windowCaption(g) {
+  if (g.code === 'done') return 'trade taken';
+  return g.ws.inside ? pretty(g.ws.left) + ' left in window'
+                     : 'next window in ' + pretty(g.ws.until);
+}
+
+function patchLive(g) {
+  const tEl = page.querySelector('#disc-time');
+  if (tEl) tEl.textContent = pad(g.now.getHours()) + ':' + pad(g.now.getMinutes());
+  const wEl = page.querySelector('#disc-window');
+  if (wEl) wEl.textContent = windowCaption(g);
+}
+
+/* the checklist / clearance card */
+function gateCard(g, armed) {
+  const e = g.e;
+  let h = '<div class="card" style="margin-bottom:14px">' +
+    '<div class="card-title">Pre-trade check</div>' +
+    '<div class="form-grid c3" style="margin-bottom:14px">' +
+      '<div class="fg"><label>Pair</label><input id="d-pair" placeholder="GBP/USD" value="' + esc2(e.pair) + '"></div>' +
+      '<div class="fg"><label>Daily bias</label><select id="d-bias">' +
+        ['', 'long', 'short', 'no trade'].map(v =>
+          '<option value="' + v + '"' + (e.bias === v ? ' selected' : '') + '>' +
+          (v ? v[0].toUpperCase() + v.slice(1) : '--') + '</option>').join('') +
+      '</select></div>' +
+      '<div class="fg"><label>Engulf timeframe</label><input id="d-etf" placeholder="15m" value="' + esc2(e.engulfTf) + '"></div>' +
+    '</div>';
+
+  RULES.forEach((r, i) => {
+    const on = !!e.checks[r.id];
+    const blocked = r.auto && !g.ws.inside;
+    h += '<div class="rule' + (on ? ' on' : '') + (blocked ? ' blocked' : '') + '" data-rule="' + r.id + '">' +
+      '<span class="rule-n">' + (i + 1) + '</span>' +
+      '<span class="rule-box">' + (on ? '✓' : '') + '</span>' +
+      '<span><span class="rule-t">' + r.label + '</span>' +
+      '<span class="rule-h">' + (blocked ? 'The clock says no. This one cannot be ticked outside 08:00–10:00 or 21:00–23:00.' : r.hint) + '</span></span></div>';
+  });
+
+  h += '<div class="fg" style="margin-top:12px"><label>What is the actual setup?</label>' +
+    '<textarea id="d-note" style="min-height:60px" placeholder="Level, why it matters, where the stop goes…">' + esc2(e.biasNote) + '</textarea></div>';
+
+  if (armed) {
+    h += '<div style="margin-top:14px;padding:14px 16px;border-radius:var(--r2);background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.25)">' +
+      '<div style="font-size:13px;font-weight:600;color:var(--green)">Clearance active — ' +
+      '<span id="d-count" style="font-family:var(--mono)">' + Math.floor(armed / 60) + ':' + pad(armed % 60) + '</span> remaining</div>' +
+      '<div style="font-size:12px;color:var(--text2);margin-top:4px">Take ' + (e.pair || 'the pair') + ' ' +
+      (e.bias || '') + ' as described. When it fills, this page locks for the day.</div>' +
+      '<button class="btn btn-ghost btn-sm" id="d-disarm" style="margin-top:10px">Stand down</button></div>';
+  } else {
+    const ok = g.code === 'ready';
+    h += '<div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">' +
+      '<button class="btn btn-primary" id="d-arm"' + (ok ? '' : ' disabled') + '>Arm trade</button>' +
+      '<span style="font-size:11.5px;color:var(--text3)">' +
+      (ok ? 'Opens a ' + cfg.clearedMin + '-minute clearance window.'
+          : g.ws.inside ? 'All three boxes have to be true first.'
+                        : 'The gate opens at ' + min2hm(hm2min(cfg.windows.map(w => w[0]).sort()[0]) ) + ' and ' +
+                          (cfg.windows[1] ? cfg.windows[1][0] : '') + '.') +
+      '</span>' +
+      (g.ws.inside ? '' : '<button class="btn btn-danger btn-sm" id="d-override" style="margin-left:auto">Override the clock</button>') +
+    '</div>';
+  }
+
+  if (e.overrides.length) {
+    h += '<div style="margin-top:12px;font-size:11.5px;color:var(--amber)">⚠ ' + e.overrides.length +
+      ' override' + (e.overrides.length === 1 ? '' : 's') + ' today: ' +
+      e.overrides.map(o => esc2(o.reason)).join(' · ') + '</div>';
+  }
+  return h + '</div>';
+}
+
+/* the lockout card, shown once the day's trade exists */
+function doneCard(g) {
+  const net = g.ts.filter(t => t.status !== 'open').reduce((s, t) => s + netOf(t), 0);
+  const open = g.ts.some(t => t.status === 'open');
+  const e = g.e;
+  const oow = g.ts.filter(t => { const d = tradeDate(t); return d && !inAnyWindow(d); });
+
+  return '<div class="card" style="margin-bottom:14px;border-color:rgba(239,68,68,.25)">' +
+    '<div class="card-title" style="color:var(--red)">Locked out</div>' +
+    '<div style="font-size:13.5px;line-height:1.7;color:var(--text2)">' +
+      g.ts.length + ' trade' + (g.ts.length === 1 ? '' : 's') + ' on the book today' +
+      (open ? ' — one still open, manage it and take nothing new.' : ', closed at <strong class="' +
+        (net >= 0 ? 'pos' : 'neg') + '">' + money(net) + '</strong>.') +
+      ' Your edge is one setup a day; a second one is boredom wearing the first one\'s clothes.' +
+    '</div>' +
+    (oow.length ? '<div style="margin-top:12px;padding:11px 14px;border-radius:var(--r);background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);font-size:12.5px;color:var(--amber)">' +
+      oow.length + ' of today\'s entries landed outside your hours (' +
+      oow.map(t => { const d = tradeDate(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }).join(', ') +
+      '). Worth writing down why.</div>' : '') +
+    '<div class="fg" style="margin-top:14px"><label>Post-trade note — did you follow the plan?</label>' +
+      '<textarea id="d-post" style="min-height:70px" placeholder="What you saw, what you did, what you would repeat…">' + esc2(e.post) + '</textarea></div>' +
+    '<button class="btn btn-primary btn-sm" id="d-save-post" style="margin-top:10px">Save note</button>' +
+    '<span id="d-post-ok" style="font-size:12px;color:var(--green);margin-left:10px;display:none">Saved</span>' +
+  '</div>';
+}
+
+/* today's trades pulled straight from the synced data */
+function todayCard(g) {
+  let h = '<div class="card" style="margin-bottom:14px"><div class="card-title">Today\'s trades — pulled from TradeLocker</div>';
+  if (!g.ts.length) {
+    h += '<div style="font-size:13px;color:var(--text3)">Nothing yet today. ' +
+      (typeof runTLSync === 'function' ? 'Hit “Pull trades” after an entry fills to refresh this.' : '') + '</div>';
+  } else {
+    h += g.ts.map(t => {
+      const d = tradeDate(t), net = netOf(t), oow = d && !inAnyWindow(d);
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px">' +
+        '<span style="font-family:var(--mono);color:var(--text3);min-width:44px">' + (d ? pad(d.getHours()) + ':' + pad(d.getMinutes()) : '--') + '</span>' +
+        '<span style="font-weight:600;min-width:74px">' + esc2(t.pair) + '</span>' +
+        '<span class="badge badge-' + (t.dir === 'short' ? 'short' : 'long') + '">' + esc2(t.dir) + '</span>' +
+        (oow ? '<span class="badge badge-be">off-hours</span>' : '') +
+        '<span style="margin-left:auto;font-family:var(--mono);font-size:12.5px" class="' +
+          (t.status === 'open' ? '' : (net >= 0 ? 'pos' : 'neg')) + '">' +
+          (t.status === 'open' ? '<span style="color:var(--blue)">open</span>' : money(net)) + '</span></div>';
+    }).join('');
+  }
+  return h + '</div>';
+}
+
+/* 30-day compliance scoreboard */
+function statsCard() {
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(dayKey(d));
+  }
+  let traded = 0, overLimit = 0, offHours = 0, checked = 0, clean = 0;
+  let cleanPnl = 0, dirtyPnl = 0;
+
+  days.forEach(k => {
+    const ts = tradesOn(k);
+    const e = log[k];
+    const closed = ts.filter(t => t.status !== 'open');
+    const pnl = closed.reduce((s, t) => s + netOf(t), 0);
+    if (!ts.length) return;
+    traded++;
+    const over = ts.length > cfg.maxTrades;
+    const off = ts.some(t => { const d = tradeDate(t); return d && !inAnyWindow(d); });
+    const list = e && checklistDone(e);
+    if (over) overLimit++;
+    if (off) offHours++;
+    if (list) checked++;
+    if (!over && !off && list) { clean++; cleanPnl += pnl; } else { dirtyPnl += pnl; }
+  });
+
+  const rate = traded ? Math.round(clean / traded * 100) : 0;
+  const rateCol = rate >= 80 ? 'pos' : rate >= 50 ? '' : 'neg';
+
+  const tape = days.map(k => {
+    const ts = tradesOn(k), e = log[k];
+    let col = 'var(--bg4)';
+    if (ts.length) {
+      const over = ts.length > cfg.maxTrades;
+      const off = ts.some(t => { const d = tradeDate(t); return d && !inAnyWindow(d); });
+      const list = e && checklistDone(e);
+      col = (!over && !off && list) ? 'rgba(16,185,129,.55)'
+          : (over || off) ? 'rgba(239,68,68,.5)' : 'rgba(245,158,11,.5)';
+    }
+    return '<div class="day-dot" title="' + k + ' · ' + ts.length + ' trade(s)" style="background:' + col + '"></div>';
+  }).join('');
+
+  return '<div class="card">' +
+    '<div class="card-title">Last 30 days — did you follow your own rules?</div>' +
+    '<div class="stats-grid" style="margin-bottom:16px">' +
+      '<div class="disc-stat"><div class="l">Clean days</div><div class="v ' + rateCol + '">' + rate + '%</div>' +
+        '<div class="s">' + clean + ' of ' + traded + ' trading days</div></div>' +
+      '<div class="disc-stat"><div class="l">Over the limit</div><div class="v' + (overLimit ? ' neg' : '') + '">' + overLimit + '</div>' +
+        '<div class="s">days with more than ' + cfg.maxTrades + '</div></div>' +
+      '<div class="disc-stat"><div class="l">Off-hours entries</div><div class="v' + (offHours ? ' neg' : '') + '">' + offHours + '</div>' +
+        '<div class="s">days with a trade outside your windows</div></div>' +
+      '<div class="disc-stat"><div class="l">Checklist filled</div><div class="v">' + checked + '</div>' +
+        '<div class="s">of ' + traded + ' trading days</div></div>' +
+      '<div class="disc-stat"><div class="l">P&L on clean days</div><div class="v ' + (cleanPnl >= 0 ? 'pos' : 'neg') + '" style="font-size:17px">' + money(cleanPnl) + '</div>' +
+        '<div class="s">rules followed</div></div>' +
+      '<div class="disc-stat"><div class="l">P&L on broken days</div><div class="v ' + (dirtyPnl >= 0 ? 'pos' : 'neg') + '" style="font-size:17px">' + money(dirtyPnl) + '</div>' +
+        '<div class="s">rules bent</div></div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(30,1fr);gap:3px">' + tape + '</div>' +
+    '<div style="display:flex;gap:14px;margin-top:10px;font-size:11px;color:var(--text3);flex-wrap:wrap">' +
+      '<span>■ green — rules followed</span><span>■ amber — traded without the checklist</span>' +
+      '<span>■ red — over the limit or off-hours</span><span>■ grey — no trades</span></div>' +
+  '</div>';
+}
+
+/* ─────────────────────────── events ─────────────────────────────── */
+
+function wire(g) {
+  const e = g.e, q = s => page.querySelector(s);
+
+  const sync = q('#disc-sync');
+  if (sync) sync.onclick = async () => {
+    sync.disabled = true; sync.textContent = 'Pulling…';
+    try { await runTLSync(); } catch (err) {}
+    sync.disabled = false; sync.textContent = '↻ Pull trades';
+    render();
+  };
+
+  const cfgBtn = q('#disc-edit-cfg');
+  if (cfgBtn) cfgBtn.onclick = () => {
+    const f = q('#disc-cfg-form');
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  };
+  const saveCfgBtn = q('#disc-save-cfg');
+  if (saveCfgBtn) saveCfgBtn.onclick = () => {
+    const v = id => q('#' + id).value;
+    const w = [];
+    if (v('cw1s') && v('cw1e')) w.push([v('cw1s'), v('cw1e')]);
+    if (v('cw2s') && v('cw2e')) w.push([v('cw2s'), v('cw2e')]);
+    if (w.length) cfg.windows = w;
+    cfg.maxTrades  = Math.max(1, parseInt(v('cmax')) || 1);
+    cfg.clearedMin = Math.max(5, parseInt(v('cclr')) || 20);
+    saveCfg(); toast('Limits saved'); render();
+  };
+
+  page.querySelectorAll('.rule').forEach(el => {
+    el.onclick = () => {
+      const id = el.dataset.rule;
+      const rule = RULES.find(r => r.id === id);
+      if (rule.auto && !g.ws.inside) { toast('Outside your hours — that one is not yours to tick'); return; }
+      e.checks[id] = !e.checks[id];
+      if (!checklistDone(e)) e.armedAt = 0;
+      saveLog(); render();
+    };
+  });
+
+  ['d-pair:pair', 'd-etf:engulfTf', 'd-note:biasNote'].forEach(m => {
+    const [id, key] = m.split(':');
+    const el = q('#' + id);
+    if (el) el.oninput = () => { e[key] = el.value; saveLog(); };
+  });
+  const bias = q('#d-bias');
+  if (bias) bias.onchange = () => { e.bias = bias.value; saveLog(); render(); };
+
+  const arm = q('#d-arm');
+  if (arm) arm.onclick = () => {
+    if (gateState().code !== 'ready') return;
+    if (!e.pair || !e.bias) { toast('Name the pair and the bias first'); return; }
+    if (e.bias === 'no trade') { toast('You logged "no trade" as your bias. Respect it.'); return; }
+    e.armedAt = Date.now(); saveLog(); render();
+    toast('Cleared for ' + cfg.clearedMin + ' minutes');
+  };
+  const disarm = q('#d-disarm');
+  if (disarm) disarm.onclick = () => { e.armedAt = 0; saveLog(); render(); };
+
+  const ov = q('#d-override');
+  if (ov) ov.onclick = () => {
+    const why = prompt('Trading outside your own hours. Write down why — it goes on your record:');
+    if (!why || !why.trim()) return;
+    e.overrides.push({ at: Date.now(), reason: why.trim() });
+    e.checks.window = true;
+    saveLog(); render();
+  };
+
+  const post = q('#d-post'), savePost = q('#d-save-post');
+  if (post) post.oninput = () => { e.post = post.value; };
+  if (savePost) savePost.onclick = () => {
+    saveLog();
+    const ok = q('#d-post-ok'); if (ok) { ok.style.display = 'inline'; setTimeout(() => ok.style.display = 'none', 2500); }
+    pushToJournal(e);
+  };
+}
+
+/* mirror the day into the existing Daily Journal so it lives in one place */
+function pushToJournal(e) {
+  if (typeof journalEntries === 'undefined' || typeof saveJournal !== 'function') return;
+  const key = todayKey();
+  const pre = [e.pair && ('Pair: ' + e.pair), e.bias && ('Daily bias: ' + e.bias),
+               e.engulfTf && ('Engulf TF: ' + e.engulfTf), e.biasNote]
+              .filter(Boolean).join(' · ');
+  const found = journalEntries.find(j => j.date === key);
+  if (found) { found.pre = pre || found.pre; found.post = e.post || found.post; }
+  else journalEntries.unshift({ id: Date.now(), date: key, mood: 7, focus: 7, pre, post: e.post, notes: '' });
+  saveJournal();
+  if (typeof renderJournal === 'function') renderJournal();
+}
+
+/* ─────────────────────────── pill + badge ────────────────────────── */
+
+function renderPill(g) {
+  const m = STATE_META[g.code], t = TONE[m.tone];
+  pill.style.background = t.bg;
+  pill.style.borderColor = t.bd;
+  pill.style.color = t.c;
+  const armed = armedSecsLeft(g.e);
+  pill.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:' + t.c + '"></span>' +
+    (g.code === 'armed' ? 'Cleared · ' + Math.floor(armed / 60) + ':' + pad(armed % 60)
+     : g.code === 'done' ? 'Done for the day'
+     : g.code === 'closed' ? 'Hours closed · ' + pretty(g.ws.until)
+     : g.code === 'ready' ? 'Rules met — arm it'
+     : 'Checklist ' + RULES.filter(r => g.e.checks[r.id]).length + '/' + RULES.length);
+}
+
+function renderBadge(g) {
+  const b = document.getElementById('disc-nav-badge');
+  if (!b) return;
+  if (g.code === 'done') { b.textContent = 'STOP'; b.style.background = 'rgba(239,68,68,.15)'; b.style.color = 'var(--red)'; }
+  else if (g.code === 'armed' || g.code === 'ready') { b.textContent = 'GO'; b.style.background = 'rgba(16,185,129,.15)'; b.style.color = 'var(--green)'; }
+  else { b.textContent = ''; b.style.background = 'transparent'; }
+}
+
+/* ─────────────────────────── routing + clock ─────────────────────── */
+
+const origShowPage = window.showPage;
+window.showPage = function (p) {
+  if (p === 'discipline') {
+    document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    page.classList.add('active');
+    const n = document.getElementById('nav-discipline');
+    if (n) n.classList.add('active');
+    render();
+    return;
+  }
+  if (typeof origShowPage === 'function') origShowPage(p);
+};
+
+let lastCode = null, lastCount = 0;
+setInterval(() => {
+  const g = gateState();
+  renderPill(g); renderBadge(g);
+  if (g.code !== lastCode || g.ts.length !== lastCount) {
+    lastCode = g.code; lastCount = g.ts.length;
+    if (page.classList.contains('active')) render();
+    if (g.code === 'done' && g.ts.length) toast('Trade detected — you are done for the day');
+  } else if (page.classList.contains('active')) {
+    patchLive(g);
+    const c = page.querySelector('#d-count');
+    if (c) { const s = armedSecsLeft(g.e); c.textContent = Math.floor(s / 60) + ':' + pad(s % 60); }
+  }
+}, 1000);
+
+pullLog().then(() => { if (page.classList.contains('active')) render(); render(); });
+render();
+})();
 
 </script>
 </body>
