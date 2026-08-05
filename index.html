@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#09090b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TradeLog">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <title>TradeLog Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
@@ -3750,9 +3755,11 @@ const CFG_KEY = 'disc_cfg_v1';
 const LOG_KEY = 'disc_log_v1';
 
 const DEF_CFG = {
-  maxTrades:  1,                                  // trades allowed per day
-  windows:    [['08:00', '10:00'], ['21:00', '23:00']],
-  clearedMin: 20,                                 // how long an "armed" clearance lasts
+  maxTrades:   1,                                 // trades allowed per day
+  windows:     [['08:00', '10:00'], ['21:00', '23:00']],
+  clearedMin:  20,                                // how long an "armed" clearance lasts
+  riskPct:     1,                                 // % of the account risked per trade
+  accountSize: 0,                                 // 0 = use the balance from Accounts
 };
 
 let cfg = Object.assign({}, DEF_CFG, readLS(CFG_KEY) || {});
@@ -3865,10 +3872,101 @@ function windowState(now) {
 }
 function inAnyWindow(d) { return windowState(d).inside; }
 
+/* ─────────────────────────── position sizing ──────────────────────── */
+
+/* Reuses calcPnlFallback() from the core app: the loss on 1 lot between the
+   entry and the stop IS the risk per lot in USD, with cross-rate conversion
+   and the index/metal multipliers already handled. That function was checked
+   against 13 of your filled trades — worst deviation 0.44%. */
+function riskPerLot(pair, entry, stop) {
+  if (typeof calcPnlFallback !== 'function') return null;
+  const v = calcPnlFallback(pair, 'long', Number(entry), Number(stop), 1);
+  return (v == null || !isFinite(v)) ? null : Math.abs(v);
+}
+function accountBasis() {
+  if (cfg.accountSize > 0) return cfg.accountSize;
+  const b = (typeof getBalance === 'function')
+    ? getBalance(typeof currentAccount !== 'undefined' ? currentAccount : 'All') : 0;
+  return b > 0 ? b : 0;
+}
+function sizing(e) {
+  const basis = accountBasis();
+  const riskUsd = basis * (cfg.riskPct / 100);
+  const per = (e.pair && e.entry && e.stop) ? riskPerLot(e.pair, e.entry, e.stop) : null;
+  const lots = (per && per > 0 && riskUsd > 0) ? riskUsd / per : null;
+  let rr = null;
+  if (e.tp && e.entry && e.stop) {
+    const sd = Math.abs(Number(e.entry) - Number(e.stop));
+    const td = Math.abs(Number(e.tp) - Number(e.entry));
+    if (sd > 0) rr = td / sd;
+  }
+  return { basis, riskUsd, per, lots, rr };
+}
+
+/* ─────────────────── what the rule breaks actually cost ───────────── */
+
+function leakStats() {
+  const byDay = {};
+  allTrades().forEach(t => {
+    if (t.status === 'open') return;
+    const d = tradeDate(t);
+    if (!d) return;
+    const k = dayKey(d);
+    (byDay[k] = byDay[k] || []).push({ t, d });
+  });
+  let total = 0, firstOnly = 0, extra = 0, extraN = 0, off = 0, offN = 0, inWin = 0;
+  const sizes = [];
+  Object.values(byDay).forEach(list => {
+    list.sort((a, b) => a.d - b.d);
+    list.forEach((x, i) => {
+      const v = netOf(x.t);
+      total += v;
+      if (i < cfg.maxTrades) firstOnly += v; else { extra += v; extraN++; }
+      if (inAnyWindow(x.d)) inWin += v; else { off += v; offN++; }
+      if (x.t.size) sizes.push(parseFloat(x.t.size));
+    });
+  });
+  sizes.sort((a, b) => a - b);
+  const med = sizes.length ? sizes[Math.floor(sizes.length / 2)] : 0;
+  let big = 0, bigN = 0;
+  Object.values(byDay).forEach(l => l.forEach(x => {
+    if (x.t.size && med && parseFloat(x.t.size) > med * 3) { big += netOf(x.t); bigN++; }
+  }));
+  const nTrades = Object.values(byDay).reduce((s, l) => s + l.length, 0);
+  return { total, firstOnly, extra, extraN, off, offN, inWin, med, big, bigN,
+           days: Object.keys(byDay).length, nTrades };
+}
+
+/* A day counts as clean on the evidence in the trade data alone — inside the
+   limit, inside the windows. Checklist completion is tracked separately, so
+   history from before this page existed still means something. */
+function dayVerdict(k) {
+  const ts = tradesOn(k);
+  if (!ts.length) return null;
+  const over = ts.length > cfg.maxTrades;
+  const off  = ts.some(t => { const d = tradeDate(t); return d && !inAnyWindow(d); });
+  return { over, off, clean: !over && !off, checked: !!(log[k] && checklistDone(log[k])), ts };
+}
+function streaks() {
+  const seen = {};
+  allTrades().forEach(t => {
+    const d = tradeDate(t);
+    if (d && t.status !== 'open') seen[dayKey(d)] = 1;
+  });
+  const keys = Object.keys(seen).sort();
+  let best = 0, run = 0;
+  keys.forEach(k => {
+    const v = dayVerdict(k);
+    if (v && v.clean) { run++; if (run > best) best = run; } else run = 0;
+  });
+  return { cur: run, best, days: keys.length };
+}
+
 /* ─────────────────────────── day entry model ──────────────────────── */
 
 function entryFor(key) {
-  if (!log[key]) log[key] = { bias: '', biasNote: '', pair: '', checks: {}, engulfTf: '', armedAt: 0, overrides: [], post: '' };
+  if (!log[key]) log[key] = { bias: '', biasNote: '', pair: '', checks: {}, engulfTf: '',
+                              entry: '', stop: '', tp: '', armedAt: 0, overrides: [], post: '' };
   const e = log[key];
   e.checks = e.checks || {};
   e.overrides = e.overrides || [];
@@ -3934,6 +4032,11 @@ style.textContent = `
 .rule-n{font-family:var(--mono);font-size:10px;color:var(--text3);min-width:14px;margin-top:4px}
 .rule-t{font-size:13.5px;font-weight:500}
 .rule-h{font-size:11.5px;color:var(--text3);margin-top:3px;line-height:1.5}
+.disc-mnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:130;background:rgba(9,9,11,.94);backdrop-filter:blur(14px);border-top:1px solid var(--border2);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.disc-mnav button{flex:1;background:none;border:none;color:var(--text3);font-family:var(--sans);font-size:9.5px;letter-spacing:.3px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;cursor:pointer;border-radius:8px}
+.disc-mnav button svg{width:20px;height:20px}
+.disc-mnav button.on{color:var(--green)}
+@media(max-width:1000px){.disc-mnav{display:flex}body{padding-bottom:64px}.disc-pill{bottom:76px !important}}
 .disc-pill{position:fixed;bottom:16px;left:16px;z-index:120;display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:22px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;backdrop-filter:blur(8px);box-shadow:var(--shadow2)}
 @media(min-width:1001px){.disc-pill{left:252px}}
 .win-chip{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border-radius:6px;border:1px solid var(--border2);color:var(--text2)}
@@ -3968,6 +4071,27 @@ page.id = 'page-discipline';
 page.className = 'page';
 (document.querySelector('main.main') || document.body).insertBefore(
   page, (document.querySelector('main.main') || document.body).firstChild);
+
+/* Below 1000px the sidebar is display:none and nothing replaces it, so the app
+   has been unreachable on a phone. This is that missing navigation. */
+const MTABS = [
+  ['discipline', 'Gate',  '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>'],
+  ['dashboard',  'Home',  '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'],
+  ['log',        'Trades','<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/>'],
+  ['insights',   'Stats', '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'],
+  ['daily-journal','Journal','<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'],
+  ['tl-sync',    'Sync',  '<polyline points="1 4 1 10 7 10"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/>'],
+];
+const mnav = document.createElement('nav');
+mnav.className = 'disc-mnav';
+mnav.innerHTML = MTABS.map(([id, label, path]) =>
+  '<button data-tab="' + id + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+  path + '</svg>' + label + '</button>').join('');
+document.body.appendChild(mnav);
+mnav.querySelectorAll('button').forEach(b => b.onclick = () => window.showPage(b.dataset.tab));
+function markTab(p) {
+  mnav.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tab === p));
+}
 
 const pill = document.createElement('div');
 pill.className = 'disc-pill';
@@ -4034,7 +4158,8 @@ function render() {
 
     (g.code === 'done' ? doneCard(g) : gateCard(g, armed)) +
     todayCard(g) +
-    statsCard();
+    statsCard() +
+    leakCard();
 
   wire(g);
 }
@@ -4052,6 +4177,44 @@ function patchLive(g) {
   if (wEl) wEl.textContent = windowCaption(g);
 }
 
+
+/* The size calculator. Your fills ranged from 0.16 to 17.61 lots, which is a
+   62x spread in risk — this exists so the number is derived, not guessed. */
+function sizerBlock(e) {
+  const z = sizing(e);
+  const lots = z.lots;
+  const warn = !z.basis;
+  return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;margin-bottom:14px">' +
+    '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px">' +
+      '<span style="font-size:11px;font-family:var(--mono);letter-spacing:.9px;text-transform:uppercase;color:var(--text3)">Size from risk</span>' +
+      '<span style="font-size:11.5px;color:var(--text3);margin-left:auto">' +
+        (warn ? '<span style="color:var(--amber)">Set your account size to use this</span>'
+              : cfg.riskPct + '% of $' + Math.round(z.basis).toLocaleString() + ' = $' + z.riskUsd.toFixed(0) + ' at risk') +
+      '</span></div>' +
+    '<div class="form-grid c4">' +
+      '<div class="fg"><label>Entry</label><input id="d-entry" type="number" step="any" placeholder="1.3420" value="' + esc2(e.entry) + '"></div>' +
+      '<div class="fg"><label>Stop loss</label><input id="d-stop" type="number" step="any" placeholder="1.3450" value="' + esc2(e.stop) + '"></div>' +
+      '<div class="fg"><label>Target <span style="text-transform:none;color:var(--text3)">(optional)</span></label><input id="d-tp" type="number" step="any" value="' + esc2(e.tp) + '"></div>' +
+      '<div class="fg"><label>Risk %</label><input id="d-riskpct" type="number" step="0.1" min="0.1" max="5" value="' + cfg.riskPct + '"></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:22px;align-items:flex-end;margin-top:14px;flex-wrap:wrap">' +
+      '<div><div style="font-size:9.5px;font-family:var(--mono);letter-spacing:.9px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Position size</div>' +
+        '<div id="d-lots" style="font-size:28px;font-weight:700;font-family:var(--mono);letter-spacing:-1px;line-height:1;color:' +
+          (lots ? 'var(--green)' : 'var(--text3)') + '">' + (lots ? lots.toFixed(2) : '--') +
+        '<span style="font-size:13px;font-weight:400;color:var(--text3);margin-left:3px">lots</span></div></div>' +
+      (z.per ? '<div style="font-size:11.5px;color:var(--text3);line-height:1.7">' +
+        '$' + z.per.toFixed(2) + ' risked per lot<br>' +
+        'stop is ' + Math.abs(Number(e.entry) - Number(e.stop)).toFixed(5).replace(/0+$/, '') + ' away' +
+        (z.rr ? '<br>reward:risk <strong style="color:' + (z.rr >= 1.5 ? 'var(--green)' : 'var(--amber)') + '">1:' + z.rr.toFixed(2) + '</strong>' : '') +
+      '</div>' : '<div style="font-size:11.5px;color:var(--text3)">Enter the pair, entry and stop to size the trade.</div>') +
+      '<div style="margin-left:auto"><div class="fg" style="min-width:130px"><label>Account size</label>' +
+        '<input id="d-acctsize" type="number" step="1000" placeholder="' + (accountBasis() ? Math.round(accountBasis()) : '100000') + '" value="' + (cfg.accountSize || '') + '"></div></div>' +
+    '</div>' +
+    (z.rr && z.rr < 1 ? '<div style="margin-top:10px;font-size:11.5px;color:var(--amber)">⚠ Target is closer than the stop. This needs a win rate above ' +
+      (100 / (1 + z.rr)).toFixed(0) + '% just to break even.</div>' : '') +
+  '</div>';
+}
+
 /* the checklist / clearance card */
 function gateCard(g, armed) {
   const e = g.e;
@@ -4065,7 +4228,7 @@ function gateCard(g, armed) {
           (v ? v[0].toUpperCase() + v.slice(1) : '--') + '</option>').join('') +
       '</select></div>' +
       '<div class="fg"><label>Engulf timeframe</label><input id="d-etf" placeholder="15m" value="' + esc2(e.engulfTf) + '"></div>' +
-    '</div>';
+    '</div>' + sizerBlock(e);
 
   RULES.forEach((r, i) => {
     const on = !!e.checks[r.id];
@@ -4157,6 +4320,45 @@ function todayCard(g) {
   return h + '</div>';
 }
 
+
+/* ── The counterfactual: what your own rules would have paid ── */
+function leakCard() {
+  const L = leakStats();
+  if (!L.nTrades) return '';
+  const row = (label, val, sub, tone) =>
+    '<div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)">' +
+      '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">' + label + '</div>' +
+      '<div style="font-size:11.5px;color:var(--text3);margin-top:2px">' + sub + '</div></div>' +
+      '<div style="font-family:var(--mono);font-size:16px;font-weight:700;white-space:nowrap" class="' + (tone || (val >= 0 ? 'pos' : 'neg')) + '">' +
+      money(val) + '</div></div>';
+
+  const delta = L.firstOnly - L.total;
+  const winDelta = L.inWin - L.total;
+
+  return '<div class="card" style="margin-bottom:14px">' +
+    '<div class="card-title">What your rules would have paid</div>' +
+    '<div style="font-size:12px;color:var(--text3);margin-bottom:6px">' +
+      L.nTrades + ' closed trades across ' + L.days + ' days, replayed three ways. Same entries, same exits — only the rules change.</div>' +
+    row('Everything you actually took', L.total, 'your real net result') +
+    row('Only the first trade of each day', L.firstOnly,
+        (delta >= 0 ? 'that is ' + money(delta) + ' better' : 'that is ' + money(Math.abs(delta)) + ' worse — the extra trades helped') ,
+        delta >= 0 ? 'pos' : 'neg') +
+    row('Only trades inside your two windows', L.inWin,
+        (winDelta >= 0 ? 'that is ' + money(winDelta) + ' better' : 'that is ' + money(Math.abs(winDelta)) + ' worse — off-hours helped'),
+        winDelta >= 0 ? 'pos' : 'neg') +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:16px">' +
+      '<div class="disc-stat"><div class="l">Trade #' + (cfg.maxTrades + 1) + ' onward</div>' +
+        '<div class="v ' + (L.extra >= 0 ? 'pos' : 'neg') + '" style="font-size:17px">' + money(L.extra) + '</div>' +
+        '<div class="s">' + L.extraN + ' trades you had already decided not to take</div></div>' +
+      '<div class="disc-stat"><div class="l">Outside your hours</div>' +
+        '<div class="v ' + (L.off >= 0 ? 'pos' : 'neg') + '" style="font-size:17px">' + money(L.off) + '</div>' +
+        '<div class="s">' + L.offN + ' entries off-window</div></div>' +
+      (L.med ? '<div class="disc-stat"><div class="l">Oversized trades</div>' +
+        '<div class="v ' + (L.big >= 0 ? 'pos' : 'neg') + '" style="font-size:17px">' + money(L.big) + '</div>' +
+        '<div class="s">' + L.bigN + ' over 3x your median ' + L.med.toFixed(2) + ' lots</div></div>' : '') +
+    '</div></div>';
+}
+
 /* 30-day compliance scoreboard */
 function statsCard() {
   const days = [];
@@ -4174,29 +4376,23 @@ function statsCard() {
     const pnl = closed.reduce((s, t) => s + netOf(t), 0);
     if (!ts.length) return;
     traded++;
-    const over = ts.length > cfg.maxTrades;
-    const off = ts.some(t => { const d = tradeDate(t); return d && !inAnyWindow(d); });
-    const list = e && checklistDone(e);
-    if (over) overLimit++;
-    if (off) offHours++;
-    if (list) checked++;
-    if (!over && !off && list) { clean++; cleanPnl += pnl; } else { dirtyPnl += pnl; }
+    const v = dayVerdict(k);
+    if (v.over) overLimit++;
+    if (v.off) offHours++;
+    if (v.checked) checked++;
+    if (v.clean) { clean++; cleanPnl += pnl; } else { dirtyPnl += pnl; }
   });
+  const st = streaks();
 
   const rate = traded ? Math.round(clean / traded * 100) : 0;
   const rateCol = rate >= 80 ? 'pos' : rate >= 50 ? '' : 'neg';
 
   const tape = days.map(k => {
-    const ts = tradesOn(k), e = log[k];
+    const v = dayVerdict(k);
     let col = 'var(--bg4)';
-    if (ts.length) {
-      const over = ts.length > cfg.maxTrades;
-      const off = ts.some(t => { const d = tradeDate(t); return d && !inAnyWindow(d); });
-      const list = e && checklistDone(e);
-      col = (!over && !off && list) ? 'rgba(16,185,129,.55)'
-          : (over || off) ? 'rgba(239,68,68,.5)' : 'rgba(245,158,11,.5)';
-    }
-    return '<div class="day-dot" title="' + k + ' · ' + ts.length + ' trade(s)" style="background:' + col + '"></div>';
+    if (v) col = v.clean ? (v.checked ? 'rgba(16,185,129,.75)' : 'rgba(16,185,129,.4)')
+                         : 'rgba(239,68,68,.5)';
+    return '<div class="day-dot" title="' + k + ' · ' + v0(v) + '" style="background:' + col + '"></div>';
   }).join('');
 
   return '<div class="card">' +
@@ -4204,6 +4400,8 @@ function statsCard() {
     '<div class="stats-grid" style="margin-bottom:16px">' +
       '<div class="disc-stat"><div class="l">Clean days</div><div class="v ' + rateCol + '">' + rate + '%</div>' +
         '<div class="s">' + clean + ' of ' + traded + ' trading days</div></div>' +
+      '<div class="disc-stat"><div class="l">Current streak</div><div class="v' + (st.cur ? ' pos' : '') + '">' + st.cur + '</div>' +
+        '<div class="s">clean days in a row · best ' + st.best + '</div></div>' +
       '<div class="disc-stat"><div class="l">Over the limit</div><div class="v' + (overLimit ? ' neg' : '') + '">' + overLimit + '</div>' +
         '<div class="s">days with more than ' + cfg.maxTrades + '</div></div>' +
       '<div class="disc-stat"><div class="l">Off-hours entries</div><div class="v' + (offHours ? ' neg' : '') + '">' + offHours + '</div>' +
@@ -4217,9 +4415,15 @@ function statsCard() {
     '</div>' +
     '<div style="display:grid;grid-template-columns:repeat(30,1fr);gap:3px">' + tape + '</div>' +
     '<div style="display:flex;gap:14px;margin-top:10px;font-size:11px;color:var(--text3);flex-wrap:wrap">' +
-      '<span>■ green — rules followed</span><span>■ amber — traded without the checklist</span>' +
+      '<span>■ bright green — rules followed, checklist filled</span><span>■ dim green — rules followed</span>' +
       '<span>■ red — over the limit or off-hours</span><span>■ grey — no trades</span></div>' +
   '</div>';
+}
+
+function v0(v) {
+  if (!v) return 'no trades';
+  return v.ts.length + ' trade(s)' + (v.over ? ' · over limit' : '') + (v.off ? ' · off-hours' : '') +
+         (v.clean ? ' · clean' : '');
 }
 
 /* ─────────────────────────── events ─────────────────────────────── */
@@ -4263,7 +4467,7 @@ function wire(g) {
     };
   });
 
-  ['d-pair:pair', 'd-etf:engulfTf', 'd-note:biasNote'].forEach(m => {
+  ['d-pair:pair', 'd-etf:engulfTf', 'd-note:biasNote', 'd-entry:entry', 'd-stop:stop', 'd-tp:tp'].forEach(m => {
     const [id, key] = m.split(':');
     const el = q('#' + id);
     if (el) el.oninput = () => { e[key] = el.value; saveLog(); };
@@ -4271,10 +4475,24 @@ function wire(g) {
   const bias = q('#d-bias');
   if (bias) bias.onchange = () => { e.bias = bias.value; saveLog(); render(); };
 
+  // live size readout: recompute on every keystroke without redrawing the page
+  ['d-entry', 'd-stop', 'd-tp', 'd-pair'].forEach(id => {
+    const el = q('#' + id);
+    if (el) el.addEventListener('input', refreshSizeReadout);
+  });
+  const rp = q('#d-riskpct');
+  if (rp) rp.oninput = () => {
+    const v = parseFloat(rp.value);
+    if (v > 0 && v <= 5) { cfg.riskPct = v; saveCfg(); refreshSizeReadout(); }
+  };
+  const as = q('#d-acctsize');
+  if (as) as.oninput = () => { cfg.accountSize = parseFloat(as.value) || 0; saveCfg(); refreshSizeReadout(); };
+
   const arm = q('#d-arm');
   if (arm) arm.onclick = () => {
     if (gateState().code !== 'ready') return;
     if (!e.pair || !e.bias) { toast('Name the pair and the bias first'); return; }
+    if (!e.entry || !e.stop) { toast('No stop, no trade — fill in the entry and the stop'); return; }
     if (e.bias === 'no trade') { toast('You logged "no trade" as your bias. Respect it.'); return; }
     e.armedAt = Date.now(); saveLog(); render();
     toast('Cleared for ' + cfg.clearedMin + ' minutes');
@@ -4298,6 +4516,26 @@ function wire(g) {
     const ok = q('#d-post-ok'); if (ok) { ok.style.display = 'inline'; setTimeout(() => ok.style.display = 'none', 2500); }
     pushToJournal(e);
   };
+}
+
+/* update just the lot number, so typing an entry price does not redraw the page */
+function refreshSizeReadout() {
+  const e = today();
+  const p = page.querySelector('#d-pair'), en = page.querySelector('#d-entry'),
+        st = page.querySelector('#d-stop'), tp = page.querySelector('#d-tp');
+  if (p)  e.pair  = p.value;
+  if (en) e.entry = en.value;
+  if (st) e.stop  = st.value;
+  if (tp) e.tp    = tp.value;
+  const z = sizing(e);
+  const out = page.querySelector('#d-lots');
+  if (out) {
+    out.textContent = z.lots ? z.lots.toFixed(2) : '--';
+    out.style.color = z.lots ? 'var(--green)' : 'var(--text3)';
+  }
+  const arm = page.querySelector('#d-arm');
+  if (arm && gateState().code === 'ready' && e.entry && e.stop) arm.disabled = false;
+  saveLog();
 }
 
 /* mirror the day into the existing Daily Journal so it lives in one place */
@@ -4342,6 +4580,8 @@ function renderBadge(g) {
 
 const origShowPage = window.showPage;
 window.showPage = function (p) {
+  markTab(p);
+  try { window.scrollTo(0, 0); } catch (e) {}
   if (p === 'discipline') {
     document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -4369,10 +4609,16 @@ setInterval(() => {
   }
 }, 1000);
 
+// the sizer leans on liveFxRates for cross pairs; populate it up front instead
+// of waiting for the first sync of the session
+if (typeof liveFxRates !== 'undefined' && typeof fetchLiveFxRates === 'function'
+    && !Object.keys(liveFxRates).length) {
+  fetchLiveFxRates().then(() => { if (page.classList.contains('active')) render(); }).catch(() => {});
+}
+markTab('dashboard');
 pullLog().then(() => { if (page.classList.contains('active')) render(); render(); });
 render();
 })();
-
 </script>
 </body>
 </html>
