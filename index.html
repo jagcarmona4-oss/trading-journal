@@ -1517,7 +1517,8 @@ async function runTLSync() {
   document.getElementById('tl-counts').textContent = '';
   setProgress(0);
 
-  let imported = 0, updated = 0, errors = 0;
+  let imported = 0, updated = 0, errors = 0, localOnly = 0;
+  lastSaveError = '';
   try {
     addLog('ok', 'Fetching live FX rates for cross-pair PNL conversion…');
     await fetchLiveFxRates();
@@ -1592,19 +1593,18 @@ async function runTLSync() {
             early:       existing.early       || 'no',
           };
           const ok = await upsertTrade(merged);
-          if (ok) {
-            const idx = trades.findIndex(t => String(t.tlId) === String(jt.tlId));
-            if (idx !== -1) trades[idx] = merged;
-            updated++;
-          }
+          const idx = trades.findIndex(t => String(t.tlId) === String(jt.tlId));
+          if (idx !== -1) trades[idx] = merged;   // update locally either way
+          if (ok) updated++; else localOnly++;
         } else {
           const ok = await upsertTrade(jt);
-          if (ok) { trades.unshift(jt); imported++; }
-          else    { addLog('err', 'Save failed: ' + jt.pair + ' posId=' + jt.tlId); errors++; }
+          trades.unshift(jt);                     // show it either way
+          if (ok) imported++; else localOnly++;
         }
       }
 
-      addLog('ok', 'Account ' + accNum + ': ' + imported + ' new, ' + updated + ' updated');
+      addLog('ok', 'Account ' + accNum + ': ' + imported + ' new, ' + updated + ' updated' +
+        (localOnly ? ', ' + localOnly + ' held on this device only' : ''));
       setProgress(base + 70);
 
       // ── FIX 1 REMINDER: After sync, prompt user to set initial balance ──
@@ -1627,10 +1627,13 @@ async function runTLSync() {
     const lsEl = document.getElementById('tl-last-sync-label');
     if (lsEl) lsEl.textContent = 'Last sync: ' + new Date(now).toLocaleString();
     setProgress(100);
-    const summary = imported + ' new · ' + updated + ' updated' + (errors ? ' · ' + errors + ' errors' : '');
+    saveTradesCache();
+    const summary = imported + ' new · ' + updated + ' updated' +
+      (localOnly ? ' · ' + localOnly + ' device-only' : '') + (errors ? ' · ' + errors + ' errors' : '');
     document.getElementById('tl-counts').textContent = summary;
-    addLog('ok', '✅ Sync complete — ' + summary);
-    showToast('✅ Synced! ' + imported + ' new, ' + updated + ' updated');
+    addLog('ok', (localOnly ? '⚠ Sync finished with unsaved rows — ' : '✅ Sync complete — ') + summary);
+    showToast(localOnly ? '⚠ ' + localOnly + ' trade(s) loaded but not saved to the database'
+                        : '✅ Synced! ' + imported + ' new, ' + updated + ' updated');
     runAutoAnalysis();
   } catch(e) {
     addLog('err', 'Sync failed: ' + e.message);
@@ -1652,6 +1655,9 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
+// v5: reports the actual reason a row was rejected instead of a bare
+// "Save failed", and only shouts about it once per sync.
+let lastSaveError = '';
 async function upsertTrade(t) {
   setSyncDot('busy', 'Saving…');
   try {
@@ -1660,27 +1666,56 @@ async function upsertTrade(t) {
       headers: { ...HDR, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
       body: JSON.stringify({ id: t.id, data: t })
     });
-    if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + (await r.text()).slice(0,200));
+    if (!r.ok) {
+      const body = await r.text();
+      throw new Error('HTTP ' + r.status + ' — ' + (body || '(empty response)').slice(0, 400));
+    }
     setSyncDot('ok', 'Synced');
+    lastSaveError = '';
     return true;
   } catch(e) {
     setSyncDot('err', 'Save failed');
-    console.error('Supabase:', e.message);
+    console.error('Supabase write rejected:', e.message, '| row id:', t.id);
+    if (e.message !== lastSaveError) {
+      lastSaveError = e.message;
+      addLog('err', 'Supabase rejected the write → ' + e.message);
+      addLog('info', 'Trades are still being kept on this device so the app works. Fix the table, then sync again.');
+    }
     return false;
   }
 }
 
+// v5: local mirror of the trade list, so a database outage or a bad policy
+// no longer means an empty dashboard.
+function saveTradesCache() {
+  try { localStorage.setItem('tradesCache', JSON.stringify(trades)); } catch(e) {}
+}
+
 async function fetchTrades() {
   setSyncDot('busy', 'Loading…');
+  let remote = null;
   try {
     const r = await fetch(API + '?order=id.desc', { headers: HDR });
-    if (!r.ok) throw new Error(await r.text());
-    trades = (await r.json()).map(r => r.data).filter(Boolean);
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + (await r.text()).slice(0, 300));
+    remote = (await r.json()).map(x => x.data).filter(Boolean);
     setSyncDot('ok', 'Synced');
   } catch(e) {
+    console.error('Supabase read failed:', e.message);
     setSyncDot('err', 'Offline');
-    showToast('Could not connect to database.');
+    showToast('Database unreachable — showing the copy saved on this device.');
   }
+  let cache = [];
+  try { cache = JSON.parse(localStorage.getItem('tradesCache')) || []; } catch(e) {}
+  if (remote) {
+    // keep any local rows the database never accepted
+    const seen = new Set(remote.map(t => String(t.tlId || t.id)));
+    const orphans = cache.filter(t => !seen.has(String(t.tlId || t.id)));
+    if (orphans.length) console.warn(orphans.length + ' trade(s) exist only on this device — not saved to Supabase');
+    trades = remote.concat(orphans);
+  } else {
+    trades = cache;
+  }
+  saveTradesCache();
 }
 
 async function deleteTradeRemote(id) {
@@ -2390,7 +2425,7 @@ function renderLog() {
 async function deleteTrade(id) {
   if (!confirm('Delete this trade?')) return;
   const ok = await deleteTradeRemote(id);
-  if (ok) { trades = trades.filter(t => t.id !== id); extractAndSaveAccounts(); renderLog(); renderDashboard(); renderAnalytics(); }
+  if (ok) { trades = trades.filter(t => t.id !== id); saveTradesCache(); extractAndSaveAccounts(); renderLog(); renderDashboard(); renderAnalytics(); }
 }
 
 function openDetail(id) {
@@ -2738,6 +2773,7 @@ async function saveTrade() {
   if (ok) {
     if (editingId) { const idx = trades.findIndex(t => t.id === editingId); if (idx !== -1) trades[idx] = trade; }
     else trades.unshift(trade);
+    saveTradesCache();
     extractAndSaveAccounts();
     const msg = document.getElementById('save-msg');
     msg.style.display = 'inline';
