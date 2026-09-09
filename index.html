@@ -1,639 +1,74 @@
 <!-- ══════════════════════════════════════════════════════════════════════
-     TradeLog Pro — v7 add-on:  R-multiples
+     TradeLog Pro — duplicate fix, no in-place edits required
 
-     Why: your fills have run from 0.16 to 17.6 lots. Every dollar figure
-     in the app — avg win, expectancy, Edge Score, the leak card — is
-     therefore measuring position size more than it measures decisions.
-     R divides each result by what was actually at risk, so a 0.2-lot
-     winner and a 12-lot winner become comparable.
+     Use this INSTEAD of Patch A and Patch B. If you already applied
+     those by hand, revert them (or leave them — this block detects the
+     work is already done and stays out of the way).
 
-     What it adds
-       · an R engine: risk per trade from the stop (via calcPnlFallback),
-         from the Risk ($) field, or from an assumed % if neither exists
-       · an "R Report" page: expectancy in R, R distribution, cumulative
-         R curve, R by pair / session / weekday / grade, risk dispersion,
-         and the flat-risk counterfactual
-       · an R column in the Trade Log (toggleable)
-       · an R block inside the trade detail modal
+     It fixes the same two things by wrapping existing functions:
+       1. editTrade + upsertTrade — an edited TradeLocker trade keeps its
+          tlId and its source, so the next sync recognises it instead of
+          inserting a second copy.
+       2. upsertTrade during a sync — a stop, target, R:R, risk figure or
+          playbook you typed in by hand is not overwritten by the null
+          coming back from the API.
 
-     WHERE THIS GOES
-       Paste before </body>, after the v6 Funding Rules block.
-       No edits to existing code — it wraps showPage, renderLog and
-       openDetail, and injects its own nav item, page and mobile tab.
+     Paste before </body>. Order does not matter relative to the other
+     add-ons.
      ══════════════════════════════════════════════════════════════════════ -->
 <script>
 (function () {
 'use strict';
-if (window.__rLoaded) return;
-window.__rLoaded = true;
+if (window.__dupFixLoaded) return;
+window.__dupFixLoaded = true;
 
-/* ─────────────────────────── config ──────────────────────────────── */
+let pendingEdit = null;
 
-const CFG_KEY = 'r_cfg_v1';
-const DEF_CFG = {
-  riskPct:  1,          // assumed risk when a trade has no stop and no Risk ($)
-  prefer:   'stop',     // 'stop' = measure from entry→SL first, 'field' = trust Risk ($) first
-  logCol:   true,       // show the R column in the Trade Log
-  unit:     'R'         // R Report headline unit: 'R' or 'pct' (R as % of account)
-};
-function rd(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
-function wr(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
-let cfg = Object.assign({}, DEF_CFG, rd(CFG_KEY) || {});
-const saveCfg = () => wr(CFG_KEY, cfg);
-
-/* pick up the account sizes the other two modules already know about */
-function acctSize(name) {
-  const fund = rd('fund_cfg_v1') || {};
-  const disc = rd('disc_cfg_v1') || {};
-  if (name && name !== 'All') {
-    if (fund.sizes && fund.sizes[name]) return Number(fund.sizes[name]);
-    if (typeof initialBalances !== 'undefined' && initialBalances[name]) return Number(initialBalances[name]);
-  }
-  if (name === 'All') {
-    const list = (typeof knownAccounts !== 'undefined' ? knownAccounts : []);
-    const s = list.reduce((x, a) => x + acctSize(a), 0);
-    if (s > 0) return s;
-  }
-  if (disc.accountSize > 0) return Number(disc.accountSize);
-  return 0;
-}
-
-/* ─────────────────────────── helpers ─────────────────────────────── */
-
-const pad = n => String(n).padStart(2, '0');
-function tradeDate(t) {
-  if (!t || !t.time) return null;
-  let s = String(t.time);
-  if (!/[zZ]|[+-]\d\d:?\d\d$/.test(s) && t.source === 'tradelocker') s += 'Z';
-  const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d;
-}
-function allTrades() { return (typeof trades !== 'undefined' && Array.isArray(trades)) ? trades : []; }
-function netOf(t) {
-  if (typeof getNetPnl === 'function') return getNetPnl(t);
-  return (parseFloat(t.pnl) || 0) + (parseFloat(t.commission) || 0);
-}
-function acctName() { return (typeof currentAccount !== 'undefined' && currentAccount) ? currentAccount : 'All'; }
-function esc4(s) {
-  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-function usd(v) { return (v < 0 ? '-$' : '$') + Math.abs(Math.round(v)).toLocaleString(); }
-function rTxt(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + 'R'; }
-function rCol(v) { return v > 0.02 ? 'var(--green)' : v < -0.02 ? 'var(--red)' : 'var(--text2)'; }
-function toast(m) { if (typeof showToast === 'function') showToast(m); }
-function median(a) {
-  if (!a.length) return 0;
-  const s = [...a].sort((x, y) => x - y);
-  const i = Math.floor(s.length / 2);
-  return s.length % 2 ? s[i] : (s[i - 1] + s[i]) / 2;
-}
-
-/* ─────────────────────────── the R engine ───────────────────────── */
-
-/* Risk in USD for one trade. calcPnlFallback() already carries the
-   per-instrument multipliers and the quote→USD conversion, so the loss
-   between entry and stop at the traded size IS the money at risk. */
-function riskFromStop(t) {
-  if (typeof calcPnlFallback !== 'function') return null;
-  if (!t.pair || !t.entry || !t.sl || !t.size) return null;
-  const v = calcPnlFallback(t.pair, 'long', Number(t.entry), Number(t.sl), Number(t.size));
-  if (v == null || !isFinite(v) || Math.abs(v) < 0.01) return null;
-  return Math.abs(v);
-}
-function riskFromField(t) {
-  const v = parseFloat(t.risk);
-  return (!isNaN(v) && v > 0) ? v : null;
-}
-function riskOf(t) {
-  const stop  = riskFromStop(t);
-  const field = riskFromField(t);
-  const order = cfg.prefer === 'field' ? [[field, 'entered'], [stop, 'stop']]
-                                       : [[stop, 'stop'], [field, 'entered']];
-  for (const [v, src] of order) if (v) return { usd: v, src: src };
-  const size = acctSize(t.account) || acctSize(acctName());
-  if (size > 0) return { usd: size * cfg.riskPct / 100, src: 'assumed' };
-  return null;
-}
-/* one enriched row per closed trade */
-function rRows(name) {
-  const list = (name === 'All' ? allTrades() : allTrades().filter(t => t.account === name));
-  return list.filter(t => t.status !== 'open').map(t => {
-    const risk = riskOf(t);
-    const net = netOf(t);
-    return { t: t, net: net, risk: risk ? risk.usd : null, src: risk ? risk.src : 'none',
-             r: risk ? net / risk.usd : null, d: tradeDate(t) };
-  }).filter(x => x.r != null && isFinite(x.r))
-    .sort((a, b) => (a.d || 0) - (b.d || 0));
-}
-
-function stats(rows) {
-  const rs = rows.map(x => x.r);
-  const wins = rows.filter(x => x.r > 0.02), losses = rows.filter(x => x.r < -0.02);
-  const totalR = rs.reduce((s, v) => s + v, 0);
-  const winR   = wins.reduce((s, x) => s + x.r, 0);
-  const lossR  = losses.reduce((s, x) => s + x.r, 0);
-  const avgR   = rows.length ? totalR / rows.length : 0;
-  const avgWin = wins.length ? winR / wins.length : 0;
-  const avgLoss= losses.length ? lossR / losses.length : 0;
-  const wr     = rows.length ? wins.length / rows.length : 0;
-  const pf     = lossR < 0 ? winR / Math.abs(lossR) : null;
-  const mean   = avgR;
-  const sd     = rows.length > 1 ? Math.sqrt(rs.reduce((s, v) => s + (v - mean) * (v - mean), 0) / (rs.length - 1)) : 0;
-  const risks  = rows.map(x => x.risk);
-  const medRisk= median(risks);
-  const oversized = medRisk ? rows.filter(x => x.risk > medRisk * 3) : [];
-  const flatR  = totalR * medRisk;                    // same trades, one risk size
-  const actual = rows.reduce((s, x) => s + x.net, 0);
-  const bySrc  = { stop: 0, entered: 0, assumed: 0 };
-  rows.forEach(x => { bySrc[x.src] = (bySrc[x.src] || 0) + 1; });
-  return { totalR, avgR, avgWin, avgLoss, wr, pf, sd, medRisk, oversized, flatR, actual, bySrc,
-           n: rows.length, nWin: wins.length, nLoss: losses.length,
-           best: rs.length ? Math.max(...rs) : 0, worst: rs.length ? Math.min(...rs) : 0 };
-}
-
-function groupBy(rows, keyFn) {
-  const m = {};
-  rows.forEach(x => {
-    const k = keyFn(x) || 'unknown';
-    if (!m[k]) m[k] = { n: 0, wins: 0, r: 0 };
-    m[k].n++;
-    if (x.r > 0.02) m[k].wins++;
-    m[k].r += x.r;
-  });
-  return Object.entries(m).map(([k, v]) => ({ key: k, n: v.n, wins: v.wins, totalR: v.r, avgR: v.r / v.n }))
-    .sort((a, b) => b.avgR - a.avgR);
-}
-
-/* ─────────────────────────── shell ──────────────────────────────── */
-
-const style = document.createElement('style');
-style.textContent = `
-.r-head{display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap;border-radius:var(--r3);padding:20px 22px;background:var(--bg2);border:1px solid var(--border);margin-bottom:14px}
-.r-big{font-family:var(--mono);font-size:40px;font-weight:700;letter-spacing:-1.6px;line-height:.95}
-.r-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px}
-.r-row:last-child{border-bottom:none}
-.r-row .k{min-width:88px;font-weight:500}
-.r-row .n{font-family:var(--mono);font-size:11.5px;color:var(--text3);min-width:34px;text-align:right}
-.r-bar{flex:1;height:6px;background:var(--bg4);border-radius:3px;position:relative;overflow:hidden}
-.r-bar i{position:absolute;top:0;bottom:0;border-radius:3px}
-.r-avg{font-family:var(--mono);font-size:12.5px;font-weight:600;min-width:64px;text-align:right}
-.r-src{font-size:9px;font-family:var(--mono);letter-spacing:.4px;padding:1px 5px;border-radius:3px;text-transform:uppercase}
-.r-src.stop{background:rgba(16,185,129,.12);color:var(--green)}
-.r-src.entered{background:rgba(59,130,246,.12);color:var(--blue)}
-.r-src.assumed{background:rgba(245,158,11,.12);color:var(--amber)}
-`;
-document.head.appendChild(style);
-
-const page = document.createElement('div');
-page.id = 'page-rreport';
-page.className = 'page';
-(document.querySelector('main.main') || document.body).appendChild(page);
-
-(function injectNav() {
-  const sb = document.querySelector('.sidebar');
-  if (!sb) return;
-  const foot = sb.querySelector('.sidebar-footer');
-  const sec = document.createElement('div');
-  sec.className = 'nav-section';
-  sec.innerHTML =
-    '<div class="nav-section-label">Risk</div>' +
-    '<div class="nav-item" id="nav-rreport">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-      '<path d="M4 20V8"/><path d="M10 20V4"/><path d="M16 20v-9"/><path d="M22 20H2"/></svg>' +
-      'R Report</div>';
-  if (foot) sb.insertBefore(sec, foot); else sb.appendChild(sec);
-  sec.querySelector('.nav-item').onclick = () => window.showPage('rreport');
-})();
-
-(function injectTab() {
-  const mn = document.querySelector('.disc-mnav');
-  if (!mn) return;
-  const b = document.createElement('button');
-  b.dataset.tab = 'rreport';
-  b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-    '<path d="M4 20V8"/><path d="M10 20V4"/><path d="M16 20v-9"/><path d="M22 20H2"/></svg>R';
-  b.onclick = () => window.showPage('rreport');
-  mn.appendChild(b);
-})();
-function markTabs(p) {
-  document.querySelectorAll('.disc-mnav button').forEach(b => b.classList.toggle('on', b.dataset.tab === p));
-}
-
-/* ─────────────────────────── rendering ──────────────────────────── */
-
-let cumChart = null, distChart = null;
-
-function render() {
-  const a = document.activeElement;
-  if (a && page.contains(a) && /INPUT|SELECT/.test(a.tagName)) return;
-
-  const name = acctName();
-  const rows = rRows(name);
-  const s = stats(rows);
-
-  page.innerHTML =
-    '<div class="page-header"><div>' +
-      '<div class="page-title">R Report</div>' +
-      '<div class="page-sub">Every result divided by what was at risk, so size stops distorting the read.</div></div>' +
-      '<div class="pill-row"><span class="pill-label">Account:</span>' +
-      ['All'].concat(typeof knownAccounts !== 'undefined' ? knownAccounts : []).map(x =>
-        '<button class="pill' + (name === x ? ' active' : '') + '" data-acct="' + esc4(x) + '">' + esc4(x) + '</button>').join('') +
-      '</div></div>';
-
-  if (!rows.length) {
-    page.innerHTML += '<div class="card"><div class="empty"><b>Nothing to measure yet</b>' +
-      '<p style="margin-top:6px">R needs a closed trade with a stop, a Risk ($) figure, or an account size to assume against. ' +
-      'Set the account size under Funding Rules and this fills in.</p></div></div>' + settingsCard();
-    wire();
-    return;
-  }
-
-  page.innerHTML +=
-    headline(s) +
-    summaryCards(s) +
-    charts() +
-    breakdowns(rows) +
-    dispersion(rows, s) +
-    recentTable(rows) +
-    settingsCard();
-
-  wire();
-  drawCharts(rows);
-}
-
-function headline(s) {
-  const size = acctSize(acctName());
-  const pctOfAcct = size ? s.medRisk / size * 100 : null;
-  return '<div class="r-head">' +
-    '<div>' +
-      '<div style="font-size:10px;font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Total</div>' +
-      '<div class="r-big" style="color:' + rCol(s.totalR) + '">' + rTxt(s.totalR) + '</div>' +
-      '<div style="font-size:11.5px;color:var(--text3);margin-top:7px">across ' + s.n + ' closed trades</div>' +
-    '</div>' +
-    '<div style="flex:1;min-width:240px;font-size:13px;color:var(--text2);line-height:1.7">' +
-      'You keep <strong style="color:' + rCol(s.avgR) + ';font-family:var(--mono)">' + rTxt(s.avgR) + '</strong> per trade on average. ' +
-      'Typical risk is <strong style="font-family:var(--mono)">' + usd(s.medRisk) + '</strong>' +
-      (pctOfAcct ? ' (' + pctOfAcct.toFixed(2) + '% of the account)' : '') + '.' +
-      '<br>Had every trade risked that same amount, the same entries and exits would have returned ' +
-      '<strong style="color:' + rCol(s.flatR) + ';font-family:var(--mono)">' + usd(s.flatR) + '</strong> instead of ' +
-      '<strong style="font-family:var(--mono)">' + usd(s.actual) + '</strong>.' +
-    '</div></div>';
-}
-
-function summaryCards(s) {
-  const c = (l, v, col, sub) =>
-    '<div class="stat-card"><div class="stat-label">' + l + '</div>' +
-    '<div class="stat-value" style="color:' + (col || 'var(--text)') + '">' + v + '</div>' +
-    (sub ? '<div class="stat-sub">' + sub + '</div>' : '') + '</div>';
-  return '<div class="stats-grid">' +
-    c('Expectancy', rTxt(s.avgR), rCol(s.avgR), 'per trade') +
-    c('Avg win', rTxt(s.avgWin), 'var(--green)', s.nWin + ' trades') +
-    c('Avg loss', rTxt(s.avgLoss), 'var(--red)', s.nLoss + ' trades') +
-    c('Win rate', (s.wr * 100).toFixed(1) + '%', '', 'breakeven at ' +
-      (s.avgWin - s.avgLoss !== 0 ? (Math.abs(s.avgLoss) / (s.avgWin + Math.abs(s.avgLoss)) * 100).toFixed(0) + '%' : '--')) +
-    c('Profit factor', s.pf != null ? s.pf.toFixed(2) : '∞', s.pf != null && s.pf >= 1 ? 'var(--green)' : 'var(--red)', 'in R terms') +
-    c('Volatility', '±' + s.sd.toFixed(2) + 'R', '', 'std dev per trade') +
-    c('Best / worst', rTxt(s.best) + ' / ' + rTxt(s.worst), '', 'single trades') +
-    '</div>';
-}
-
-function charts() {
-  return '<div style="display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin:4px 0 14px">' +
-    '<div class="card"><div class="card-title">Cumulative R</div>' +
-      '<div style="position:relative;height:190px"><canvas id="r-cum"></canvas></div></div>' +
-    '<div class="card"><div class="card-title">R distribution</div>' +
-      '<div style="position:relative;height:190px"><canvas id="r-dist"></canvas></div></div></div>';
-}
-
-function bar(o) {
-  /* diverging bar centred on zero, scaled to the widest avgR on show */
-  const half = 50, w = Math.min(50, Math.abs(o.avgR) / o.scale * half);
-  const pos = o.avgR >= 0;
-  return '<div class="r-row">' +
-    '<span class="k">' + esc4(o.label) + '</span>' +
-    '<span class="n">' + o.n + 'T</span>' +
-    '<span class="n" style="min-width:42px">' + Math.round(o.wins / o.n * 100) + '%</span>' +
-    '<span class="r-bar"><i style="left:' + (pos ? half : half - w) + '%;width:' + w + '%;background:' +
-      (pos ? 'var(--green)' : 'var(--red)') + '"></i>' +
-      '<i style="left:50%;width:1px;background:var(--border3);border-radius:0"></i></span>' +
-    '<span class="r-avg" style="color:' + rCol(o.avgR) + '">' + rTxt(o.avgR) + '</span>' +
-    '<span class="n" style="min-width:56px">' + rTxt(o.totalR) + '</span>' +
-    '</div>';
-}
-function groupCard(title, groups, note) {
-  if (!groups.length) return '';
-  const scale = Math.max(0.25, ...groups.map(g => Math.abs(g.avgR)));
-  return '<div class="card"><div class="card-title">' + title + '</div>' +
-    groups.map(g => bar({ label: g.key, n: g.n, wins: g.wins, avgR: g.avgR, totalR: g.totalR, scale: scale })).join('') +
-    (note ? '<div style="font-size:11px;color:var(--text3);margin-top:9px">' + note + '</div>' : '') +
-    '</div>';
-}
-
-function breakdowns(rows) {
-  const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const pairs = groupBy(rows, x => x.t.pair).filter(g => g.n >= 1);
-  const sess  = groupBy(rows, x => (x.t.session || 'unknown').replace('_', ' '));
-  const dow   = groupBy(rows, x => x.d ? DOW[x.d.getDay()] : 'unknown');
-  const grade = groupBy(rows.filter(x => x.t.grade), x => 'Grade ' + x.t.grade);
-  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">' +
-    groupCard('R by pair', pairs, 'Columns: trades · win rate · average R · total R. Ranked by average, so a single big dollar win cannot carry a pair.') +
-    groupCard('R by weekday', dow) +
-    groupCard('R by session', sess) +
-    (grade.length ? groupCard('R by your own grade', grade, 'If A-graded trades do not out-earn C and D in R, the grading is not measuring what you think.') : '') +
-    '</div>';
-}
-
-function dispersion(rows, s) {
-  const worst = [...s.oversized].sort((a, b) => a.r - b.r).slice(0, 5);
-  const overR = s.oversized.reduce((x, y) => x + y.r, 0);
-  const overNet = s.oversized.reduce((x, y) => x + y.net, 0);
-  const spread = s.medRisk ? Math.max(...rows.map(x => x.risk)) / Math.min(...rows.map(x => x.risk)) : 0;
-  return '<div class="card" style="margin-bottom:14px">' +
-    '<div class="card-title">Risk consistency</div>' +
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px">' +
-      '<div class="disc-stat"><div class="l">Typical risk</div><div class="v">' + usd(s.medRisk) + '</div>' +
-        '<div class="s">median across ' + s.n + ' trades</div></div>' +
-      '<div class="disc-stat"><div class="l">Largest ÷ smallest</div><div class="v' + (spread > 5 ? ' neg' : '') + '">' + spread.toFixed(0) + '×</div>' +
-        '<div class="s">spread in money risked</div></div>' +
-      '<div class="disc-stat"><div class="l">Trades over 3× typical</div><div class="v' + (s.oversized.length ? ' neg' : '') + '">' + s.oversized.length + '</div>' +
-        '<div class="s">' + rTxt(overR) + ' · ' + usd(overNet) + '</div></div>' +
-      '<div class="disc-stat"><div class="l">Risk known from</div><div class="v" style="font-size:15px">' +
-        (s.bySrc.stop || 0) + ' / ' + s.n + '</div>' +
-        '<div class="s">a real stop; ' + (s.bySrc.entered || 0) + ' entered, ' + (s.bySrc.assumed || 0) + ' assumed</div></div>' +
-    '</div>' +
-    (worst.length
-      ? '<div style="font-size:12px;color:var(--text3);margin-bottom:6px">Biggest bets, worst first</div>' +
-        worst.map(x => '<div class="r-row">' +
-          '<span class="k">' + esc4(x.t.pair) + '</span>' +
-          '<span class="n" style="min-width:76px">' + (x.t.time || '').slice(0, 10) + '</span>' +
-          '<span class="n" style="min-width:66px">' + usd(x.risk) + ' risk</span>' +
-          '<span class="n" style="min-width:52px">' + (x.t.size || '--') + 'L</span>' +
-          '<span style="flex:1"></span>' +
-          '<span class="r-avg" style="color:' + rCol(x.r) + '">' + rTxt(x.r) + '</span>' +
-          '<span class="n" style="min-width:70px">' + usd(x.net) + '</span></div>').join('')
-      : '<div style="font-size:12.5px;color:var(--green)">No trade risked more than three times your typical amount. That is the hard part done.</div>') +
-    ((s.bySrc.assumed || 0) > 0
-      ? '<div style="margin-top:12px;font-size:11.5px;color:var(--amber)">' + s.bySrc.assumed +
-        ' trade(s) had neither a stop nor a Risk ($) figure, so R there assumes ' + cfg.riskPct +
-        '% of the account. Filling in the stop on those makes this exact.</div>' : '') +
-    '</div>';
-}
-
-function recentTable(rows) {
-  const last = [...rows].reverse().slice(0, 25);
-  return '<div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">' +
-    '<div class="card-title" style="padding:18px 18px 12px;margin:0">Last 25 trades in R</div>' +
-    '<div class="tbl-wrap"><table class="tbl"><thead><tr>' +
-      '<th>Date</th><th>Pair</th><th>Dir</th><th>Size</th><th>Risk</th><th>Basis</th><th>Net</th><th>R</th>' +
-    '</tr></thead><tbody>' +
-    last.map(x => '<tr class="' + (x.r > 0 ? 'row-win' : x.r < 0 ? 'row-loss' : '') + '"' +
-      ' onclick="openDetail(' + x.t.id + ')">' +
-      '<td class="mono" style="color:var(--text2)">' + (x.t.time || '').slice(0, 10) + '</td>' +
-      '<td style="font-weight:600">' + esc4(x.t.pair) + '</td>' +
-      '<td><span class="badge badge-' + (x.t.dir === 'short' ? 'short' : 'long') + '">' + esc4(x.t.dir) + '</span></td>' +
-      '<td class="mono" style="color:var(--text2)">' + (x.t.size ? x.t.size + 'L' : '--') + '</td>' +
-      '<td class="mono">' + usd(x.risk) + '</td>' +
-      '<td><span class="r-src ' + x.src + '">' + x.src + '</span></td>' +
-      '<td class="mono" style="color:' + rCol(x.net) + '">' + usd(x.net) + '</td>' +
-      '<td class="mono" style="font-weight:700;color:' + rCol(x.r) + '">' + rTxt(x.r) + '</td>' +
-    '</tr>').join('') +
-    '</tbody></table></div></div>';
-}
-
-function settingsCard() {
-  return '<div class="card">' +
-    '<div class="card-title">How R is measured</div>' +
-    '<div style="font-size:12.5px;color:var(--text2);line-height:1.7;margin-bottom:14px">' +
-      'Risk comes from the distance between entry and stop at the size traded, converted to USD with the same ' +
-      'per-instrument maths the position sizer uses. Where there is no stop, the Risk ($) field is used. ' +
-      'Where there is neither, a flat percentage is assumed and the trade is flagged.</div>' +
-    '<div class="form-grid c3">' +
-      '<div class="fg"><label>Assumed risk (%)</label><input id="r-pct" type="number" step="0.1" min="0.1" max="10" value="' + cfg.riskPct + '"></div>' +
-      '<div class="fg"><label>Prefer</label><select id="r-prefer">' +
-        '<option value="stop"' + (cfg.prefer === 'stop' ? ' selected' : '') + '>Stop distance</option>' +
-        '<option value="field"' + (cfg.prefer === 'field' ? ' selected' : '') + '>Risk ($) field</option>' +
-      '</select></div>' +
-      '<div class="fg"><label>R column in Trade Log</label><select id="r-logcol">' +
-        '<option value="1"' + (cfg.logCol ? ' selected' : '') + '>Show</option>' +
-        '<option value="0"' + (!cfg.logCol ? ' selected' : '') + '>Hide</option>' +
-      '</select></div>' +
-    '</div>' +
-    '<button class="btn btn-primary btn-sm" id="r-save" style="margin-top:12px">Save</button></div>';
-}
-
-/* ─────────────────────────── charts ────────────────────────────── */
-
-function drawCharts(rows) {
-  if (typeof Chart === 'undefined') return;
-
-  const cum = [];
-  let run = 0;
-  rows.forEach(x => { run += x.r; cum.push(parseFloat(run.toFixed(3))); });
-  const cEl = page.querySelector('#r-cum');
-  if (cEl) {
-    if (cumChart) { cumChart.destroy(); cumChart = null; }
-    cumChart = new Chart(cEl.getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: rows.map((_, i) => i + 1),
-        datasets: [{
-          data: cum,
-          borderColor: run >= 0 ? '#10b981' : '#ef4444',
-          borderWidth: 1.6, pointRadius: rows.length < 60 ? 2.5 : 0,
-          fill: true, tension: 0.28,
-          backgroundColor: run >= 0 ? 'rgba(16,185,129,0.07)' : 'rgba(239,68,68,0.07)'
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: c => [rTxt(c.raw) + ' cumulative',
-            rows[c.dataIndex].t.pair + ' ' + rTxt(rows[c.dataIndex].r)] } }
-        },
-        scales: {
-          x: { ticks: { color: '#52525b', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
-          y: { ticks: { color: '#52525b', font: { size: 10 }, callback: v => v + 'R' }, grid: { color: 'rgba(255,255,255,0.04)' } }
-        }
-      }
-    });
-  }
-
-  const buckets = [
-    ['< -2R', v => v < -2], ['-2 to -1', v => v >= -2 && v < -1], ['-1 to -0.5', v => v >= -1 && v < -0.5],
-    ['-0.5 to 0', v => v >= -0.5 && v <= 0.02], ['0 to 0.5', v => v > 0.02 && v <= 0.5],
-    ['0.5 to 1', v => v > 0.5 && v <= 1], ['1 to 2', v => v > 1 && v <= 2],
-    ['2 to 3', v => v > 2 && v <= 3], ['> 3R', v => v > 3]
-  ];
-  const counts = buckets.map(([, f]) => rows.filter(x => f(x.r)).length);
-  const dEl = page.querySelector('#r-dist');
-  if (dEl) {
-    if (distChart) { distChart.destroy(); distChart = null; }
-    distChart = new Chart(dEl.getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: buckets.map(b => b[0]),
-        datasets: [{
-          data: counts, borderRadius: 3,
-          backgroundColor: buckets.map((b, i) => i < 4 ? 'rgba(239,68,68,0.65)' : 'rgba(16,185,129,0.65)')
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.raw + ' trade(s)' } } },
-        scales: {
-          x: { ticks: { color: '#52525b', font: { size: 9 }, maxRotation: 55, minRotation: 35 }, grid: { display: false } },
-          y: { ticks: { color: '#52525b', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(255,255,255,0.04)' } }
-        }
-      }
-    });
-  }
-}
-
-/* ─────────────────────────── events ───────────────────────────── */
-
-function wire() {
-  const q = s => page.querySelector(s);
-  page.querySelectorAll('[data-acct]').forEach(b => b.onclick = () => {
-    const v = b.dataset.acct;
-    if (typeof setCurrentAccount === 'function') setCurrentAccount(v);
-    else if (typeof currentAccount !== 'undefined') currentAccount = v;
-    render();
-  });
-  const save = q('#r-save');
-  if (save) save.onclick = () => {
-    const p = parseFloat((q('#r-pct') || {}).value);
-    if (!isNaN(p) && p > 0 && p <= 10) cfg.riskPct = p;
-    const pref = q('#r-prefer');  if (pref) cfg.prefer = pref.value === 'field' ? 'field' : 'stop';
-    const lc = q('#r-logcol');    if (lc) cfg.logCol = lc.value === '1';
-    saveCfg();
-    if (!cfg.logCol) removeLogColumn();
-    if (typeof renderLog === 'function' && document.getElementById('page-log')) renderLog();
-    toast('R settings saved');
-    render();
-  };
-}
-
-/* ───────────────── R column inside the existing Trade Log ──────── */
-
-function logTable() { return document.querySelector('#page-log table.tbl'); }
-function removeLogColumn() {
-  const tb = logTable();
-  if (!tb) return;
-  const th = tb.querySelector('thead th[data-rcol]');
-  if (th) th.remove();
-  tb.querySelectorAll('td[data-rcell]').forEach(td => td.remove());
-}
-function injectLogColumn() {
-  const tb = logTable();
-  if (!tb) return;
-  if (!cfg.logCol) { removeLogColumn(); return; }
-
-  const headRow = tb.querySelector('thead tr');
-  if (headRow && !headRow.querySelector('th[data-rcol]')) {
-    const th = document.createElement('th');
-    th.setAttribute('data-rcol', '1');
-    th.textContent = 'R';
-    th.title = 'Net PnL divided by the money at risk';
-    headRow.insertBefore(th, headRow.children[11] || null);   // straight after Net PNL
-  }
-
-  tb.querySelectorAll('tbody tr').forEach(tr => {
-    if (tr.querySelector('td[data-rcell]')) return;
-    const cells = tr.children;
-    if (cells.length === 1 && cells[0].hasAttribute('colspan')) { cells[0].setAttribute('colspan', '14'); return; }
-    const m = /openDetail\((\d+)\)/.exec(tr.getAttribute('onclick') || '');
-    const t = m ? allTrades().find(x => String(x.id) === m[1]) : null;
-    const td = document.createElement('td');
-    td.setAttribute('data-rcell', '1');
-    td.className = 'mono';
-    if (!t || t.status === 'open') {
-      td.style.color = 'var(--text3)';
-      td.textContent = '--';
-    } else {
-      const risk = riskOf(t);
-      if (!risk) { td.style.color = 'var(--text3)'; td.textContent = '--'; }
-      else {
-        const r = netOf(t) / risk.usd;
-        td.style.color = rCol(r);
-        td.style.fontWeight = '600';
-        td.textContent = rTxt(r);
-        td.title = usd(risk.usd) + ' at risk (' + risk.src + ')';
-        if (risk.src === 'assumed') td.style.opacity = '0.65';
-      }
-    }
-    tr.insertBefore(td, cells[11] || null);
-  });
-}
-
-const prevRenderLog = window.renderLog;
-if (typeof prevRenderLog === 'function') {
-  window.renderLog = function () {
-    const out = prevRenderLog.apply(this, arguments);
-    try { injectLogColumn(); } catch (e) { console.warn('[R] log column skipped:', e); }
-    return out;
-  };
-}
-
-/* ───────────────── R block inside the detail modal ────────────── */
-
-const prevOpenDetail = window.openDetail;
-if (typeof prevOpenDetail === 'function') {
-  window.openDetail = function (id) {
-    prevOpenDetail.apply(this, arguments);
+/* remember the row as it stood before the form touched it */
+const prevEditTrade = window.editTrade;
+if (typeof prevEditTrade === 'function') {
+  window.editTrade = function (id) {
     try {
-      const t = allTrades().find(x => x.id == id);
-      const box = document.getElementById('detail-box');
-      if (!t || !box || t.status === 'open') return;
-      const risk = riskOf(t);
-      if (!risk) return;
-      const r = netOf(t) / risk.usd;
-      const size = acctSize(t.account);
-      const div = document.createElement('div');
-      div.style.cssText = 'margin:14px 0 0;padding:13px 16px;border-radius:var(--r2);background:var(--bg3);border:1px solid var(--border)';
-      div.innerHTML =
-        '<div style="display:flex;align-items:baseline;gap:18px;flex-wrap:wrap">' +
-          '<div><div style="font-size:9.5px;font-family:var(--mono);letter-spacing:.9px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Result in R</div>' +
-            '<div style="font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:-.8px;color:' + rCol(r) + '">' + rTxt(r) + '</div></div>' +
-          '<div style="font-size:11.5px;color:var(--text3);line-height:1.7">' +
-            usd(risk.usd) + ' at risk, ' +
-            (risk.src === 'stop' ? 'measured from your stop'
-              : risk.src === 'entered' ? 'from the Risk ($) you entered'
-              : 'assumed at ' + cfg.riskPct + '% — no stop on this trade') +
-            (size ? '<br>that is ' + (risk.usd / size * 100).toFixed(2) + '% of the account' : '') +
-          '</div></div>';
-      box.appendChild(div);
-    } catch (e) { console.warn('[R] detail block skipped:', e); }
+      const t = (window.trades || []).find(x => x.id === id);
+      pendingEdit = t ? Object.assign({}, t) : null;
+    } catch (e) { pendingEdit = null; }
+    return prevEditTrade.apply(this, arguments);
   };
 }
 
-/* ─────────────────────────── routing ──────────────────────────── */
-
-const prevShowPage = window.showPage;
-window.showPage = function (p) {
-  if (p === 'rreport') {
-    document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    page.classList.add('active');
-    const n = document.getElementById('nav-rreport');
-    if (n) n.classList.add('active');
-    markTabs('rreport');
-    try { window.scrollTo(0, 0); } catch (e) {}
-    render();
-    return;
-  }
-  if (typeof prevShowPage === 'function') prevShowPage(p);
-};
-
-/* the sizer maths needs FX rates for cross pairs — make sure they exist */
-if (typeof liveFxRates !== 'undefined' && typeof fetchLiveFxRates === 'function'
-    && !Object.keys(liveFxRates).length) {
-  fetchLiveFxRates().then(() => {
-    if (page.classList.contains('active')) render();
-    try { injectLogColumn(); } catch (e) {}
-  }).catch(() => {});
+/* last stop before anything reaches Supabase */
+const prevUpsert = window.upsertTrade;
+if (typeof prevUpsert === 'function') {
+  window.upsertTrade = function (t) {
+    try { mend(t); } catch (e) { console.warn('[dupfix] skipped:', e); }
+    return prevUpsert.apply(this, arguments);
+  };
 }
-setTimeout(() => { try { injectLogColumn(); } catch (e) {} }, 1500);
+
+function mend(t) {
+  if (!t || t.id == null) return;
+  const isEdit = pendingEdit && String(pendingEdit.id) === String(t.id);
+
+  if (isEdit) {
+    /* the form has no tlId field, so saveTrade drops it and flips source
+       to 'manual'. Put both back — that is the whole duplicate bug. */
+    if (!t.tlId && pendingEdit.tlId) {
+      t.tlId = pendingEdit.tlId;
+      console.log('[dupfix] restored tlId ' + t.tlId + ' on trade ' + t.id);
+    }
+    if (pendingEdit.source === 'tradelocker') t.source = 'tradelocker';
+    return;                      /* never restore anything else here —
+                                    a cleared note is a deliberate clear */
+  }
+
+  if (!t.tlId) return;
+
+  /* sync path: fill only the fields the API cannot know about */
+  const old = (window.trades || []).find(x => x !== t && x.tlId && String(x.tlId) === String(t.tlId));
+  if (!old) return;
+  ['sl', 'tp', 'rr', 'risk', 'playbookId'].forEach(k => {
+    if ((t[k] == null || t[k] === '') && old[k] != null && old[k] !== '') t[k] = old[k];
+  });
+}
 })();
 </script>
