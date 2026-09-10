@@ -333,7 +333,7 @@ th.sorted-desc::after { content: ' ↓'; }
   <nav class="sidebar">
     <div class="logo">
       <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-      <div class="logo-text"><div class="logo-name">TradeLog</div><div class="logo-version">Pro v7</div></div>
+      <div class="logo-text"><div class="logo-name">TradeLog</div><div class="logo-version">Pro v8</div></div>
     </div>
 
     <div class="nav-section">
@@ -2775,7 +2775,7 @@ async function saveTrade() {
     grade:       document.getElementById('fgr').value,
     images:      [...tempImages],
     source:      existing ? (existing.source || 'manual') : 'manual',   // v7: an edited TL trade stays a TL trade
-    playbookId:  parseInt(document.getElementById('fpb')?.value) || (existing ? existing.playbookId : null) || null   // v7: do not drop it if the select cannot hold the value
+    playbookId:  parseInt(document.getElementById('fpb')?.value) || (existing ? existing.playbookId : null) || null   // v7
   };
 
   const btn = document.getElementById('save-btn');
@@ -5239,11 +5239,11 @@ function dupCard() {
     groups.map((g, i) => {
       const keep = [...g].sort((a, b) => (contentScore(b) - contentScore(a)) || ((b.tlId ? 1 : 0) - (a.tlId ? 1 : 0)))[0];
       return '<div style="border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;margin-bottom:9px">' +
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">' +
           '<span style="font-weight:600;font-size:13px">' + esc3(g[0].pair) + ' ' + esc3(g[0].dir) + '</span>' +
           '<span style="font-size:11.5px;color:var(--text3);font-family:var(--mono)">' + String(g[0].time || '').slice(0, 10) + '</span>' +
-          '<button class="btn btn-primary btn-xs" data-merge="' + i + '" style="margin-left:auto">Merge into one</button>' +
-          '<button class="btn btn-ghost btn-xs" data-ignore="' + i + '">Not a duplicate</button>' +
+          '<button class="btn btn-primary btn-sm" data-merge="' + i + '" style="margin-left:auto">Merge into one</button>' +
+          '<button class="btn btn-ghost btn-sm" data-ignore="' + i + '">Not a duplicate</button>' +
         '</div>' +
         g.map(t => '<div class="dup-row">' +
           '<span style="font-family:var(--mono);color:var(--text3);min-width:120px">id ' + t.id + '</span>' +
@@ -5709,7 +5709,7 @@ function summaryCards(s) {
 }
 
 function charts() {
-  return '<div style="display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin:4px 0 14px">' +
+  return '<div class="r-two" style="display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin:4px 0 14px">' +
     '<div class="card"><div class="card-title">Cumulative R</div>' +
       '<div style="position:relative;height:190px"><canvas id="r-cum"></canvas></div></div>' +
     '<div class="card"><div class="card-title">R distribution</div>' +
@@ -5746,7 +5746,7 @@ function breakdowns(rows) {
   const sess  = groupBy(rows, x => (x.t.session || 'unknown').replace('_', ' '));
   const dow   = groupBy(rows, x => x.d ? DOW[x.d.getDay()] : 'unknown');
   const grade = groupBy(rows.filter(x => x.t.grade), x => 'Grade ' + x.t.grade);
-  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">' +
+  return '<div class="r-two" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">' +
     groupCard('R by pair', pairs, 'Columns: trades · win rate · average R · total R. Ranked by average, so a single big dollar win cannot carry a pair.') +
     groupCard('R by weekday', dow) +
     groupCard('R by session', sess) +
@@ -6069,6 +6069,297 @@ if (typeof liveFxRates !== 'undefined' && typeof fetchLiveFxRates === 'function'
 setTimeout(() => { try { injectLogColumn(); } catch (e) {} }, 1500);
 })();
 </script>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     TradeLog Pro — v8: cross-device sync + mobile fixes
+
+     Only `trades` was ever going to Supabase. Journal entries, playbooks,
+     initial balances and account nicknames live in localStorage, which is
+     per-device — so a note written on the phone could never appear on the
+     laptop. This block syncs them through the same project.
+
+     ONE-TIME SETUP — run in the Supabase SQL editor:
+
+       create table appstate (
+         id text primary key,
+         data jsonb,
+         updated_at timestamptz default now()
+       );
+       alter table appstate enable row level security;
+       create policy anon_all on appstate for all using (true) with check (true);
+
+     Without that table the module logs a warning once and the app carries
+     on exactly as before. TradeLocker credentials and your API key are
+     deliberately NOT synced — they stay on the device that entered them.
+
+     How conflicts resolve: every journal entry and playbook carries a
+     timestamp, and the newer edit of the same item wins. Deletes leave a
+     tombstone so a deleted item cannot be resurrected by the other device.
+     ══════════════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+'use strict';
+if (window.__cloudSyncLoaded) return;
+window.__cloudSyncLoaded = true;
+
+/* ─────────────────────────── plumbing ───────────────────────────── */
+
+const API  = (typeof SUPABASE_URL !== 'undefined') ? SUPABASE_URL + '/rest/v1/appstate' : null;
+const HDRS = (typeof HDR !== 'undefined') ? HDR : null;
+const TOMB_KEY = 'cloud_tombs_v1';
+const HASH_KEY = 'cloud_settings_hash_v1';
+const SU_KEY   = 'cloud_settings_u_v1';
+
+const now = () => Date.now();
+function rd(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+function wrt(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+let tombs = rd(TOMB_KEY) || { journal: {}, playbooks: {} };
+tombs.journal = tombs.journal || {};
+tombs.playbooks = tombs.playbooks || {};
+
+let remoteOK = null, lastPull = 0, pulling = false, pushTimer = null, warned = false;
+
+async function getRow(id) {
+  const r = await fetch(API + '?id=eq.' + id, { headers: HDRS });
+  if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + (await r.text()).slice(0, 140));
+  const rows = await r.json();
+  return rows[0] ? rows[0].data : null;
+}
+async function putRow(id, data) {
+  const r = await fetch(API, {
+    method: 'POST',
+    headers: Object.assign({}, HDRS, { Prefer: 'resolution=merge-duplicates,return=minimal' }),
+    body: JSON.stringify({ id: id, data: data })
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + (await r.text()).slice(0, 140));
+}
+function warnOnce(e) {
+  if (warned) return;
+  warned = true;
+  console.warn('[sync] appstate unavailable — journal and playbooks stay on this device. ' +
+               'Create the appstate table in Supabase to turn this on. (' + e.message + ')');
+  if (typeof showToast === 'function') showToast('Cross-device sync is off — see the console for the one-line setup');
+}
+
+/* the two lists are `let` globals: reach them by name, mutate in place */
+function J() { try { return (typeof journalEntries !== 'undefined' && Array.isArray(journalEntries)) ? journalEntries : null; } catch (e) { return null; } }
+function P() { try { return (typeof playbooks !== 'undefined' && Array.isArray(playbooks)) ? playbooks : null; } catch (e) { return null; } }
+function listOf(kind) { return kind === 'journal' ? J() : P(); }
+function persist(kind) {
+  if (kind === 'journal' && typeof saveJournal === 'function') saveJournal();
+  if (kind === 'playbooks' && typeof savePlaybooks === 'function') savePlaybooks();
+}
+function repaint(kind) {
+  if (kind === 'journal' && typeof renderJournal === 'function') renderJournal();
+  if (kind === 'playbooks') {
+    if (typeof renderPlaybooks === 'function') renderPlaybooks();
+    if (typeof populatePlaybookSelect === 'function') populatePlaybookSelect();
+  }
+}
+
+/* ─────────────────────────── merging ────────────────────────────── */
+
+function mergeList(local, remote, tomb) {
+  const map = {};
+  (remote || []).concat(local || []).forEach(it => {
+    if (!it || it.id == null) return;
+    const k = String(it.id);
+    const prev = map[k];
+    if (!prev || (it.u || 0) >= (prev.u || 0)) map[k] = it;
+  });
+  return Object.values(map)
+    .filter(it => !(tomb[String(it.id)] && tomb[String(it.id)] >= (it.u || 0)))
+    .sort((a, b) => String(b.date || b.created || '').localeCompare(String(a.date || a.created || '')));
+}
+function mergeTombs(localT, remoteT) {
+  const out = Object.assign({}, localT || {});
+  Object.entries(remoteT || {}).forEach(([k, v]) => { if (!out[k] || v > out[k]) out[k] = v; });
+  return out;
+}
+function applyList(kind, payload) {
+  const arr = listOf(kind);
+  if (!arr) return;
+  tombs[kind] = mergeTombs(tombs[kind], payload && payload.tombs);
+  wrt(TOMB_KEY, tombs);
+  const merged = mergeList(arr, payload && payload.items, tombs[kind]);
+  if (JSON.stringify(merged) === JSON.stringify(arr)) return;
+  arr.length = 0;
+  merged.forEach(x => arr.push(x));
+  persist(kind);
+  repaint(kind);
+}
+
+/* ─────────────────────────── settings ───────────────────────────── */
+
+function snapshotSettings() {
+  const s = { u: Number(rd(SU_KEY) || 0) };
+  try { if (typeof initialBalances !== 'undefined') s.initialBalances = initialBalances; } catch (e) {}
+  try { if (typeof accountAliases  !== 'undefined') s.accountAliases  = accountAliases;  } catch (e) {}
+  try { if (typeof knownAccounts   !== 'undefined') s.knownAccounts   = knownAccounts;   } catch (e) {}
+  s.fundCfg = rd('fund_cfg_v1');
+  s.rCfg    = rd('r_cfg_v1');
+  s.discCfg = rd('disc_cfg_v1');
+  return s;                     /* tlCreds and the API key stay out on purpose */
+}
+function settingsHash(s) {
+  const c = Object.assign({}, s); delete c.u;
+  return JSON.stringify(c);
+}
+function bumpSettings() {
+  const h = settingsHash(snapshotSettings());
+  if (h !== rd(HASH_KEY)) { wrt(HASH_KEY, h); wrt(SU_KEY, now()); }
+}
+function applySettings(rem) {
+  if (!rem) return;
+  const preferRemote = Number(rem.u || 0) > Number(rd(SU_KEY) || 0);
+
+  const mergeMap = (globalName, remoteMap) => {
+    try {
+      if (typeof window[globalName] === 'undefined' && typeof eval(globalName) === 'undefined') return;
+    } catch (e) { return; }
+    const target = eval(globalName);
+    if (!target || typeof target !== 'object') return;
+    const merged = preferRemote ? Object.assign({}, target, remoteMap || {})
+                                : Object.assign({}, remoteMap || {}, target);
+    Object.keys(merged).forEach(k => { target[k] = merged[k]; });
+    if (typeof saveLocal === 'function') saveLocal(globalName, target);
+  };
+  mergeMap('initialBalances', rem.initialBalances);
+  mergeMap('accountAliases',  rem.accountAliases);
+
+  if (preferRemote) {
+    /* module configs are read at load, so these land on the next refresh */
+    if (rem.fundCfg) wrt('fund_cfg_v1', rem.fundCfg);
+    if (rem.rCfg)    wrt('r_cfg_v1',    rem.rCfg);
+    if (rem.discCfg) wrt('disc_cfg_v1', rem.discCfg);
+    wrt(SU_KEY, Number(rem.u || 0));
+    wrt(HASH_KEY, settingsHash(snapshotSettings()));
+  }
+  if (typeof extractAndSaveAccounts === 'function') extractAndSaveAccounts();
+  if (typeof renderDashboard === 'function') renderDashboard();
+}
+
+/* ─────────────────────────── pull / push ────────────────────────── */
+
+async function pull(force) {
+  if (!API || !HDRS || pulling) return;
+  if (!force && now() - lastPull < 15000) return;
+  pulling = true;
+  try {
+    const [j, p, s] = await Promise.all([getRow('journal'), getRow('playbooks'), getRow('settings')]);
+    remoteOK = true;
+    lastPull = now();
+    applyList('journal', j);
+    applyList('playbooks', p);
+    applySettings(s);
+    schedulePush();                         /* send the merged result back up */
+  } catch (e) { remoteOK = false; warnOnce(e); }
+  finally { pulling = false; }
+}
+
+function schedulePush() {
+  if (!API || !HDRS) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(push, 1200);
+}
+async function push() {
+  if (!API || !HDRS) return;
+  try {
+    bumpSettings();
+    const j = J(), p = P();
+    if (j) await putRow('journal',   { items: j, tombs: tombs.journal });
+    if (p) await putRow('playbooks', { items: p, tombs: tombs.playbooks });
+    await putRow('settings', snapshotSettings());
+    remoteOK = true;
+  } catch (e) { remoteOK = false; warnOnce(e); }
+}
+
+/* ─────────────────────────── hooks ──────────────────────────────── */
+
+function stripU(o) { const c = Object.assign({}, o); delete c.u; return JSON.stringify(c); }
+
+function wrapSave(name, kind) {
+  const prev = window[name];
+  if (typeof prev !== 'function') return;
+  window[name] = function () {
+    const before = new Map((listOf(kind) || []).map(it => [String(it.id), stripU(it)]));
+    const out = prev.apply(this, arguments);
+    (listOf(kind) || []).forEach(it => {
+      const b = before.get(String(it.id));
+      if (b === undefined || b !== stripU(it)) it.u = now();     /* new or changed */
+    });
+    persist(kind);
+    schedulePush();
+    return out;
+  };
+}
+function wrapDelete(name, kind) {
+  const prev = window[name];
+  if (typeof prev !== 'function') return;
+  window[name] = function (id) {
+    const out = prev.apply(this, arguments);
+    const gone = !(listOf(kind) || []).some(it => String(it.id) === String(id));
+    if (gone) { tombs[kind][String(id)] = now(); wrt(TOMB_KEY, tombs); schedulePush(); }
+    return out;
+  };
+}
+function wrapSetting(name) {
+  const prev = window[name];
+  if (typeof prev !== 'function') return;
+  window[name] = function () {
+    const out = prev.apply(this, arguments);
+    bumpSettings();
+    schedulePush();
+    return out;
+  };
+}
+
+wrapSave('saveJournalEntry', 'journal');
+wrapSave('savePlaybook',     'playbooks');
+wrapDelete('deleteJournalEntry', 'journal');
+wrapDelete('deletePlaybook',     'playbooks');
+['updateInitialBalance', 'setAlias', 'addAccount', 'deleteAccount'].forEach(wrapSetting);
+
+/* stamp anything already on this device so the first merge has a basis */
+[['journal', J], ['playbooks', P]].forEach(([kind, get]) => {
+  const arr = get();
+  if (!arr) return;
+  let touched = false;
+  arr.forEach(it => { if (it && it.u == null) { it.u = 1; touched = true; } });   /* 1 = oldest */
+  if (touched) persist(kind);
+});
+
+/* ─────────────────────────── triggers ───────────────────────────── */
+
+setTimeout(() => pull(true), 2000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(false); });
+window.addEventListener('focus', () => pull(false));
+window.addEventListener('pagehide', () => { try { push(); } catch (e) {} });
+setInterval(() => { if (!document.hidden) pull(false); }, 60000);
+
+window.cloudSync = {
+  status: () => ({ remoteOK: remoteOK, lastPull: lastPull ? new Date(lastPull).toLocaleTimeString() : 'never',
+                   journal: (J() || []).length, playbooks: (P() || []).length, tombs: tombs }),
+  pull: () => pull(true),
+  push: push
+};
+})();
+</script>
+
+<!-- ── mobile fixes: the v6/v7 pages used fixed two-column grids, which
+     overflowed a phone and pushed the merge buttons off-screen ── -->
+<style>
+@media (max-width: 900px) {
+  #page-rreport .r-two,
+  #page-funding .fund-grid { grid-template-columns: 1fr !important; }
+  #page-funding .card, #page-rreport .card { overflow-x: hidden; }
+}
+@media (pointer: coarse) {
+  #page-funding .btn, #page-rreport .btn { padding: 9px 15px; font-size: 12.5px; }
+  #page-funding .btn-xs, #page-rreport .btn-xs { padding: 7px 12px; font-size: 11.5px; }
+}
+</style>
 
 </body>
 </html>
